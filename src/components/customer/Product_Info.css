@@ -1,0 +1,740 @@
+/* ========== GLOBAL RESET & HELPERS ========== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--casa-bg, #f7f8f5);
+  color: var(--casa-text-dark, #2b2b2b);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* small helper to make flex children allow overflow/ellipsis */
+.flex-min-zero {
+  min-width: 0;
+}
+
+/* =========================================
+   THEME VARIABLES (kept from original)
+========================================= */
+:root {
+  --casa-green-dark: #5b6a4f;
+  --casa-green-mid: #8fa070;
+  --casa-green-light: #e6edd8;
+
+  --casa-bg: #f7f8f5;
+  --casa-surface: #ffffff;
+
+  --casa-text-dark: #2b2b2b;
+  --casa-text-muted: #7b7b74;
+
+  --casa-border: #e3e6e3;
+  --casa-accent: #cfa44a;
+
+  --radius: 14px;
+  --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 18px 40px rgba(0, 0, 0, 0.1);
+
+  --transition: all 260ms cubic-bezier(.16, .9, .32, 1);
+}
+
+/* =========================================
+   PAGE CONTAINER
+========================================= */
+.pd-container {
+  max-width: 1400px;
+  margin: auto;
+  padding: 32px 20px;
+  display: grid;
+  grid-template-columns: 420px 1fr 320px;
+  gap: 32px;
+  background: var(--casa-bg);
+  align-items: start;
+}
+
+/* ensure center/right can shrink on small screens */
+.pd-center,
+.pd-right {
+  min-width: 0;
+  /* KEY FIX for overflow in flex layouts */
+}
+
+/* =========================================
+   LEFT – MEDIA
+========================================= */
+.pd-left {
+  display: flex;
+  gap: 16px;
+}
+
+.pd-thumbnails {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pd-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background: #fff;
+  transition: var(--transition);
+  display: block;
+}
+
+.pd-thumb:hover,
+.pd-thumb.active {
+  border-color: var(--casa-green-mid);
+}
+
+.video-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--casa-green-light);
+  color: var(--casa-green-dark);
+  font-size: 22px;
+}
+
+/* MAIN IMAGE */
+.pd-image-box {
+  flex: 1;
+  background: var(--casa-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pd-image {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* =========================================
+   FULLSCREEN BUTTON – CASA STYLE
+========================================= */
+.pd-fullscreen-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(43, 43, 43, 0.6);
+  backdrop-filter: blur(8px);
+
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 200ms ease;
+}
+
+.pd-fullscreen-btn:hover {
+  background: var(--casa-green-mid);
+  color: #1f2a18;
+  transform: scale(1.08);
+}
+
+/* =========================================
+   FULLSCREEN / VIDEO – Polished controls
+========================================= */
+.pd-image-box:fullscreen {
+  background: #000;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pd-image-box:fullscreen .pd-video-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  background: #000;
+}
+
+.pd-image-box:fullscreen .pd-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+.pd-image-box:fullscreen .pd-video-controls {
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(14px);
+}
+
+.pd-image-box:fullscreen .pd-video-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+
+.pd-image-box:fullscreen .pd-video-seek {
+  height: 6px;
+}
+
+.pd-image-box:fullscreen .pd-fullscreen-btn {
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* Hide page scrollbars when fullscreen */
+:fullscreen {
+  overflow: hidden;
+}
+
+/* VIDEO section */
+.pd-video-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.pd-video {
+  width: 100%;
+  display: block;
+}
+
+.pd-video-controls {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(43, 43, 43, 0.65);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 260ms cubic-bezier(.16, .9, .32, 1);
+}
+
+.pd-video-wrapper:hover .pd-video-controls,
+.pd-video-wrapper:active .pd-video-controls {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pd-video-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 15px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms ease;
+}
+
+.pd-video-btn:hover {
+  background: var(--casa-green-mid);
+  color: #1f2a18;
+  transform: scale(1.08);
+}
+
+.pd-video-seek {
+  flex: 1;
+  height: 4px;
+  cursor: pointer;
+  appearance: none;
+  background: linear-gradient(to right,
+      var(--casa-green-mid) 0%,
+      var(--casa-green-mid) var(--seek-progress, 0%),
+      rgba(255, 255, 255, 0.3) var(--seek-progress, 0%));
+  border-radius: 6px;
+  outline: none;
+}
+
+.pd-video-seek::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--casa-green-light);
+  box-shadow: 0 0 0 4px rgba(143, 160, 112, 0.35);
+  transition: transform 160ms ease;
+}
+
+.pd-video-seek::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.pd-video-seek::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--casa-green-light);
+  border: none;
+}
+
+/* MOBILE – always show controls (touch) */
+@media (max-width: 768px) {
+  .pd-video-controls {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   CENTER – DETAILS
+========================================= */
+.pd-center {
+  background: var(--casa-surface);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.pd-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--casa-text-dark);
+  margin-bottom: 12px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* Ensure rating line doesn't overflow */
+.pd-rating-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* star icons */
+.pd-stars svg {
+  color: var(--casa-accent);
+  margin-right: 2px;
+}
+
+/* rating count and meta wrap */
+.pd-rating-count {
+  font-size: 14px;
+  color: var(--casa-text-muted);
+  white-space: nowrap;
+}
+
+/* product description */
+.pd-description {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--casa-text-dark);
+  margin-bottom: 18px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* divider */
+.pd-divider {
+  border: none;
+  border-top: 1px solid var(--casa-border);
+  margin: 18px 0;
+}
+
+/* key details */
+.pd-key-details p {
+  font-size: 14px;
+  color: var(--casa-text-muted);
+  margin-bottom: 8px;
+}
+
+.pd-key-details strong {
+  color: var(--casa-text-dark);
+}
+
+/* =========================================
+   RIGHT – BUY BOX (AMAZON STYLE)
+========================================= */
+.pd-right {
+  position: sticky;
+  top: 90px;
+  height: fit-content;
+  min-width: 0;
+  /* allow shrink on small screens */
+}
+
+.pd-buybox {
+  background: var(--casa-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pd-buybox-title {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.pd-price {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--casa-green-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-btn {
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pd-btn-buy {
+  background: var(--casa-green-dark);
+  color: #fff;
+}
+
+.pd-btn-buy:hover {
+  background: #47543d;
+}
+
+.pd-btn-cart {
+  background: var(--casa-green-light);
+  color: var(--casa-green-dark);
+}
+
+.pd-btn-cart:hover {
+  background: #dbe3c9;
+}
+
+.pd-btn-share,
+.pd-btn-back {
+  background: #f1f3ef;
+  color: var(--casa-text-dark);
+}
+
+.pd-btn-share:hover,
+.pd-btn-back:hover {
+  background: #e4e7e2;
+}
+
+/* ensure the buybox content doesn't overflow on narrow screens */
+.pd-buybox * {
+  min-width: 0;
+}
+
+/* =========================================
+   REVIEWS
+========================================= */
+.pd-reviews-section {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.pd-reviews-title {
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+.pd-reviews-list {
+  display: grid;
+  gap: 16px;
+}
+
+.pd-review-card {
+  background: var(--casa-surface);
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.pd-review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pd-review-user {
+  font-weight: 600;
+}
+
+.pd-review-comment {
+  font-size: 14px;
+  color: var(--casa-text-muted);
+}
+
+/* =========================================
+   RESPONSIVE – desktop -> single column for narrower screens
+========================================= */
+/* @media (min-width: 1400px) {
+  .pd-image-box {
+    height: min(580px, 72vh);
+  }
+} */
+
+@media (max-width: 1200px) {
+  .pd-container {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-left {
+    order: 1;
+  }
+
+  .pd-center {
+    order: 2;
+  }
+
+  .pd-right {
+    order: 3;
+    position: static;
+  }
+
+  .pd-image {
+    max-height: 520px;
+  }
+}
+
+/* Core mobile layout tweaks */
+@media (max-width: 768px) {
+  .pd-container {
+    grid-template-columns: 1fr;
+    padding: 18px 12px;
+    gap: 14px;
+  }
+
+  .pd-left {
+    flex-direction: column;
+    order: 1;
+  }
+
+  .pd-thumbnails {
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    order: 0;
+  }
+
+  .pd-center {
+    order: 2;
+    padding: 18px;
+  }
+
+  .pd-right {
+    order: 3;
+    margin-top: 8px;
+    position: static;
+    padding: 12px;
+  }
+
+  .pd-image-box {
+    height: 360px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .pd-image {
+    max-height: 100%;
+  }
+
+  /* tighten paddings and font sizes for mobile */
+  .pd-title {
+    font-size: 18px;
+  }
+
+  .pd-description {
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: calc(1.5em * 6);
+    /* generous limit */
+    overflow: hidden;
+  }
+
+  /* ensure buybox fits */
+  .pd-buybox {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .pd-price {
+    font-size: 20px;
+  }
+
+  /* WRAP & ELLIPSIS protections for content that previously overflowed */
+  .pd-center,
+  .pd-right,
+  .pd-buybox,
+  .pd-image-box {
+    min-width: 0;
+    /* critical to prevent overflowing text in flex parent */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* PD-RATING-LINE: reduce gap */
+  .pd-rating-line {
+    gap: 6px;
+  }
+
+  .pd-stars svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pd-rating-count {
+    font-size: 12px;
+  }
+
+  /* PD-KEY-DETAILS: compress */
+  .pd-key-details p {
+    font-size: 13px;
+  }
+}
+
+/* =========================================
+   MOBILE-ONLY: Amazon / boAt compact card style
+   (applies when you render a compact card box inside product page)
+========================================= */
+@media (max-width: 768px) {
+
+  /* Generic compact card wrapper you can add to markup: .pd-compact-card */
+  .pd-compact-card {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--casa-surface);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+  }
+
+  .pd-compact-card .pd-compact-img {
+    width: 92px;
+    height: 92px;
+    flex: 0 0 92px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f6f6f6;
+  }
+
+  .pd-compact-card .pd-compact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+    /* allow text to truncate correctly */
+  }
+
+  .pd-compact-card .pd-compact-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* clamp to two lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+  }
+
+  .pd-compact-card .pd-compact-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--casa-text-muted);
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pd-compact-card .pd-compact-price {
+    margin-top: 6px;
+    font-weight: 700;
+    color: var(--casa-green-dark);
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* rating inline (small) */
+  .pd-compact-card .pd-compact-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--casa-accent);
+    font-size: 13px;
+  }
+
+  /* fix for "text under the card going out of box" — make sure content wraps and children can shrink */
+  .pd-compact-card,
+  .pd-compact-card * {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+}
+
+/* =========================================
+   SMALL TOUCHES: accessibility / focus
+========================================= */
+button:focus,
+a:focus {
+  outline: 3px solid rgba(199, 164, 74, 0.18);
+  outline-offset: 2px;
+}

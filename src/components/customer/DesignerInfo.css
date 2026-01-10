@@ -1,0 +1,766 @@
+/* ============================================================
+   DesignerInfo.css
+   - Production-ready styles for DesignerInfo.jsx
+   - Keeps top / review areas familiar, implements a clean,
+     responsive, expandable works/portfolio section.
+   ============================================================ */
+
+/* -----------------------
+   Theme variables
+   ----------------------- */
+:root {
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+  --green-dark: #556943;
+  --green-mid: #91A56E;
+  --green-light: #dbe7c9;
+  --bg: #f8f8f4;
+  --card-bg: #ffffff;
+  --accent: #91a56e;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 18px 40px rgba(0, 0, 0, 0.08);
+  --gap: 16px;
+  --font-body: "Helvetica", Arial, sans-serif;
+  --font-accent: "Big Caslon", serif;
+}
+
+/* -----------------------
+   Page
+   ----------------------- */
+* {
+  box-sizing: border-box
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  font-family: var(--font-body);
+  color: var(--text-dark);
+}
+
+.designer-info-page {
+  padding: 40px 4vw;
+  background: var(--bg);
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* -----------------------
+   Back button
+   ----------------------- */
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--green-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 6px 0;
+}
+
+.back-btn:focus {
+  outline: 3px solid rgba(145, 165, 110, 0.18);
+  border-radius: 8px;
+}
+
+/* -----------------------
+   Main layout
+   ----------------------- */
+.designer-info-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Left text column */
+.designer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.designer-photo {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 6px solid #fff;
+  /* subtle frame */
+}
+
+/* Title row */
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.designer-name {
+  font-family: var(--font-accent);
+  font-size: 2.3rem;
+  margin: 0;
+  line-height: 1;
+}
+
+.availability-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 6px 18px rgba(96, 110, 82, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.availability-pill .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.availability-pill.available {
+  background: linear-gradient(90deg, rgba(145, 165, 110, 0.12), rgba(96, 110, 82, 0.06));
+  color: var(--green-dark);
+  border-color: rgba(145, 165, 110, 0.18);
+}
+
+.availability-pill.available .dot {
+  background: var(--green-mid);
+  box-shadow: 0 4px 12px rgba(145, 165, 110, 0.18);
+}
+
+.availability-pill.busy {
+  background: linear-gradient(90deg, rgba(220, 100, 100, 0.06), rgba(220, 100, 100, 0.03));
+  color: #b33b3b;
+}
+
+.designer-role {
+  color: var(--green-dark);
+  font-weight: 600;
+  margin-top: -6px;
+}
+
+/* small metadata */
+.portfolio-link {
+  color: #2563eb;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.portfolio-link:hover {
+  text-decoration: underline;
+}
+
+.designer-location {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* rating */
+.designer-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.stars-large {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.average-number {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* bio */
+.expandable-text {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.see-more-btn {
+  color: var(--green-dark);
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.see-more-btn:hover {
+  color: var(--green-mid)
+}
+
+/* hire button */
+.hire-btn {
+  margin-top: 12px;
+  background: var(--green-mid);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 8px 28px rgba(145, 165, 110, 0.08);
+  transition: transform .16s ease, box-shadow .16s ease, background .16s;
+}
+
+.hire-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  background: var(--green-dark)
+}
+
+.hire-btn.disabled,
+.hire-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  filter: grayscale(.05)
+}
+
+/* Right main preview */
+.designer-main-image img {
+  width: 100%;
+  height: 650px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: zoom-in;
+}
+
+/* -----------------------
+   PORTFOLIO / WORKS
+   - core behavior: cards expand page height naturally
+   ----------------------- */
+.portfolio-section {
+  margin-top: 50px;
+  padding-top: 10px;
+}
+
+/* section title */
+.portfolio-title {
+  font-family: var(--font-accent);
+  font-size: 1.8rem;
+  margin: 0 0 18px 0;
+  color: var(--green-dark);
+  text-align: center;
+}
+
+/* horizontal row — allow vertical growth */
+.portfolio-row {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  align-items: flex-start;
+  /* CRITICAL: allow cards to grow vertically */
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 10px;
+}
+
+/* scrollbar styling (thin & subtle) */
+.portfolio-row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.portfolio-row::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--green-light), #d6e3be);
+  border-radius: 10px;
+}
+
+/* each item wrapper */
+.portfolio-item {
+  flex: 0 0 300px;
+  /* fixed thumbnail width, grows vertically */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  overflow: visible;
+  /* allow growth */
+}
+
+/* the white card that contains the image */
+.work-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--green-light);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  overflow: visible;
+  /* allow internal growth */
+}
+
+/* selected state */
+.portfolio-item.active .work-card {
+  border-color: var(--green-mid);
+  box-shadow: 0 14px 40px rgba(96, 110, 82, 0.06);
+  transform: translateY(-6px);
+}
+
+/* image */
+.work-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* caption sits below the card (so it expands naturally) */
+.portfolio-caption {
+  display: block;
+  border-radius: calc(var(--radius-md) - 2px);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 12px;
+  min-height: 64px;
+  color: var(--text-dark);
+  overflow: visible;
+  /* allow desc to expand */
+}
+
+/* optional small title inside caption (if used) */
+.portfolio-caption>div:first-child {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-dark);
+}
+
+/* description that expands the caption and page */
+.work_desc {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  line-height: 1.5;
+  border: none;
+  /* allow natural growth (no clipping) */
+  white-space: normal;
+  overflow: visible;
+  max-height: none;
+}
+
+/* inline see-more button style */
+.work_desc .see-more-btn {
+  display: inline-block;
+  color: #91a56e;
+  margin-left: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.work_desc .see-more-btn:hover {
+  color: var(--green-dark)
+}
+
+/* small hover lift for the whole item */
+.portfolio-item:hover .work-card {
+  transform: translateY(-4px);
+}
+
+/* small devices */
+@media (max-width: 1100px) {
+  .designer-info-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .designer-photo {
+    height: 340px;
+  }
+
+  .designer-main-image img {
+    height: 420px;
+    object-fit: cover;
+  }
+
+  .portfolio-row {
+    gap: 16px;
+    padding-top: 10px;
+  }
+
+  .portfolio-item {
+    flex: 0 0 260px;
+  }
+
+  .work-card img {
+    height: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .designer-info-page {
+    padding: 24px 5vw;
+  }
+
+  .designer-photo {
+    height: 280px;
+    object-fit: cover;
+  }
+
+  .designer-main-image img {
+    height: 300px;
+    object-fit: cover;
+  }
+
+  .portfolio-item {
+    flex: 0 0 220px;
+  }
+
+  .work-card img {
+    height: 140px;
+  }
+
+  .portfolio-caption {
+    min-height: 56px;
+    padding: 10px;
+  }
+
+  .portfolio-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolio-item {
+    flex: 0 0 180px;
+  }
+
+  .work-card img {
+    height: 120px;
+  }
+
+  .portfolio-caption {
+    min-height: 48px;
+    padding: 8px;
+    font-size: 0.92rem;
+  }
+}
+
+/* -----------------------
+   Reviews area (kept nice & unchanged)
+   ----------------------- */
+.reviews-section {
+  margin-top: 36px;
+}
+
+.reviews-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.review-item {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reviewer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.review-item p {
+  font-size: 0.95rem;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.review-meta {
+  font-size: 0.82rem;
+  color: #9ca3af;
+}
+
+/* paginator */
+.pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.pagination button {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* -----------------------
+   Modals & Image popup (unchanged)
+   ----------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+  background: rgba(60, 60, 60, 0.45);
+  backdrop-filter: blur(5px);
+  padding: 20px;
+  overflow-y: auto; /* allow scrolling on small screens */
+}
+
+@media (max-width: 880px) {
+  .modal-box {
+    width: min(760px, 96%);
+    padding: 18px;
+    max-height: calc(100vh - 56px);
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  /* single column layout */
+  .modal-form {
+    grid-template-columns: 1fr;
+  }
+
+  /* actions stack vertically on small screens for comfortable tapping */
+  .modal-actions {
+    flex-direction: column-reverse; /* submit on bottom */
+    gap: 10px;
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 14px;
+  }
+}
+
+.modal-box {
+  width: min(920px, 98%);
+  max-width: 920px;
+  max-height: calc(100vh - 72px); /* keep a comfortable top/bottom gap */
+  overflow: auto; /* scroll inside modal if content is tall */
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(96, 110, 82, 0.08);
+  box-sizing: border-box;
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  margin: 0 0 10px 0;
+  color: var(--text-dark);
+  font-weight: 800;
+}
+
+.modal-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.modal-form label.desc {
+  grid-column: 1 / -1;
+}
+
+.modal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.modal-form input,
+.modal-form select,
+.modal-form textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e6e6e6;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+
+.modal-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  grid-column: 1 / -1;
+}
+
+.cancel-btn {
+  background: #f2f2f2;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.submit-btn {
+  background: var(--green-mid);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.submit-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* overlay */
+.img-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(40, 40, 40, 0.6);
+  z-index: 6000;
+  padding: 16px; /* prevents edge clipping on small screens */
+}
+
+/* popup container */
+.img-popup {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* image itself */
+.img-popup img {
+  max-width: 90vw;   
+  max-height: 90vh;  
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+}
+
+
+/* small helpers */
+.empty-text {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .modal-box {
+    padding: 22px;
+  }
+
+  .modal-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .modal-box {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .modal-title {
+    font-size: 1.35rem;
+  }
+
+  .modal-form label {
+    font-size: 0.85rem;
+  }
+
+  .modal-form input,
+  .modal-form select,
+  .modal-form textarea {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  .modal-form textarea {
+    min-height: 100px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .modal-box {
+    padding: 14px;
+    max-height: calc(100vh - 36px);
+  }
+
+  .modal-title {
+    font-size: 1.05rem;
+  }
+
+  .modal-form input,
+  .modal-form select,
+  .modal-form textarea {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+}

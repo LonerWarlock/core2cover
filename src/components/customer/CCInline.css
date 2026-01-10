@@ -1,0 +1,11 @@
+.cc-inline {
+  display: inline-flex;
+  align-items: center;
+  font-weight: inherit;
+}
+
+.cc-inline span {
+  font-size: 0.7em;
+  margin: 0 0.15em;
+  transform: translateY(-0.05em);
+}

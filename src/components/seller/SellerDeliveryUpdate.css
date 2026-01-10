@@ -1,0 +1,231 @@
+/* =========================================
+   LAYOUT
+========================================= */
+.seller-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-1);
+}
+
+.delivery-container {
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Offset when sidebar exists */
+.seller-layout .delivery-container {
+  margin-left: var(--ms-sidebar-w);
+}
+
+/* =========================================
+   CARD
+========================================= */
+.delivery-card {
+  width: 100%;
+  max-width: 760px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  box-shadow: var(--shadow-soft);
+}
+
+.delivery-card h2 {
+  margin-bottom: 6px;
+  font-size: 22px;
+  color: var(--green-dark);
+}
+
+.delivery-card p {
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* =========================================
+   FORM
+========================================= */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.input-group input,
+.input-group select {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  outline: none;
+  transition: all 240ms var(--ease);
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 2px rgba(145, 165, 110, 0.2);
+}
+
+/* =========================================
+   GRID
+========================================= */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* =========================================
+   CHECKBOX
+========================================= */
+.input-group.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-group.checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.input-group.checkbox label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* =========================================
+   BUTTON
+========================================= */
+.primary-btn {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+
+  background: linear-gradient(
+    135deg,
+    var(--green-mid),
+    var(--green-dark)
+  );
+
+  transition: all 240ms var(--ease);
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 900px) {
+  .seller-layout {
+    flex-direction: column;
+  }
+
+  .seller-layout .delivery-container {
+    margin-left: 0;          /* 🔥 remove sidebar offset */
+  }
+
+  .delivery-container {
+    padding: 24px 5vw;
+    padding-left: 250px;
+    align-items: stretch;
+  }
+
+  .delivery-card {
+    max-width: 100%;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-card {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .delivery-container {
+    padding: 80px 4vw;
+  }
+
+  .delivery-card {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .delivery-card h2 {
+    font-size: 20px;
+  }
+
+  .delivery-card p {
+    font-size: 13px;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr; /* 🔥 single column */
+    gap: 14px;
+  }
+
+  .input-group input,
+  .input-group select {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .primary-btn {
+    width: 100%;
+    font-size: 16px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .delivery-container {
+    padding: 16px 3.5vw;
+  }
+
+  .delivery-card {
+    padding: 18px;
+  }
+
+  .delivery-card h2 {
+    font-size: 18px;
+  }
+
+  .input-group label {
+    font-size: 12.5px;
+  }
+
+  .input-group.checkbox {
+    gap: 8px;
+  }
+
+  .input-group.checkbox label {
+    font-size: 13px;
+  }
+}

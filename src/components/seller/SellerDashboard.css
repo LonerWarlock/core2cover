@@ -1,0 +1,236 @@
+/* =========================================
+   CASA / CONSTRUCTIFY THEME VARIABLES
+========================================= */
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+
+  --bg: linear-gradient(180deg, #f4f7ef, #e8efdc);
+  /* --bg-1: #F3F7EC;
+  --bg-2: #EAF1DD; */
+  --surface: #FFFFFF;
+
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+
+  --border-soft: rgba(96, 110, 82, 0.12);
+  --shadow-soft: 0 18px 48px rgba(96, 110, 82, 0.12);
+
+  --radius: 14px;
+  --ease: cubic-bezier(.2,.9,.3,1);
+
+  /* MUST MATCH SIDEBAR WIDTH */
+  --ms-sidebar-w: 220px;
+
+  font-family: "Helvetica", Arial, sans-serif;
+}
+
+/* =========================================
+   PAGE SHELL
+========================================= */
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  color: var(--text-dark);
+}
+
+/* =========================================
+   MAIN CONTENT AREA
+========================================= */
+.dashboard-main {
+  flex: 1;
+  margin-left: var(--ms-sidebar-w); /* sidebar offset */
+  padding: 90px 40px 48px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Content width control */
+.dashboard-main > .content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* =========================================
+   PAGE TITLE
+========================================= */
+.dashboard-title {
+  font-family: "Playfair Display", serif;
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--green-dark);
+  margin-bottom: 26px;
+}
+
+/* Optional subtitle */
+.dashboard-sub {
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 22px;
+}
+
+/* =========================================
+   DASHBOARD CARDS GRID
+========================================= */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 22px;
+}
+
+/* =========================================
+   CARD
+========================================= */
+.dashboard-card {
+  background: linear-gradient(
+    180deg,
+    var(--surface),
+    #FBFEF8
+  );
+  border-radius: var(--radius);
+  padding: 26px 22px;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+
+  transition: transform 220ms var(--ease),
+              box-shadow 220ms var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 60px rgba(96,110,82,0.22);
+}
+
+/* Decorative glow */
+.dashboard-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -60% -40% auto;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    var(--green-light),
+    transparent 45%
+  );
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+/* =========================================
+   ICON
+========================================= */
+.dashboard-icon {
+  font-size: 3.8rem;
+  color: var(--green-dark);
+  background: linear-gradient(
+    180deg,
+    rgba(145, 165, 110, 0.25),
+    rgba(192, 204, 164, 0.18)
+  );
+  padding: 14px;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(96,110,82,0.14);
+}
+
+/* =========================================
+   TEXT
+========================================= */
+.dashboard-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.dashboard-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+
+/* Optional note */
+.dashboard-note {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* =========================================
+   LARGE CARD VARIANT
+========================================= */
+.card-large {
+  grid-column: span 2;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align: left;
+  gap: 24px;
+}
+
+.card-large .dashboard-icon {
+  font-size: 4.2rem;
+}
+
+.card-large .dashboard-value {
+  font-size: 2.2rem;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 980px) {
+  .dashboard-main {
+    padding: 80px 24px 40px;
+  }
+
+  .dashboard-title {
+    font-size: 1.7rem;
+  }
+}
+
+@media (max-width: 618px) {
+  .dashboard-main {
+    margin-left: 0; /* sidebar hidden on mobile */
+    padding: 72px 16px 32px;
+  }
+
+  .dashboard-title {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .card-large {
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+.dashboard-card:focus,
+.dashboard-card:focus-within {
+  outline: 3px solid rgba(145, 165, 110, 0.45);
+  outline-offset: 6px;
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

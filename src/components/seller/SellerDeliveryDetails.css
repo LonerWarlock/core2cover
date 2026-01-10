@@ -1,0 +1,185 @@
+/* =========================================
+   CASA – SELLER DELIVERY DETAILS
+   Theme: Clean, modern, trustworthy
+========================================= */
+
+:root {
+  --casa-green-dark: #5b6a4f;
+  --casa-green-mid: #8fa070;
+  --casa-green-light: #e6edd8;
+
+  --casa-bg: #f7f9f4;
+  --casa-surface: #ffffff;
+
+  --casa-text-dark: #2f2f2f;
+  --casa-text-muted: #7b7b74;
+
+  --casa-border: #e1e5d8;
+
+  --radius: 14px;
+  --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --transition: all 0.25s ease;
+
+  --font-ui: "Inter", "Helvetica", Arial, sans-serif;
+}
+
+/* =========================
+   PAGE WRAPPER
+========================= */
+
+.delivery-container {
+  min-height: 100vh;
+  background: var(--casa-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  font-family: var(--font-ui);
+}
+
+/* =========================
+   CARD
+========================= */
+
+.delivery-card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--casa-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.delivery-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  color: var(--casa-text-dark);
+}
+
+.delivery-card p {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  color: var(--casa-text-muted);
+}
+
+/* =========================
+   FORM
+========================= */
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--casa-text-dark);
+}
+
+/* Inputs & Selects */
+
+.input-group input,
+.input-group select {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--casa-border);
+  font-size: 0.95rem;
+  color: var(--casa-text-dark);
+  outline: none;
+  transition: var(--transition);
+  background: #fff;
+}
+
+.input-group input::placeholder {
+  color: #b1b6a6;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  border-color: var(--casa-green-mid);
+  box-shadow: 0 0 0 3px rgba(143, 160, 112, 0.18);
+}
+
+/* =========================
+   GRID
+========================= */
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* =========================
+   CHECKBOX
+========================= */
+
+.input-group.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-group.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--casa-green-dark);
+}
+
+.input-group.checkbox label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--casa-text-dark);
+}
+
+/* =========================
+   PRIMARY BUTTON
+========================= */
+
+.primary-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--casa-green-dark),
+    var(--casa-green-mid)
+  );
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(91, 106, 79, 0.25);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 600px) {
+  .delivery-card {
+    padding: 24px;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

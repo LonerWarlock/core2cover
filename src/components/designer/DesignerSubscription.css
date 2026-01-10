@@ -1,0 +1,134 @@
+/* ROOT THEME */
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+
+  --radius: 16px;
+  --shadow: 0 18px 46px rgba(96, 110, 82, 0.12);
+  --card-bg: #ffffff;
+  --bg-soft: #F3F7EC;
+
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif;
+}
+
+/* PAGE WRAPPER */
+.sub-page {
+  max-height: 100vh;
+  padding: 60px 6vw;
+  background: var(--bg-soft);
+  text-align: center;
+  font-family: var(--font-ui);
+}
+
+/* HEADER */
+.sub-title {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  color: var(--green-dark);
+  margin-bottom: 8px;
+}
+
+.sub-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 580px;
+  margin: 0 auto 40px;
+}
+
+/* GRID */
+.sub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 26px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* SUBSCRIPTION CARD */
+.sub-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 26px 22px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(96, 110, 82, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sub-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 50px rgba(96, 110, 82, 0.16);
+}
+
+/* Premium highlight */
+.sub-card-highlight {
+  border: 2px solid var(--green-mid);
+  background: linear-gradient(180deg, #ffffff, #F7FFF1);
+}
+
+/* TEXT */
+.sub-plan-name {
+  font-size: 1.5rem;
+  font-family: var(--font-heading);
+  color: var(--green-dark);
+  margin-bottom: 6px;
+}
+
+.sub-price {
+  font-size: 1.8rem;
+  font-family: var(--font-heading);
+  color: var(--green-dark);
+  margin-bottom: 10px;
+}
+
+.sub-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* FEATURES LIST */
+.sub-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  text-align: left;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.sub-features li {
+  margin-bottom: 8px;
+  position: relative;
+  padding-left: 18px;
+}
+
+.sub-features li::before {
+  content: "•";
+  color: var(--green-dark);
+  position: absolute;
+  left: 0;
+  top: 2px;
+}
+
+/* BUTTON */
+.sub-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+  font-weight: 700;
+  transition: 0.3s;
+}
+
+.sub-btn:hover {
+  background: linear-gradient(90deg, var(--green-mid), var(--green-dark));
+  transform: translateY(-3px);
+}

@@ -1,0 +1,408 @@
+/* =========================================
+   CASA THEME VARIABLES
+========================================= */
+:root {
+  --casa-bg: #f8f9f7;
+  --casa-surface: #ffffff;
+  --casa-primary: #5b6a4f;
+  --casa-primary-light: #e6edd8;
+  --casa-text-dark: #2f2f2f;
+  --casa-text-muted: #7b7b74;
+  --casa-border: #e2e5dc;
+
+  --radius: 14px;
+  --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 18px 40px rgba(0, 0, 0, 0.12);
+
+  --transition: all 240ms ease;
+}
+
+/* =========================================
+   PAGE LAYOUT
+========================================= */
+
+/* =========================================
+   PAGE HEADER (LEFT TITLE + RIGHT RATING)
+========================================= */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.page-header-left {
+  max-width: 60%;
+}
+
+/* =========================================
+   TOP RIGHT RATING BOX
+========================================= */
+.overall-rating-box.top-right {
+  background: var(--casa-surface);
+  padding: 18px 22px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  min-width: 260px;
+  text-align: right;
+}
+
+.overall-rating-box.top-right h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--casa-text-muted);
+  margin-bottom: 8px;
+}
+
+.overall-rating {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.overall-score {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--casa-text-dark);
+}
+
+.overall-count {
+  font-size: 0.8rem;
+  color: var(--casa-text-muted);
+  margin-left: 4px;
+}
+
+.hired-designers-page {
+  padding: 60px 6%;
+  background: var(--casa-bg);
+  min-height: 100vh;
+}
+
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--casa-text-dark);
+}
+
+.page-sub {
+  color: var(--casa-text-muted);
+  margin-top: 6px;
+}
+
+/* =========================================
+   GRID
+========================================= */
+.hired-grid {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
+}
+
+/* =========================================
+   CARD
+========================================= */
+.hired-card {
+  background: var(--casa-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.hired-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-md);
+}
+
+.hired-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: #eee;
+}
+
+/* =========================================
+   CARD CONTENT
+========================================= */
+.hired-info {
+  padding: 18px 18px 22px;
+}
+
+.hired-info h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--casa-text-dark);
+}
+
+.hired-type {
+  font-size: 0.9rem;
+  margin-top: 2px;
+  color: var(--casa-primary);
+}
+
+.hired-location {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: var(--casa-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hired-work,
+.hired-budget {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--casa-text-dark);
+}
+
+/* =========================================
+   STATUS
+========================================= */
+.hired-status {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.hired-status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.hired-status.accepted {
+  background: #e6edd8;
+  color: var(--casa-primary);
+}
+
+.hired-status.completed {
+  background: #e0f4ec;
+  color: #0f766e;
+}
+
+.hired-status.rejected{
+  background: #e0f4ec;
+  color: #ed1717;
+}
+
+/* =========================================
+   RATE BUTTON
+========================================= */
+.rate-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: var(--casa-primary);
+  color: #fff;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.rate-btn:hover {
+  opacity: 0.92;
+}
+
+.rated-badge {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+/* =========================================
+   MODAL
+========================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-box {
+  background: var(--casa-surface);
+  width: 100%;
+  max-width: 420px;
+  padding: 26px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.modal-box h2 {
+  font-size: 1.4rem;
+  color: var(--casa-text-dark);
+  margin-bottom: 16px;
+}
+
+/* =========================================
+   FORM
+========================================= */
+.modal-box form label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+  color: var(--casa-text-muted);
+}
+
+.modal-box select,
+.modal-box textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--casa-border);
+  font-family: inherit;
+}
+
+.modal-box textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* =========================================
+   MODAL ACTIONS
+========================================= */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-actions button:first-child {
+  background: #f1f1f1;
+  color: var(--casa-text-dark);
+}
+
+.modal-actions button:last-child {
+  background: var(--casa-primary);
+  color: #fff;
+}
+
+/* =========================================
+   AMAZON-STYLE STAR RATING
+========================================= */
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 16px;
+}
+
+.star {
+  font-size: 28px;
+  cursor: pointer;
+  color: #d1d5db; /* light gray */
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.star:hover {
+  transform: scale(1.15);
+}
+
+.star.active {
+  color: #f59e0b; /* Amazon gold */
+}
+
+.star-text {
+  margin-left: 10px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* =========================================
+   REVIEW TEXTAREA (PRO)
+========================================= */
+.modal-box textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.modal-box textarea:focus {
+  outline: none;
+  border-color: #5b6a4f;
+}
+
+.existing-rating {
+  margin-top: 10px;
+}
+
+.rated-stars {
+  display: flex;
+  gap: 4px;
+}
+
+.star {
+  color: #d1d5db;
+  font-size: 16px;
+}
+
+.star.active {
+  color: #f59e0b;
+}
+
+.existing-review {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-header-left {
+    max-width: 100%;
+  }
+
+  .overall-rating-box.top-right {
+    width: 90%;
+    text-align: left;
+  }
+
+  .overall-rating {
+    justify-content: flex-start;
+  }
+}
+
+.review-card{
+  margin-bottom: 25px;
+  border: 2px solid var(--casa-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--casa-surface);
+}

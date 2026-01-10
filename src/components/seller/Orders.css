@@ -1,0 +1,287 @@
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+  --bg: linear-gradient(180deg, #f4f7ef, #e8efdc);
+
+
+  --white: #ffffff;
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+
+  --radius: 14px;
+  --border: rgba(96,110,82,0.15);
+  --shadow: 0 12px 28px rgba(96,110,82,0.12);
+  --ease: 220ms cubic-bezier(.2,.9,.3,1);
+}
+
+/* =========================
+   PAGE LAYOUT
+========================= */
+.orders-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: "Helvetica", Arial, sans-serif;
+}
+
+/* =========================
+   MAIN CONTENT
+========================= */
+.orders-content {
+  flex: 1;
+  padding: 32px 16px 40px;
+  max-width: 950px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  margin-left: 260px; 
+  margin-top: 50px;
+}
+
+.orders-content h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 18px;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+.no-orders {
+  text-align: center;
+  margin-top: 40px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* =========================
+   ORDERS LIST
+========================= */
+.orders-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================
+   ORDER CARD
+========================= */
+.order-item {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+
+.order-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(96,110,82,0.18);
+}
+
+/* Status border indicator */
+.order-item.confirmed {
+  border-left: 5px solid var(--green-mid);
+}
+.order-item.fulfilled {
+  border-left: 5px solid var(--green-dark);
+}
+.order-item.rejected {
+  border-left: 5px solid #b65454;
+}
+
+/* =========================
+   TOP SECTION
+========================= */
+.order-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* =========================
+   BODY
+========================= */
+.order-body {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* LEFT */
+.order-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-status {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.status-label {
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.status-label.confirmed {
+  color: var(--green-dark);
+}
+
+.status-label.fulfilled {
+  color: var(--green-dark);
+}
+
+.status-label.rejected {
+  color: #b65454;
+}
+
+/* =========================
+   SITE LOCATION
+========================= */
+.site-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.site-button {
+  background: transparent;
+  border: none;
+  color: var(--green-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.site-button:hover {
+  text-decoration: underline;
+}
+
+.site-copy {
+  background: var(--green-light);
+  border: none;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--green-dark);
+}
+
+/* =========================
+   ACTIONS
+========================= */
+.order-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.confirm-btn,
+.reject-btn,
+.fulfill-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+/* Confirm */
+.confirm-btn {
+  background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+  color: var(--white);
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Reject */
+.reject-btn {
+  background: #f3e6e6;
+  color: #9a3f3f;
+}
+
+/* Fulfill */
+.fulfill-btn {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+/* =========================
+   BADGES
+========================= */
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.badge.fulfilled {
+  background: #e6f1e3;
+  color: var(--green-dark);
+}
+
+.badge.rejected {
+  background: #f3dede;
+  color: #9a3f3f;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .orders-content {
+    padding: 24px 5vw;
+  }
+
+  .order-body {
+    flex-direction: column;
+  }
+
+  .order-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Mobile fix */
+@media (max-width: 618px) {
+  .orders-content {
+    margin-left: 0;        /* sidebar gone */
+    padding-top: 88px;     /* fixed top nav */
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+

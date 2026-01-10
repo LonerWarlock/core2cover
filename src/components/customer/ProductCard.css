@@ -1,0 +1,518 @@
+/* =========================================
+   GLOBAL THEME COLORS & FONTS (kept)
+========================================= */
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+  --white: #FFFFFF;
+
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.12);
+
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif;
+}
+
+/* =========================================
+   SMALL HELPERS (important for flex shrink)
+========================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.product-card,
+.product-info,
+.product-meta-row,
+.product-image-container {
+  min-width: 0;
+  /* CRITICAL: allow flex children to shrink and avoid overflow */
+}
+
+/* =========================================
+   CARD CONTAINER
+========================================= */
+.product-card {
+  background: var(--white);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #e8eddc;
+  width: 320px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-bottom: 60px;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* =========================================
+   IMAGE
+========================================= */
+.product-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: var(--green-light);
+  overflow: hidden;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  display: block;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* =========================================
+   TOP BADGE
+========================================= */
+.product-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--green-dark);
+  color: var(--white);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+}
+
+/* =========================================
+   INFO SECTION
+========================================= */
+.product-info {
+  padding: 18px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  /* allow text truncation inside flex */
+}
+
+/* Title */
+.product-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--green-dark);
+  margin: 0;
+  letter-spacing: 0.3px;
+  line-height: 1.18;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  /* allow up to 2 lines by default */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+/* Description (one-line on desktop; hidden on mobile) */
+.product-description {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 500;
+  margin: 0;
+
+  /* Multi-line clamp (desktop) */
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* protect against long tokens */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* =========================================
+   PRICE
+========================================= */
+.product-price {
+  margin-top: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  padding-bottom: 40px;
+  gap: 4px;
+  justify-content: center;
+}
+
+.price-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+
+.price-unit {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* =========================================
+   BUTTON
+   - on mobile we use a full-card invisible overlay
+   - pointer-events kept enabled so overlay still clickable
+========================================= */
+.product-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  background: var(--green-dark);
+  color: var(--white);
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(96, 110, 82, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  z-index: 3;
+  pointer-events: auto;
+  /* keep clickable even when transparent */
+}
+
+.product-btn:hover {
+  box-shadow: 0 14px 40px rgba(96, 110, 82, 0.35);
+}
+
+/* =========================================
+   META INFO
+========================================= */
+.product-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 0;
+}
+
+.product-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.product-rating {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.product-price {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 480px) {
+  .product-card {
+    width: 100%;
+  }
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #facc15;
+  margin-bottom: 6px;
+}
+
+.rating-text {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ================================
+   STAR RATING – CASA / AMAZON STYLE
+================================ */
+.stars-inline,
+.stars-large,
+.review-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stars-inline {
+  justify-content: center;
+}
+
+.star {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.star.filled {
+  color: #f59e0b;
+}
+
+.star.half {
+  color: #f59e0b;
+}
+
+.star.empty {
+  color: #d1d5db;
+}
+
+.stars-large .star {
+  font-size: 20px;
+}
+
+.rating-numeric,
+.average-number {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
+.average-number {
+  font-size: 22px;
+}
+
+.out-of {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.rating-count,
+.review-count {
+  color: #6b7280;
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.no-rating {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* ================================
+   REVIEWS (Amazon-like)
+================================ */
+.reviews-section {
+  margin-top: 50px;
+}
+
+.reviews-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+}
+
+.review-item {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 0;
+}
+
+.review-text {
+  font-size: 14px;
+  color: #111827;
+  margin: 6px 0;
+}
+
+.review-meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ================================
+   PAGINATION
+================================ */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  background: #111827;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ================================
+   MOBILE: AMAZON / BOAT STYLE
+================================ */
+@media (max-width: 768px) {
+
+  .product-card {
+    width: 100%;
+    flex-direction: row;
+    padding-bottom: 0;
+    height: 175px;
+    border-radius: 12px;
+    position: relative;
+    padding: 0;
+    /* mobile padding moved into children */
+  }
+
+  /* IMAGE */
+  .product-image-container {
+    width: 120px;
+    height: 100%;
+    flex-shrink: 0;
+    border-radius: 12px 0 0 12px;
+    overflow: hidden;
+  }
+
+  .product-image {
+    object-fit: cover;
+  }
+
+  /* REMOVE BADGE ON MOBILE */
+  .product-badge {
+    display: none;
+  }
+
+  /* INFO */
+  .product-info {
+    padding: 10px 12px;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+    /* *** crucial for preventing overflow */
+  }
+
+  /* TITLE (2-line clamp on mobile) */
+  .product-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    /* clamp to two lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* DESCRIPTION HIDDEN on compact row */
+  .product-description {
+    display: none;
+  }
+
+  /* RATING */
+  .product-rating {
+    justify-content: flex-start;
+    font-size: 12px;
+  }
+
+  /* META */
+  .product-meta-row {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  /* PRICE */
+  .product-price {
+    /* margin: 0; */
+    padding-bottom: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    justify-content: flex-start;
+  }
+
+  /* BUTTON -> FULL CARD CLICK overlay (transparent) */
+  .product-btn {
+    position: absolute;
+    inset: 0;
+    /* fill the card */
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    background: transparent;
+    border-radius: 12px;
+    display: block;
+    pointer-events: auto;
+    /* keep clickable */
+    z-index: 4;
+  }
+
+  /* ensure content is above overlay visually (but overlay still receives click) */
+  .product-info,
+  .product-image-container {
+    z-index: 5;
+    position: relative;
+  }
+
+  /* Clamp/ellipsis for meta fields to avoid overflow */
+  .product-meta,
+  .product-price {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* very long tokens protection */
+  .product-title,
+  .product-meta,
+  .product-price,
+  .product-info {
+    min-width: 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY: focus states
+========================================= */
+button:focus,
+.product-card:focus {
+  outline: 3px solid rgba(145, 165, 110, 0.16);
+  outline-offset: 2px;
+}

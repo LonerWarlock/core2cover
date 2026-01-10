@@ -1,0 +1,667 @@
+/* =========================================
+   GLOBAL THEME COLORS & FONTS
+========================================= */
+:root {
+    --green-dark: #606E52;
+    --green-mid: #91A56E;
+    --green-light: #C0CCA4;
+
+    --text-dark: #474747;
+    --text-muted: #8F8B84;
+
+    --border: rgba(96, 110, 82, 0.15);
+    --radius: 14px;
+
+    --casa-bg: #f7f8f5;
+
+    --white: #FFFFFF;
+
+    --shadow: 0 10px 24px rgba(96, 110, 82, 0.10);
+    --ease: 180ms cubic-bezier(.2, .9, .3, 1);
+
+    --font-ui: "Helvetica", Arial, sans-serif;
+    --font-heading: "Playfair Display", serif;
+}
+
+/* =========================================
+   PAGE LAYOUT
+========================================= */
+.orders-page {
+    background: var(--casa-bg, #f7f8f5);
+    min-height: calc(100vh - 76px);
+    padding: 60px 6vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: var(--font-ui);
+    box-sizing: border-box;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+.orders-header {
+    width: 100%;
+    max-width: 1000px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.orders-title {
+    font-size: 2rem;
+    font-family: var(--font-heading);
+    font-weight: 500;
+    color: var(--green-dark);
+}
+
+.order-search {
+    width: 90%;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    background: var(--white);
+    color: var(--text-dark);
+    outline: none;
+    transition: var(--ease);
+}
+
+.order-search:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(96, 110, 82, 0.20);
+}
+
+/* =========================================
+   ORDERS LIST
+========================================= */
+.orders-lists {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* =========================================
+   ORDER CARD
+========================================= */
+.order-card {
+    display: flex;
+    gap: 18px;
+    background: var(--white);
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: var(--ease);
+}
+
+.order-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(96, 110, 82, 0.18);
+}
+
+/* IMAGE */
+.order-img {
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+/* =========================================
+   ORDER CONTENT
+========================================= */
+.order-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Top section inside card */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.order-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin: 0;
+}
+
+/* STATUS COLORS */
+.order-status {
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.order-status.delivered {
+    color: var(--green-dark);
+}
+
+.order-status.pending {
+    color: #B3833A;
+}
+
+.order-status.cancelled {
+    color: #B65454;
+}
+
+/* META DETAILS */
+.order-meta {
+    display: flex;
+    gap: 14px 24px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    font-size: 0.97rem;
+    color: var(--text-muted);
+}
+
+.order-total {
+    font-weight: 800;
+    color: var(--green-dark);
+}
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+.order-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+/* Track Button */
+.track-btn {
+    background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    color: var(--white);
+    font-weight: 800;
+    cursor: pointer;
+    transition: var(--ease);
+}
+
+.track-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(96, 110, 82, 0.25);
+}
+
+/* Rate Button */
+.rate-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    color: var(--green-dark);
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--ease);
+}
+
+.rate-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* =========================================
+   FOOTER TEXT
+========================================= */
+.no-orders,
+.end-text {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* =========================================
+   RESPONSIVE — TABLETS
+========================================= */
+@media (max-width: 900px) {
+    .orders-page {
+        padding: 40px 4vw;
+    }
+
+    .orders-title {
+        font-size: 1.7rem;
+    }
+
+    .order-card {
+        gap: 14px;
+    }
+
+    .order-img {
+        width: 110px;
+        height: 110px;
+    }
+}
+
+/* =========================================
+   RESPONSIVE — MOBILE
+========================================= */
+@media (max-width: 700px) {
+    .order-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .order-img {
+        width: 100%;
+        height: 200px;
+    }
+
+    .order-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .order-meta {
+        justify-content: center;
+    }
+
+    .order-actions {
+        justify-content: center;
+    }
+}
+
+/* =========================================
+   EXTRA SMALL SCREENS
+========================================= */
+@media (max-width: 420px) {
+    .orders-header {
+        gap: 6px;
+    }
+
+    .orders-title {
+        font-size: 1.5rem;
+    }
+
+    .order-search {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .order-meta {
+        font-size: 0.85rem;
+    }
+
+    .track-btn,
+    .rate-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Rating Modal */
+.rating-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.rating-modal {
+    background: #fff;
+    padding: 24px;
+    width: 320px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.rating-stars {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.star {
+    font-size: 26px;
+    cursor: pointer;
+    color: #d1d5db;
+}
+
+.star.active {
+    color: #facc15;
+}
+
+.rating-modal textarea {
+    width: 100%;
+    height: 80px;
+    margin-bottom: 14px;
+    padding: 8px;
+}
+
+.rating-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.cancel-btn {
+    background-color: #B65454;
+    width: 45%;
+    height: 50px;
+    color: var(--white);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.submit-btn {
+    background: linear-gradient(90deg, var(--green-dark));
+    width: 45%;
+    height: 50px;
+    border: none;
+    color: var(--white);
+    font-weight: 800;
+    cursor: pointer;
+    transition: var(--ease);
+    border-radius: var(--radius);
+}
+
+.order-status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-processing {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.status-confirmed {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-delivered {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.status-cancelled {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.already-rated {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #16a34a;
+    /* green */
+}
+
+.rate-btn.disabled {
+    background: #e5e7eb;
+    color: #6b7280;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Rated badge (green pill with check) */
+.rated-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(180deg, #e9f7ea 0%, #e1f0d9 100%);
+    color: #2f6a3a;
+    border: 1px solid rgba(41, 112, 56, 0.12);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 6px 18px rgba(41, 112, 56, 0.06);
+    cursor: default;
+    user-select: none;
+}
+
+/* Check icon inside badge */
+.rated-badge .rated-icon {
+    color: #2f6a3a;
+    /* same green as text */
+    background: rgba(47, 106, 58, 0.08);
+    padding: 4px;
+    border-radius: 999px;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+/* If you previously used .rate-btn.disabled style, keep it, but no need to show it */
+.rate-btn {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.rate-btn:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+}
+
+/* Keep .order-card / layout styles consistent - minimal additions: */
+.order-card {
+    display: flex;
+    gap: 16px;
+    background: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+.order-img {
+    width: 120px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.order-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.order-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.order-status {
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.status-delivered {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid rgba(22, 101, 52, 0.08);
+}
+
+.status-cancelled {
+    background: #fff5f5;
+    color: #b91c1c;
+    border: 1px solid rgba(185, 28, 28, 0.06);
+}
+
+.status-confirmed {
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid rgba(67, 56, 202, 0.06);
+}
+
+.status-processing {
+    background: #f8fafc;
+    color: #374151;
+    border: 1px solid rgba(55, 65, 81, 0.04);
+}
+
+/* rating area */
+.order-rating {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.order-review {
+    width: 100%;
+    min-height: 64px;
+    resize: vertical;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #e6e6e6;
+}
+
+.track-btn {
+    background: #91A56E;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.track-btn:hover {
+    opacity: 0.95;
+}
+
+/* small responsive niceties */
+@media (max-width:700px) {
+    .order-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .order-img {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+/* =========================
+   RATED BADGE (CARD)
+========================= */
+
+.rated-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+
+    margin-top: 10px;
+    padding: 6px 12px;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    color: #16a34a;
+    background: #ecfdf5;
+    border: 1px solid #86efac;
+    border-radius: 999px;
+}
+
+.rated-pill {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.status-return-requested {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.status-returned {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.status-return-rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.cancel-btn {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.cancel-btn:hover {
+    background: #fecaca;
+}
+
+.refund-method {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    margin: 6px 0;
+}
+
+.status-out-for-delivery {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fdba74;
+}
+
+.status-refund-completed {
+  background: #dcfce7;
+  color: #047857;
+  font-weight: 600;
+}

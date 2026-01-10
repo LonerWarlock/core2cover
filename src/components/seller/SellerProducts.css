@@ -1,0 +1,430 @@
+/* =========================================
+   CASA – Natural Interior (Olive / Sage)
+   Prefix: ms-
+========================================= */
+
+:root {
+  --ms-sidebar-w: 220px;
+
+  --ms-bg: #f4f6f1;
+  --ms-surface: #ffffff;
+  --ms-primary: #6b7c5c;
+  --ms-primary-dark: #4f5e44;
+  --ms-accent: #a8b79c;
+  --ms-ink: #2f332b;
+  --ms-muted: #7a7f75;
+
+  --ms-radius: 14px;
+  --ms-shadow: 0 14px 34px rgba(79, 94, 68, 0.12);
+  --ms-border: rgba(79, 94, 68, 0.12);
+}
+
+/* ===============================
+   ROOT & LAYOUT
+================================ */
+.ms-root {
+  min-height: 100vh;
+  background: var(--ms-bg);
+}
+
+.ms-main {
+  margin-left: var(--ms-sidebar-w);
+  padding: 22px;
+  max-width: 1440px;
+}
+
+.ms-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--ms-ink);
+  margin-bottom: 14px;
+}
+
+/* ===============================
+   GRID & CARD
+================================ */
+.ms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+.ms-card {
+  background: var(--ms-surface);
+  border-radius: var(--ms-radius);
+  box-shadow: var(--ms-shadow);
+  border: 1px solid var(--ms-border);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  transition: 0.25s ease;
+}
+
+.ms-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px rgba(79, 94, 68, 0.18);
+}
+
+.ms-thumb {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* ===============================
+   CARD BODY
+================================ */
+.ms-body {
+  margin-top: 12px;
+}
+
+.ms-name {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--ms-ink);
+}
+
+.ms-price {
+  margin-top: 4px;
+  font-weight: 800;
+  color: var(--ms-primary);
+}
+
+.ms-desc {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: var(--ms-muted);
+  line-height: 1.5;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ms-meta {
+  margin-top: 6px;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+/* ===============================
+   STOCK COLORS
+================================ */
+.stock-available strong {
+  color: #16a34a;
+}
+
+.stock-out_of_stock strong {
+  color: #dc2626;
+}
+
+.stock-low_stock strong {
+  color: #ca8a04;
+}
+
+.stock-discontinued strong {
+  color: #6b7280;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+.ms-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.ms-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s ease;
+}
+
+/* Primary */
+.ms-btn--primary {
+  background: linear-gradient(90deg,
+      var(--ms-primary),
+      var(--ms-primary-dark));
+  color: #fff;
+}
+
+.ms-btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+/* Outline */
+.ms-btn--outline {
+  background: transparent;
+  border: 1px solid var(--ms-border);
+  color: var(--ms-ink);
+}
+
+.ms-btn--outline:hover {
+  background: rgba(107, 124, 92, 0.08);
+}
+
+/* Ghost */
+.ms-btn--ghost {
+  background: transparent;
+  border: 1px dashed var(--ms-border);
+  color: var(--ms-muted);
+}
+
+.ms-btn--ghost:hover {
+  background: rgba(107, 124, 92, 0.06);
+}
+
+/* Danger */
+.ms-btn--danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ms-btn--danger:hover {
+  background: #fecaca;
+}
+
+/* ===============================
+   EDIT PANEL
+================================ */
+.ms-edit-panel {
+  background: var(--ms-surface);
+  border-radius: var(--ms-radius);
+  padding: 22px;
+  margin-bottom: 28px;
+  box-shadow: var(--ms-shadow);
+  border: 1px solid var(--ms-border);
+}
+
+.ms-edit-header {
+  margin-bottom: 18px;
+}
+
+.ms-edit-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.ms-edit-sub {
+  font-size: 0.9rem;
+  color: var(--ms-muted);
+}
+
+/* ===============================
+   EDIT SECTIONS
+================================ */
+.ms-edit-section {
+  margin-top: 22px;
+}
+
+.ms-edit-section-title {
+  font-size: 1rem;
+  font-weight: 900;
+  margin-bottom: 12px;
+  color: var(--ms-ink);
+}
+
+/* ===============================
+   FORM GRID
+================================ */
+.ms-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.ms-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.ms-full {
+  grid-column: 1 / -1;
+}
+
+.ms-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ms-muted);
+  margin-bottom: 6px;
+}
+
+/* Inputs */
+.ms-input,
+.ms-select,
+.ms-textarea,
+.ms-file {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-border);
+  font-weight: 800;
+}
+
+.ms-input:focus,
+.ms-select:focus,
+.ms-textarea:focus {
+  outline: none;
+  border-color: var(--ms-primary);
+  box-shadow: 0 0 0 3px rgba(107, 124, 92, 0.15);
+}
+
+.ms-textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+/* ===============================
+   MEDIA GRID
+================================ */
+.ms-media-grid {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ms-media-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ms-preview {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--ms-border);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   EDIT ACTIONS
+================================ */
+.ms-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  .ms-main {
+    margin-left: 0;
+    padding: 16px;
+    padding-left: 260px;
+  }
+
+  .ms-actions {
+    flex-direction: column;
+  }
+
+  .ms-edit-actions {
+    flex-direction: column;
+  }
+
+  .ms-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 642px){
+  .ms-main {
+    margin-left: 0;
+    padding: 16px;
+  }
+}
+
+/* =========================================
+   RATINGS & REVIEWS – SELLER VIEW
+========================================= */
+
+.ms-reviews-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(79, 94, 68, 0.15);
+  box-shadow: 0 14px 34px rgba(79, 94, 68, 0.12);
+  padding: 18px;
+  margin-bottom: 26px;
+}
+
+/* Title */
+.ms-reviews-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #2f332b;
+  margin-bottom: 12px;
+}
+
+/* Rating summary row */
+.ms-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* Stars */
+.ms-stars svg {
+  color: #facc15;
+  /* gold */
+  font-size: 1.05rem;
+}
+
+/* Rating number */
+.ms-rating-number {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #2f332b;
+}
+
+/* Rating count */
+.ms-rating-count {
+  font-size: 0.9rem;
+  color: #7a7f75;
+}
+
+/* Reviews list */
+.ms-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Single review */
+.ms-review-card {
+  padding-top: 12px;
+  border-top: 1px solid rgba(79, 94, 68, 0.15);
+}
+
+/* Review user */
+.ms-review-user {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #2f332b;
+}
+
+/* Review text */
+.ms-review-text {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #7a7f75;
+}
+
+/* Empty state */
+.ms-no-reviews {
+  font-size: 0.9rem;
+  color: #7a7f75;
+}

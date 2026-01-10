@@ -1,0 +1,361 @@
+/* =========================================
+   GLOBAL THEME COLORS & FONTS
+========================================= */
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+  --white: #FFFFFF;
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif;
+}
+
+/* =========================================
+   NAVBAR BASE
+========================================= */
+.navbar {
+  background-color: var(--white);
+  color: var(--text-dark);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-shadow: var(--shadow-soft);
+  border-bottom: 1px solid #e8eddc;
+  font-family: var(--font-ui);
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* =========================================
+   LOGO
+========================================= */
+.logo {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--green-dark);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+}
+
+/* =========================================
+   SEARCH FORM (DESKTOP + MOBILE)
+========================================= */
+.nav-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* MAIN SEARCH PILL */
+.search_form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  width: 420px;
+  max-width: 100%;
+  height: 44px;
+
+  padding: 0 16px;
+
+  background-color: var(--green-light);
+  border-radius: 999px;
+  border: 1px solid #dbe6c6;
+
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+/* MOBILE VARIANT */
+.search_form.mobile {
+  width: 100%;
+  padding: 0 14px;
+}
+
+/* INPUT */
+.search_input {
+  flex: 1;
+  height: 100%;
+
+  background: none;
+  border: none;
+  outline: none;
+
+  font-size: 14px;
+  color: var(--green-dark);
+  font-family: var(--font-ui);
+
+  padding: 0;
+}
+
+/* ICON */
+.search-ico {
+  font-size: 16px;
+  color: var(--green-dark);
+  opacity: 0.75;
+}
+
+/* BUTTON (NO BACKGROUND AS REQUESTED) */
+.search_button {
+  height: 100%;
+  padding: 0 6px;
+
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search_button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* FOCUS EFFECT */
+.search_form:focus-within {
+  background-color: var(--white);
+  box-shadow: 0 0 0 2px rgba(96, 110, 82, 0.25);
+}
+
+/* =========================================
+   MOBILE SEARCH CONTAINER
+========================================= */
+.search-container {
+  display: none;
+  background: var(--white);
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8eddc;
+}
+
+/* =========================================
+   RIGHT SECTION
+========================================= */
+.nav-right {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav-link,
+.cart-btn {
+  text-decoration: none;
+  color: var(--text-dark);
+  transition: color 0.25s;
+  font-family: var(--font-ui);
+}
+
+.nav-links li {
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-links li:hover {
+  color: var(--green-dark);
+}
+
+/* =========================================
+   SELLER / DESIGNER BUTTON
+========================================= */
+.seller-btn {
+  background: var(--green-dark);
+  color: var(--white);
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  transition: background 0.25s ease;
+  text-decoration: none;
+}
+
+.seller-btn:hover {
+  background: var(--green-mid);
+}
+
+/* =========================================
+   HAMBURGER
+========================================= */
+.hamburger {
+  display: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--green-dark);
+  margin-left: 10px;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 1024px) {
+  .nav-center {
+    display: none;
+  }
+
+  .search-container {
+    display: block;
+  }
+
+  .nav-container {
+    padding: 12px 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-container {
+    padding: 12px 18px;
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background: var(--white);
+    flex-direction: column;
+    gap: 18px;
+    padding: 20px;
+    width: 220px;
+    border-radius: 0 0 0 10px;
+    box-shadow: var(--shadow-soft);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+  }
+
+  .nav-links.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
+
+/* =========================================
+   LOGO AREA
+========================================= */
+.nav-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nav-logo-link {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  text-decoration: none;
+}
+
+.nav-logo-wrap {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  overflow: visible;
+}
+
+.nav-logo {
+  width: 60px;
+  transform: scale(1.35);
+  transform-origin: left center;
+}
+
+@media (max-width: 480px) {
+  .nav-logo {
+    transform: scale(1.15);
+  }
+}
+
+/* =========================================
+   OVERRIDE GLOBAL SUBMIT BUTTON (SEARCH ONLY)
+========================================= */
+.search_form .search_button {
+  margin: 0 !important;
+  height: 100% !important;
+
+  background: none !important;
+  box-shadow: none !important;
+
+  border-radius: 0 !important;
+  font-weight: normal !important;
+
+  color: var(--green-dark) !important;
+}
+
+/* icon sizing consistency */
+.search_form .search_button svg {
+  font-size: 16px;
+}
+
+/* =========================================
+   FIX INNER WHITE INPUT
+========================================= */
+.search_input {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+
+  box-shadow: none !important;
+  border-radius: 0 !important;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+@media (max-width: 900px) {
+  .nav-logo {
+    width: 48px;
+  }
+
+  .brand {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .brand {
+    display: none;
+  }
+
+  .nav-logo {
+    width: 46px;
+  }
+
+  .nav-logo-wrap {
+    gap: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-logo {
+    width: 42px;
+  }
+}

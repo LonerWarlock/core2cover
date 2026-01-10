@@ -1,0 +1,145 @@
+:root {
+  --dark-gray: #474747;
+  --warm-gray: #8f8b84;
+  --olive: #606e52;
+  --sage: #91a56e;
+  --light-sage: #c0cca4;
+  --white: #ffffff;
+}
+
+/* Page */
+.seller-kyc-page {
+  min-height: 100vh;
+  background: #f5f4ee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/* Card */
+.seller-kyc-card {
+  max-width: 540px;
+  width: 100%;
+  background: var(--white);
+  padding: 38px 34px;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(60, 80, 60, 0.12);
+}
+
+/* Titles */
+.seller-kyc-title {
+  font-family: "Big Caslon", serif;
+  font-size: 32px;
+  color: var(--dark-gray);
+}
+
+.seller-kyc-subtitle {
+  font-family: Helvetica, sans-serif;
+  font-size: 14px;
+  color: var(--warm-gray);
+  margin-bottom: 30px;
+}
+
+/* Fields */
+.seller-kyc-field,
+.seller-kyc-file {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 22px;
+}
+
+.seller-kyc-field label,
+.seller-kyc-file label {
+  font-family: Helvetica, sans-serif;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.seller-kyc-field input,
+.seller-kyc-file input {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  font-size: 14px;
+}
+
+.seller-kyc-field input:focus,
+.seller-kyc-file input:focus {
+  outline: none;
+  border-color: var(--sage);
+  background: var(--white);
+}
+
+/* PAN Row */
+.seller-kyc-pan-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+/* Verify Button */
+.seller-kyc-verify-btn {
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: none;
+  background: var(--olive);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.seller-kyc-verify-btn.verifying {
+  background: var(--warm-gray);
+}
+
+.seller-kyc-verify-btn.verified {
+  background: var(--sage);
+}
+
+.seller-kyc-verify-btn.failed {
+  background: #b64545;
+}
+
+/* Checkbox */
+.seller-kyc-checkbox {
+  display: flex;
+  gap: 10px;
+  margin: 26px 0 8px;
+  font-size: 13px;
+}
+
+/* Error */
+.seller-kyc-error {
+  font-size: 12px;
+  color: #b64545;
+  margin-top: 4px;
+}
+
+/* Security note */
+.seller-kyc-note {
+  font-size: 12px;
+  color: var(--warm-gray);
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+/* Submit */
+.seller-kyc-submit {
+  width: 100%;
+  padding: 15px;
+  margin-top: 22px;
+  border-radius: 16px;
+  border: none;
+  background: var(--olive);
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.seller-kyc-submit:hover {
+  background: var(--sage);
+}

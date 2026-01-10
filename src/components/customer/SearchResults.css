@@ -1,0 +1,206 @@
+/* =========================================
+   GLOBAL THEME COLORS & FONTS
+========================================= */
+:root {
+  --bg: linear-gradient(180deg, #fafaf8, #f1f1ec);
+  --panel: #ffffff;
+
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+
+  --muted: #8F8B84;
+  --title: #474747;
+
+  --card-shadow: 0 12px 36px rgba(96, 110, 82, 0.12);
+  --glass-border: rgba(96, 110, 82, 0.15);
+
+  --radius: 14px;
+  --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+
+  --btn-primary-bg: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+  --btn-primary-border: rgba(96, 110, 82, 0.25);
+
+  --btn-ghost-bg: rgba(96, 110, 82, 0.06);
+  --btn-ghost-border: rgba(96, 110, 82, 0.12);
+
+  --btn-danger-bg: linear-gradient(90deg, #c0392b, #e74c3c);
+
+  --container-max: 100%;
+
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif;
+}
+
+/* =========================================
+   PAGE WRAPPER
+========================================= */
+.results {
+  padding: 2rem 0rem 2rem;
+  background: var(--bg);
+  max-width: var(--container-max);
+  margin: 0 auto;
+  /* background: var(--bg); */
+  color: var(--title);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  display: block;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+.results h2 {
+  margin-left: 50px;
+  font-size: 1.9rem;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  color: var(--green-dark);
+  letter-spacing: -0.015em;
+
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  /* background: rgba(96, 110, 82, 0.08); */
+
+  box-shadow: 0 8px 24px rgba(96, 110, 82, 0.08);
+  transform-origin: left center;
+  animation: titleFloat 900ms var(--ease) both;
+}
+
+.results p {
+  margin: 8px 0 24px;
+  margin-left: 50px;
+  color: var(--muted);
+  font-weight: 600;
+  font-family: var(--font-ui);
+}
+
+/* Highlight search term */
+.results strong {
+  color: var(--green-dark);
+  background: linear-gradient(90deg, rgba(96, 110, 82, 0.14), rgba(96, 110, 82, 0.05));
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  border: 1px solid rgba(96, 110, 82, 0.12);
+  width: 40%;
+}
+
+/* Spacing for elements */
+.results > *:not(h2):not(p) {
+  margin-top: 22px;
+}
+
+/* =========================================
+   PRODUCT CARDS
+========================================= */
+.results .display-card {
+  opacity: 0;
+  transform: translateY(14px) scale(0.995);
+  animation: cardEntrance 520ms var(--ease) both;
+
+  border: 1px solid rgba(96, 110, 82, 0.15);
+  border-radius: var(--radius);
+}
+
+.results .display-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 80px rgba(96, 110, 82, 0.18);
+}
+
+/* Stagger animation */
+.results .display-card:nth-of-type(1) { animation-delay: 0ms; }
+.results .display-card:nth-of-type(2) { animation-delay: 100ms; }
+.results .display-card:nth-of-type(3) { animation-delay: 200ms; }
+.results .display-card:nth-of-type(4) { animation-delay: 300ms; }
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
+.btn-primary {
+  padding: 8px 12px;
+  background: var(--btn-primary-bg);
+  color: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--btn-primary-border);
+  font-weight: 700;
+  font-family: var(--font-ui);
+  cursor: pointer;
+
+  box-shadow: 0 10px 30px rgba(96, 110, 82, 0.16);
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 46px rgba(96, 110, 82, 0.22);
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.996);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.002);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes titleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.998);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+@media (max-width: 767px) {
+  .results {
+    padding: 4rem 1rem 2rem;
+  }
+
+  .results h2 {
+    font-size: 1.45rem;
+    padding: 8px 12px;
+  }
+
+  .results p {
+    font-size: 0.9rem;
+  }
+
+  .results .display-card {
+    animation-duration: 420ms;
+  }
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+@media (prefers-reduced-motion: reduce) {
+  .results h2,
+  .results .display-card {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}

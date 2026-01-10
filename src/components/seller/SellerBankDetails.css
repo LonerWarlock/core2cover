@@ -1,0 +1,72 @@
+/* ===============================
+   SELLER BANK DETAILS – CASA
+=============================== */
+
+.bs-bank-form {
+  max-width: 520px;
+  margin-top: 14px;
+  display: grid;
+  gap: 14px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Labels */
+.bs-bank-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--bs-muted);
+}
+
+/* Inputs */
+.bs-bank-form input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(96, 110, 82, 0.25);
+  background: #ffffff;
+  color: var(--bs-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bs-bank-form input:focus {
+  outline: none;
+  border-color: var(--bs-green-mid);
+  box-shadow: 0 0 0 3px rgba(145, 165, 110, 0.25);
+}
+
+/* Save button */
+.bs-bank-form .bs-btn {
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+/* ===============================
+   INFO NOTE (OPTIONAL)
+=============================== */
+.bs-bank-note {
+  font-size: 0.85rem;
+  color: var(--bs-muted);
+  margin-top: 6px;
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+@media (max-width: 768px) {
+  .bs-bank-form {
+    max-width: 100%;
+  }
+
+  .bs-bank-form input {
+    font-size: 0.9rem;
+  }
+
+  .bs-bank-form .bs-btn {
+    width: 100%;
+  }
+}

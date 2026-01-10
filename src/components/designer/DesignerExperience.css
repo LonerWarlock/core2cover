@@ -1,0 +1,293 @@
+/* ===========================================================
+   DESIGN TOKENS
+   =========================================================== */
+:root {
+  --de-gray-dark: #474747;
+  --de-gray-mid: #8f8b84;
+
+  --de-green-dark: #606e52;
+  --de-green-mid: #91a56e;
+  --de-green-light: #c0cca4;
+
+  --de-white: #ffffff;
+  --de-bg: #f7f7f3;
+
+  --de-card-bg: rgba(255, 255, 255, 0.88);
+  --de-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+  --de-radius-lg: 18px;
+  --de-radius-md: 14px;
+
+  --de-font-ui: Helvetica, sans-serif;
+  --de-font-serif: "Big Caslon", serif;
+
+  --de-transition: 260ms cubic-bezier(.2, .9, .3, 1);
+}
+
+/* ===========================================================
+   PAGE WRAPPER
+   =========================================================== */
+.de-page {
+  padding: 120px 6vw 60px;
+  background: linear-gradient(180deg, #fafaf7, #f4f7f2);
+  min-height: 100vh;
+  font-family: var(--de-font-ui);
+}
+
+/* ===========================================================
+   PAGE HEADER
+   =========================================================== */
+.de-header {
+  text-align: center;
+  margin-bottom: 42px;
+}
+
+.de-title {
+  font-family: var(--de-font-serif);
+  font-size: 2.4rem;
+  color: var(--de-gray-dark);
+  margin: 0;
+}
+
+.de-subtitle {
+  color: var(--de-gray-mid);
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+/* ===========================================================
+   EMPTY STATE
+   =========================================================== */
+.de-empty {
+  text-align: center;
+  padding: 56px;
+}
+
+.de-empty img {
+  width: 140px;
+  opacity: 0.85;
+  margin-bottom: 18px;
+}
+
+.de-empty-text {
+  color: var(--de-gray-mid);
+  font-size: 1.1rem;
+  margin-bottom: 18px;
+}
+
+.de-empty-btn {
+  background: var(--de-green-mid);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: var(--de-radius-md);
+  cursor: pointer;
+  transition: var(--de-transition);
+  font-size: 1rem;
+}
+
+.de-empty-btn:hover {
+  background: var(--de-green-dark);
+  transform: translateY(-2px);
+}
+
+/* ===========================================================
+   EXPERIENCE LIST
+   =========================================================== */
+.de-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ===========================================================
+   EXPERIENCE ITEM (CARD)
+   =========================================================== */
+.de-item {
+  display: flex;
+  gap: 26px;
+  background: var(--de-card-bg);
+  border-radius: var(--de-radius-lg);
+  box-shadow: var(--de-shadow);
+  padding: 22px;
+  align-items: flex-start;
+  transition: var(--de-transition);
+}
+
+.de-item:hover {
+  transform: translateY(-4px);
+}
+
+/* ===========================================================
+   IMAGE BLOCK
+   =========================================================== */
+.de-image {
+  width: 45%;
+  min-height: 220px;
+  border-radius: var(--de-radius-lg);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: #ecece7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.de-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.de-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.95rem;
+  color: var(--de-gray-mid);
+}
+
+.de-image-placeholder svg {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+/* hide input */
+.de-image input {
+  display: none;
+}
+
+/* ===========================================================
+   DETAILS / DESCRIPTION
+   =========================================================== */
+.de-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.de-description {
+  width: 96%;
+  min-height: 140px;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid #dcdcd4;
+  background: #ffffffcc;
+  color: var(--de-gray-dark);
+  resize: none;
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--de-transition);
+}
+
+.de-description:focus {
+  border-color: var(--de-green-dark);
+  box-shadow: 0 0 0 3px rgba(144, 165, 110, 0.25);
+}
+
+/* ===========================================================
+   ACTION BUTTONS
+   =========================================================== */
+.de-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.de-save-btn,
+.de-delete-btn {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--de-transition);
+  font-size: 0.9rem;
+}
+
+.de-save-btn {
+  background: var(--de-green-light);
+  color: var(--de-green-dark);
+}
+
+.de-save-btn:hover:not(:disabled) {
+  background: var(--de-green-mid);
+  color: #fff;
+}
+
+.de-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.de-delete-btn {
+  background: #f8e4e4;
+  color: #c94a4a;
+}
+
+.de-delete-btn:hover {
+  background: #e8bcbc;
+}
+
+/* ===========================================================
+   ADD WORK BUTTON
+   =========================================================== */
+.de-add-btn {
+  margin: 42px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--de-green-mid);
+  color: white;
+  padding: 14px 22px;
+  border-radius: var(--de-radius-lg);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: var(--de-transition);
+}
+
+.de-add-btn:hover:not(.de-disabled) {
+  background: var(--de-green-dark);
+  transform: translateY(-2px);
+}
+
+.de-add-btn.de-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ===========================================================
+   REVEAL ANIMATION (SCOPED)
+   =========================================================== */
+.de-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: deRevealFade 0.7s ease forwards;
+}
+
+@keyframes deRevealFade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===========================================================
+   RESPONSIVE
+   =========================================================== */
+@media (max-width: 920px) {
+  .de-item {
+    flex-direction: column;
+  }
+
+  .de-image {
+    width: 100%;
+    height: 240px;
+  }
+}

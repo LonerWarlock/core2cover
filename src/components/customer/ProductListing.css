@@ -1,0 +1,140 @@
+/* =========================================
+   GLOBAL FONTS & COLORS (Theme Setup)
+========================================= */
+:root {
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif; /* Big Caslon Substitute */
+  
+  /* THEME COLORS */
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+  --white: #FFFFFF;
+}
+
+/* ============ SECTION HEADER ============ */
+.products-section {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: var(--white);
+  font-family: var(--font-ui);
+}
+
+.products-title {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  font-weight: 500; /* Big Caslon look */
+  color: var(--green-dark);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.products-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-family: var(--font-ui);
+  margin-bottom: 28px;
+}
+
+/* ============ FILTER BUTTONS ============ */
+.category-filter {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.category-filter button {
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 600;
+  font-family: var(--font-ui);
+  border: none;
+  outline: none;
+  padding: 10px 24px;
+  border-radius: 22px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.category-filter button:hover {
+  background: var(--green-mid);
+  color: var(--white);
+}
+
+.category-filter button.active {
+  background: var(--green-dark);
+  color: var(--white);
+}
+
+/* ============ MATERIAL GRID ============ */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 80px;
+  padding: 60px 4vw 40px;
+  justify-items: center;
+  box-sizing: border-box;
+}
+
+/* Card container
+.product-grid .material-card {
+  max-width: 300px;
+  width: 100%;
+  background: var(--white);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.product-grid .material-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.12);
+} */
+
+/* ============ RESPONSIVE DESIGN ============ */
+@media (max-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-section {
+    padding: 40px 10px;
+  }
+
+  .products-title {
+    font-size: 2rem;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-buttons {
+    gap: 10px;
+  }
+
+  .filter-btn {
+    padding: 8px 18px;
+    font-size: 0.9rem;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px 3vw;
+  }
+}

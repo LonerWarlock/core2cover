@@ -1,0 +1,348 @@
+/* =========================================
+   CASA THEME VARIABLES
+========================================= */
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+  --bg: linear-gradient(180deg, #f4f7ef, #e8efdc);
+
+  --white: #ffffff;
+  --bg-soft: #F3F7EC;
+
+  --text-dark: #474747;
+  --text-muted: #8F8B84;
+
+  --radius: 14px;
+  --border: rgba(96,110,82,0.25);
+  --shadow: 0 16px 42px rgba(96,110,82,0.18);
+  --ease: 220ms cubic-bezier(.2,.9,.3,1);
+
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif;
+}
+
+/* =========================================
+   ROOT LAYOUT
+========================================= */
+.sma-root {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+  font-family: var(--font-ui);
+}
+
+/* MAIN CONTENT */
+.sma-main {
+  flex: 1;
+  padding: 90px 6vw 40px;
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================================
+   CARD
+========================================= */
+.sma-card {
+  width: 100%;
+  max-width: 860px;
+  background: var(--white);
+  padding: 32px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.5s ease forwards;
+  margin-left: 220px;
+}
+
+/* TITLE */
+.sma-title {
+  font-family: var(--font-heading);
+  font-size: 1.9rem;
+  font-weight: 500;
+  color: var(--green-dark);
+  margin-bottom: 24px;
+}
+
+/* =========================================
+   GRID
+========================================= */
+.sma-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 20px;
+}
+
+.sma-full {
+  grid-column: 1 / -1;
+}
+
+/* =========================================
+   FIELDS
+========================================= */
+.sma-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sma-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+/* INPUTS */
+.sma-input,
+.sma-textarea,
+.sma-file {
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #f9faf7;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--ease), box-shadow var(--ease);
+}
+
+.sma-input:focus,
+.sma-textarea:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 3px rgba(96,110,82,0.22);
+}
+
+.sma-input:disabled {
+  background: #eef2e6;
+  cursor: not-allowed;
+}
+
+/* TEXTAREA */
+.sma-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* FILE INPUT */
+.sma-file {
+  background: var(--white);
+  cursor: pointer;
+}
+
+/* =========================================
+   IMAGE PREVIEW GRID
+========================================= */
+.sma-preview-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.sma-preview {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  background: #f1f4ea;
+}
+
+/* VIDEO PREVIEW */
+video.sma-preview {
+  height: 200px;
+}
+
+/* =========================================
+   ACTIONS
+========================================= */
+.sma-actions {
+  margin-top: 26px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sma-btn {
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+
+/* PRIMARY */
+.sma-btn--primary {
+  background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+  color: var(--white);
+}
+
+.sma-btn--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(96,110,82,0.28);
+}
+
+.sma-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   ANIMATION
+========================================= */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 900px) {
+  .sma-main {
+    padding: 80px 4vw 30px;
+  }
+}
+
+@media (max-width: 680px) {
+  .sma-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sma-title {
+    font-size: 1.6rem;
+  }
+
+  .sma-preview {
+    height: 100px;
+  }
+
+  video.sma-preview {
+    height: 180px;
+  }
+}
+
+/* When image container is fullscreen */
+.pd-image-box:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image must fit viewport */
+.pd-image-box:fullscreen .pd-image {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* 🔥 KEY */
+}
+
+/* Prevent overflow caused by inherited styles */
+.pd-image-box:fullscreen img,
+.pd-image-box:fullscreen video {
+  overflow: hidden;
+}
+
+/* Fullscreen container */
+.pd-image-box:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Video wrapper takes full screen */
+.pd-image-box:fullscreen .pd-video-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+/*  VIDEO ITSELF */
+.pd-image-box:fullscreen .pd-video {
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+
+  object-fit: contain; /*  NO CROP, NO STRETCH */
+  background: #000;
+}
+
+/* Prevent overflow */
+.pd-image-box:fullscreen video {
+  overflow: hidden;
+}
+
+@media (max-width: 426px){
+  .sma-main{
+    padding-left: 0%;
+  }
+
+  .sma-card{
+    margin-left: 5%;
+  }
+}
+
+@media (max-width: 768px) {
+  .sma-root {
+    flex-direction: column;
+  }
+
+  .sma-main {
+    padding: 72px 5vw 28px;
+  }
+
+  .sma-card {
+    padding: 22px;
+    border-radius: 12px;
+  }
+
+  .sma-grid {
+    grid-template-columns: 1fr; /* 🔥 single column */
+    gap: 14px;
+  }
+
+  .sma-title {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .sma-actions {
+    justify-content: center;
+  }
+
+  .sma-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .sma-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  }
+
+  .sma-preview {
+    height: 96px;
+  }
+
+  video.sma-preview {
+    height: 160px;
+  }
+}

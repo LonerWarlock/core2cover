@@ -1,0 +1,198 @@
+/* =========================================
+   GLOBAL THEME COLORS & FONTS
+========================================= */
+:root {
+  --green-dark: #606E52;        /* Deep elegant green */
+  --green-mid: #91A56E;         /* Soft botanical green */
+  --green-light: #C0CCA4;       /* Pastel green */
+
+  --text-dark: #474747;         /* Warm charcoal */
+  --text-muted: #8F8B84;        /* Muted warm gray */
+
+  --bg: linear-gradient(180deg, #F3F7EC, #E6EFD6);
+
+  --border: rgba(96,110,82,0.20);
+  --shadow: 0 12px 40px rgba(96,110,82,0.14);
+
+  --radius: 14px;
+
+  --font-ui: "Helvetica", Arial, sans-serif;
+  --font-heading: "Playfair Display", serif;
+}
+
+/* =========================================
+   PAGE WRAPPER
+========================================= */
+.contact-page {
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 60px 6vw;
+  font-family: var(--font-ui);
+}
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+.contact-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 1150px;
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 40px;
+}
+
+/* =========================================
+   LEFT SIDE – FORM
+========================================= */
+.contact-left h2 {
+  color: var(--green-dark);
+  font-size: 1.9rem;
+  font-weight: 500;
+  font-family: var(--font-heading);
+  margin-bottom: 10px;
+}
+
+.contact-left p {
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* Form */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* Inputs */
+.form-group input,
+.form-group textarea {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--white);
+  color: var(--text-dark);
+  outline: none;
+  transition: border .2s ease, box-shadow .2s ease;
+}
+
+/* Focus */
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 3px rgba(96,110,82,0.25);
+}
+
+/* Textarea */
+.form-group textarea {
+  resize: none;
+  height: 120px;
+}
+
+/* Button */
+.contact-btn {
+  background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.contact-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(96,110,82,0.25);
+}
+
+.pd-btn-call{
+  width: 100%;
+}
+
+.pd-btn{
+  margin-top: 10px;
+}
+
+/* =========================================
+   RIGHT SIDE – INFO BOX
+========================================= */
+.contact-right {
+  background: linear-gradient(180deg, #6F7F63 0%, #606E52 100%);
+  color: #F3F7EC;
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Heading */
+.contact-right h3 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: var(--green-light);
+  font-family: var(--font-heading);
+}
+
+/* Text */
+.contact-right p {
+  margin: 6px 0;
+  font-weight: 600;
+  color: #F3F7EC;
+}
+
+/* Map */
+.contact-map {
+  margin-top: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contact-map iframe {
+  width: 100%;
+  height: 200px;
+  border: none;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 900px) {
+  .contact-container {
+    grid-template-columns: 1fr;
+    padding: 26px;
+  }
+
+  .contact-right {
+    height: auto;
+  }
+
+  .contact-page {
+    padding: 40px 4vw;
+  }
+}

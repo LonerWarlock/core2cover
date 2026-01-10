@@ -1,0 +1,203 @@
+/* ===============================
+   CASA THEME VARIABLES
+=============================== */
+:root {
+  --bg-main: #f4f7ee;
+  --bg-card: #ffffff;
+  --bg: linear-gradient(180deg, #f4f7ef, #e8efdc);
+
+  --green-dark: #5f6d52;
+  --green-mid: #8fa070;
+  --green-light: #d9e2c7;
+
+  --text-dark: #2f2f2f;
+  --text-muted: #7b7b74;
+
+  --shadow-sm: 0 8px 22px rgba(95, 109, 82, 0.14);
+  --shadow-lg: 0 20px 45px rgba(95, 109, 82, 0.22);
+
+  --radius: 16px;
+
+  /* must match sidebar */
+  --sidebar-w: 220px;
+
+  font-family: "Helvetica", Arial, sans-serif;
+}
+
+/* ===============================
+   ROOT LAYOUT
+=============================== */
+.bs-layout-root {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+}
+
+/* ===============================
+   PROFILE CONTAINER
+=============================== */
+.bs-profile-shell {
+  flex: 1;
+  max-width: 900px;
+  margin: 40px auto;
+  margin-left: calc(var(--sidebar-w) + 32px);
+  padding: 24px;
+}
+
+/* ===============================
+   HEADING
+=============================== */
+.bs-heading {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: var(--green-dark);
+  margin-bottom: 20px;
+}
+
+/* ===============================
+   PROFILE CARD
+=============================== */
+.bs-card {
+  background: var(--bg-card);
+  padding: 22px 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(95, 109, 82, 0.12);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bs-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.bs-card strong {
+  color: var(--green-dark);
+}
+
+/* ===============================
+   BUTTONS
+=============================== */
+.bs-btn {
+  margin-top: 14px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 220ms ease;
+}
+
+.bs-btn--primary {
+  background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+  color: #ffffff;
+  box-shadow: var(--shadow-lg);
+}
+
+.bs-btn--primary:hover {
+  transform: translateY(-2px);
+}
+
+.bs-btn--ghost {
+  background: transparent;
+  color: var(--green-dark);
+  border: 1px solid rgba(95, 109, 82, 0.3);
+}
+
+.bs-btn--ghost:hover {
+  background: rgba(95, 109, 82, 0.08);
+}
+
+/* ===============================
+   EDIT FORM
+=============================== */
+.bs-edit-form {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bs-edit-form input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(95, 109, 82, 0.3);
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.bs-edit-form input:focus {
+  outline: none;
+  border-color: var(--green-mid);
+}
+
+.bs-edit-form button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.bs-edit-form button[type="submit"] {
+  background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+  color: #fff;
+}
+
+.bs-edit-form button[type="button"] {
+  background: transparent;
+  color: var(--green-dark);
+  border: 1px solid rgba(95, 109, 82, 0.3);
+}
+
+/* ===============================
+   LOADING STATE
+=============================== */
+.bs-profile-shell h2 {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+@media (max-width: 900px) {
+  .bs-profile-shell {
+    margin-left: 254px;
+    margin-top: 90px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .bs-heading {
+    font-size: 1.45rem;
+    text-align: center;
+  }
+
+  .bs-card,
+  .bs-edit-form {
+    padding: 18px;
+  }
+
+  .bs-btn,
+  .bs-edit-form button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 426px){
+  .bs-profile-shell{
+    margin-left: 0%;
+  }
+}

@@ -1,0 +1,355 @@
+/* =========================================
+   CASA LIGHT THEME ROOT
+========================================= */
+:root {
+  --bg-dark: #F3F7EC;
+  --panel: linear-gradient(180deg, #FFFFFF, #F8FAF3);
+  --muted: #8F8B84;
+  --text-primary: #474747;
+
+  --accent: linear-gradient(90deg, #606E52, #91A56E);
+  --accent-soft: rgba(96, 110, 82, 0.14);
+
+  --glass: rgba(0, 0, 0, 0.03);
+  --card-shadow: 0 18px 40px rgba(96, 110, 82, 0.18);
+
+  --radius: 14px;
+  --ease: cubic-bezier(.16, .9, .32, 1);
+
+  --sidebar-width: 220px;
+  --sidebar-collapsed: 72px;
+
+  font-family: Inter, system-ui, -apple-system, "Segoe UI",
+    Roboto, Arial, sans-serif;
+
+  color-scheme: light;
+}
+
+/* =========================================
+   WRAPPER
+========================================= */
+.sidebar-wrapper {
+  position: relative;
+  /* min-height: 100vh; */
+  display: flex;
+  background: transparent;
+}
+
+/* =========================================
+   DESKTOP SIDEBAR
+========================================= */
+.sidebar-panel {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--panel);
+  color: var(--text-primary);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex-shrink: 0;
+  box-shadow: var(--card-shadow);
+  border-right: 1px solid rgba(96, 110, 82, 0.15);
+  box-sizing: border-box;
+  position: fixed;
+  transition: width 260ms var(--ease), transform 260ms var(--ease);
+}
+
+/* =========================================
+   LOGO
+========================================= */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.sidebar-logo .logo-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(96, 110, 82, 0.28);
+}
+
+.sidebar-logo .logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo .logo-text .name {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.sidebar-logo .logo-text .tag {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* =========================================
+   NAV
+========================================= */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* NAV ITEM */
+.sidebar-nav-item {
+  background: transparent;
+  border: none;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 180ms var(--ease),
+    transform 160ms var(--ease),
+    box-shadow 180ms var(--ease);
+  text-align: left;
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.sidebar-nav-item svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.sidebar-nav-item span {
+  font-weight: 800;
+}
+
+/* Hover */
+.sidebar-nav-item:hover,
+.sidebar-nav-item:focus {
+  background: var(--accent-soft);
+  transform: translateY(-2px);
+  outline: none;
+  box-shadow: 0 8px 24px rgba(96, 110, 82, 0.12);
+}
+
+/* Active */
+.sidebar-nav-item.active,
+.sidebar-nav-item[data-active="true"] {
+  background: linear-gradient(90deg,
+      rgba(96, 110, 82, 0.18),
+      rgba(145, 165, 110, 0.12));
+  box-shadow: inset 0 0 0 1px rgba(96, 110, 82, 0.12),
+    0 10px 28px rgba(96, 110, 82, 0.16);
+  position: relative;
+}
+
+.sidebar-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #91A56E, #606E52);
+}
+
+/* =========================================
+   COMPACT MODE (OPTIONAL)
+========================================= */
+.sidebar-panel.compact {
+  width: var(--sidebar-collapsed);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.sidebar-panel.compact .logo-text,
+.sidebar-panel.compact .sidebar-nav-item span {
+  display: none;
+}
+
+.sidebar-panel.compact .sidebar-logo {
+  justify-content: center;
+}
+
+/* =========================================
+   MOBILE NAVBAR
+========================================= */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel);
+  color: var(--text-primary);
+  padding: 0.65rem 1rem;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1200;
+  box-shadow: var(--card-shadow);
+  border-bottom: 1px solid rgba(96, 110, 82, 0.15);
+}
+
+.nav-logo {
+  font-weight: 900;
+}
+
+.nav-hamburger,
+.nav-close {
+  background: var(--glass);
+  border: none;
+  font-size: 1.2rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+
+.nav-hamburger:hover,
+.nav-close:hover {
+  background: var(--accent-soft);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   SLIDE MENU (MOBILE)
+========================================= */
+.nav-menu {
+  position: fixed;
+  top: 0;
+  left: -110%;
+  width: 82%;
+  max-width: 320px;
+  height: 100%;
+  background: var(--panel);
+  padding: 18px;
+  z-index: 1300;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--card-shadow);
+  transition: left 320ms var(--ease);
+}
+
+.nav-menu.active {
+  left: 0;
+}
+
+.nav-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms var(--ease),
+    transform 140ms var(--ease);
+}
+
+.nav-menu-item:hover {
+  background: var(--accent-soft);
+  transform: translateY(-2px);
+}
+
+/* Overlay */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1250;
+  backdrop-filter: blur(2px);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media screen and (max-width: 618px) {
+  .sidebar-panel {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 619px) {
+  .nav {
+    display: none;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+.sidebar-nav-item:focus,
+.nav-menu-item:focus,
+.nav-hamburger:focus,
+.nav-close:focus {
+  outline: 3px solid rgba(96, 110, 82, 0.28);
+  outline-offset: 3px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* =========================
+   SIDEBAR LOGO
+========================= */
+
+.sidebar-logo,
+.nav-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Logo image */
+.sidebar-logo-img {
+  width: 140px;
+  /* consistent with navbar/footer */
+  height: auto;
+  max-height: 36px;
+  /* prevents layout break */
+  object-fit: contain;
+}
+
+/* Mobile navbar logo */
+.nav-logo .sidebar-logo-img {
+  width: 120px;
+  max-height: 32px;
+}
+
+/* Small devices */
+@media (max-width: 480px) {
+  .nav-logo .sidebar-logo-img {
+    width: 100px;
+    max-height: 28px;
+  }
+
+  .nav-logo {
+    position: relative;
+    left: 30%;
+  }
+}

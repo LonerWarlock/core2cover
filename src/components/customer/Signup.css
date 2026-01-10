@@ -1,0 +1,395 @@
+/* =========================================
+   CASA — USER SIGNUP
+   Theme: Soft Green / Premium
+========================================= */
+
+:root {
+  --green-dark: #606e52;
+  --green-mid: #91a56e;
+  --green-light: #c0cca4;
+
+  --bg: linear-gradient(180deg, #f4f7ef, #e8efdc);
+  --card-bg: #ffffff;
+
+  --text-dark: #474747;
+  --text-muted: #8f8b84;
+
+  --border: rgba(96, 110, 82, 0.18);
+  --shadow: 0 22px 60px rgba(96, 110, 82, 0.22);
+
+  --radius: 14px;
+  --ease: 220ms cubic-bezier(.2,.9,.3,1);
+
+  font-family: "Helvetica", Arial, sans-serif;
+}
+
+/* =========================================
+   PAGE WRAPPER
+========================================= */
+.signup-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   SIGNUP CARD
+========================================= */
+.signup-box {
+  width: 100%;
+  max-width: 460px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 30px 26px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* =========================================
+   BRAND
+========================================= */
+.brand-heading {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: var(--green-dark);
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+/* =========================================
+   HEADINGS
+========================================= */
+.signup-title {
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+/* =========================================
+   FORM
+========================================= */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Inputs */
+.signup-form input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-weight: 600;
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color var(--ease),
+              box-shadow var(--ease),
+              transform var(--ease);
+}
+
+.signup-form input::placeholder {
+  color: rgba(71, 71, 71, 0.45);
+}
+
+.signup-form input:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 10px 30px rgba(145, 165, 110, 0.35);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   OTP SECTION — CASA THEME
+========================================= */
+
+.field.full {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* SEND / VERIFY OTP BUTTON */
+.field.full button {
+  background: linear-gradient(
+    135deg,
+    var(--green-mid),
+    var(--green-dark)
+  );
+  color: #fff;
+  border: none;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: transform var(--ease),
+              box-shadow var(--ease),
+              opacity var(--ease);
+  box-shadow: 0 10px 26px rgba(96, 110, 82, 0.25);
+}
+
+/* HOVER */
+.field.full button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(96, 110, 82, 0.35);
+}
+
+/* DISABLED (OTP SENT / VERIFIED) */
+.field.full button:disabled {
+  background: linear-gradient(
+    135deg,
+    var(--green-light),
+    var(--green-mid)
+  );
+  color: var(--text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.85;
+}
+
+/* OTP INPUT */
+.field.full input {
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 6px;
+  background: var(--card-bg);
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color var(--ease),
+              box-shadow var(--ease);
+}
+
+/* OTP INPUT FOCUS */
+.field.full input:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 3px rgba(145, 165, 110, 0.25);
+}
+
+/* VERIFIED TEXT */
+.otp-verified {
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.otp-btn.sent {
+  background: linear-gradient(
+    135deg,
+    var(--green-light),
+    var(--green-mid)
+  );
+  color: var(--text-muted);
+}
+
+/* =========================================
+   PASSWORD FIELDS (PREMIUM)
+========================================= */
+
+/* container */
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* input style */
+.password-wrap input {
+  width: 100%;
+  padding: 13px 46px 13px 14px; /* space for eye toggle */
+  border-radius: 12px;
+  border: 1.5px solid var(--green-light);
+  background: linear-gradient(180deg, #ffffff, #f7f9f4);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  outline: none;
+  transition:
+    border-color var(--ease),
+    box-shadow var(--ease),
+    transform var(--ease);
+}
+
+/* focus */
+.password-wrap input:focus {
+  border-color: var(--green-dark);
+  box-shadow:
+    0 0 0 3px rgba(96, 110, 82, 0.18),
+    0 10px 30px rgba(96, 110, 82, 0.25);
+  transform: translateY(-1px);
+}
+
+/* eye toggle */
+.pw-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--ease),
+    color var(--ease),
+    transform var(--ease);
+}
+
+.pw-toggle:hover {
+  background: rgba(96, 110, 82, 0.12);
+  color: var(--green-dark);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.pw-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* mismatch / error state example */
+.password-error input {
+  border-color: #c23b3b;
+  box-shadow: 0 0 0 3px rgba(194, 59, 59, 0.12);
+}
+
+/* =========================================
+   REVEAL (HIDES UNTIL VERIFIED)
+========================================= */
+.pw-reveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 360ms var(--ease), opacity 240ms var(--ease), margin-top var(--ease);
+  margin-top: 0;
+  pointer-events: none;
+}
+
+.pw-reveal.show {
+  max-height: 900px;
+  opacity: 1;
+  margin-top: 14px;
+  pointer-events: auto;
+}
+
+/* =========================================
+   TERMS
+========================================= */
+.terms {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.terms input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green-dark);
+  cursor: pointer;
+}
+
+/* =========================================
+   SUBMIT BUTTON
+========================================= */
+.create-btn {
+  margin-top: 6px;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 14px 40px rgba(96, 110, 82, 0.35);
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+
+.create-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 60px rgba(96, 110, 82, 0.45);
+}
+
+.create-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================================
+   ERRORS / LINKS / RESPONSIVE
+========================================= */
+.error {
+  color: #c23b3b;
+  display: block;
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+.links {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.links a {
+  color: var(--green-dark);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+/* mobile */
+@media (max-width: 480px) {
+  .signup-box {
+    padding: 24px 18px;
+  }
+
+  .brand-heading {
+    font-size: 1.65rem;
+  }
+
+  .signup-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* accessibility focus */
+.signup-box :focus-visible {
+  outline: 3px solid rgba(145, 165, 110, 0.45);
+  outline-offset: 4px;
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+

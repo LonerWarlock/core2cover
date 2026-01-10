@@ -1,0 +1,390 @@
+/* ===============================
+   DESIGN TOKENS
+=============================== */
+:root {
+  --green-dark: #606e52;
+  --green-mid: #91a56e;
+  --green-light: #c0cca4;
+
+  --text-dark: #2f2f2f;
+  --text-muted: #8f8b84;
+
+  --bg-main: #f6f7f2;
+  --white: #ffffff;
+
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 18px 48px rgba(0, 0, 0, 0.14);
+
+  --transition: 260ms cubic-bezier(.2,.9,.3,1);
+
+  --star-gold: #f4b400;
+  --danger: #dc2626;
+}
+
+/* ===============================
+   NAVBAR
+=============================== */
+.dd-navbar {
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.dd-nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dd-logo {
+  font-family: "Big Caslon", serif;
+  font-size: 1.6rem;
+  color: var(--green-dark);
+  margin: 0;
+}
+
+.dd-nav-link {
+  text-decoration: none;
+}
+
+.dd-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.dd-nav-links {
+  list-style: none;
+  display: flex;
+  gap: 16px;
+}
+
+.dd-seller-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--green-dark);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.dd-hamburger {
+  display: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* ===============================
+   PAGE
+=============================== */
+.dd-dashboard {
+  padding: 40px 6vw 60px;
+  background: linear-gradient(180deg, #fafcf7, var(--bg-main));
+  min-height: 100vh;
+  font-family: "Helvetica", sans-serif;
+}
+
+/* ===============================
+   HEADER
+=============================== */
+.dd-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.dd-title {
+  font-family: "Big Caslon", serif;
+  font-size: 2.3rem;
+  color: var(--green-dark);
+  margin: 0;
+}
+
+.dd-sub {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* ===============================
+   TOP RATING CARD
+=============================== */
+.dd-top-rating-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  min-width: 140px;
+  box-shadow: var(--shadow-soft);
+  text-align: right;
+}
+
+.dd-top-stars {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.dd-top-rating-value {
+  margin-top: 6px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.dd-top-out {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dd-top-review-count {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ===============================
+   DASH GRID
+=============================== */
+.dd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+}
+
+/* ===============================
+   DASH CARD
+=============================== */
+.dd-card {
+  background: var(--white);
+  padding: 26px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid rgba(96,110,82,0.15);
+}
+
+.dd-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+.dd-icon {
+  font-size: 1.8rem;
+  color: var(--green-dark);
+  margin-bottom: 12px;
+}
+
+.dd-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.dd-card p {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ===============================
+   SETTINGS CARD
+=============================== */
+.dd-setting-card {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dd-setting-info h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dd-setting-info p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Toggle */
+.dd-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dd-toggle-icon {
+  font-size: 34px;
+}
+
+.dd-on {
+  color: var(--green-dark);
+}
+
+.dd-off {
+  color: #b6b6b6;
+}
+
+/* ===============================
+   REVIEWS SECTION
+=============================== */
+.dd-reviews-section {
+  margin-top: 48px;
+}
+
+.dd-reviews-title {
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+  color: var(--text-dark);
+}
+
+.dd-reviews-list {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1000px) {
+  .dd-reviews-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Review Card */
+.dd-review-row {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  gap: 18px;
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition);
+}
+
+.dd-review-row:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Reviewer */
+.dd-review-left {
+  min-width: 160px;
+}
+
+.dd-reviewer-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.dd-reviewer-name::before {
+  content: attr(data-initial);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 800;
+}
+
+.dd-review-date {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Review content */
+.dd-review-right {
+  flex: 1;
+}
+
+.dd-review-stars-inline {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.star.filled,
+.star.half {
+  color: var(--star-gold);
+}
+
+.star.empty {
+  color: #ddd;
+}
+
+.dd-review-text {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-dark);
+}
+
+/* ===============================
+   STATES
+=============================== */
+.dd-empty-text {
+  padding: 14px;
+  background: #f8faf9;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.dd-form-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* ===============================
+   ANIMATION
+=============================== */
+.dd-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ddFadeIn 0.6s ease forwards;
+}
+
+.dd-delay-1 { animation-delay: 0.1s; }
+.dd-delay-2 { animation-delay: 0.2s; }
+.dd-delay-3 { animation-delay: 0.3s; }
+.dd-delay-4 { animation-delay: 0.4s; }
+
+@keyframes ddFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+@media (max-width: 768px) {
+  .dd-header {
+    flex-direction: column;
+  }
+
+  .dd-review-row {
+    flex-direction: column;
+  }
+
+  .dd-review-left {
+    min-width: auto;
+  }
+}

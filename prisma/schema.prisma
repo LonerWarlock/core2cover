@@ -1,0 +1,418 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+enum ReturnStatus {
+  NONE
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum RefundStatus {
+  NONE
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum RefundMethod {
+  STORE_CREDIT
+  ORIGINAL_PAYMENT
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+
+  credit Float @default(0)
+
+  orders         Order[]
+  ratings        Rating[]
+  hireRequests   DesignerHireRequest[]
+  returnRequests ReturnRequest[]
+}
+
+model CustomerOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+/// =========================
+/// SELLER (ACCOUNT)
+/// =========================
+model Seller {
+  id            Int                    @id @default(autoincrement())
+  name          String
+  email         String                 @unique
+  phone         String
+  password      String
+  phoneVerified Boolean                @default(false)
+  createdAt     DateTime               @default(now())
+  orderItems    OrderItem[]
+  products      Product[]
+  business      SellerBusinessDetails?
+  delivery      SellerDeliveryDetails?
+  bank          SellerBankDetails?
+}
+
+///SELLER OTP
+model SellerOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+/// =========================
+/// SELLER BUSINESS DETAILS
+/// =========================
+model SellerBusinessDetails {
+  id           Int      @id @default(autoincrement())
+  businessName String
+  sellerType   String
+  address      String?
+  city         String?
+  state        String?
+  pincode      String?
+  gst          String?
+  sellerId     Int      @unique
+  createdAt    DateTime @default(now())
+  seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+/// =========================
+/// SELLER DELIVERY DETAILS
+/// =========================
+model SellerDeliveryDetails {
+  id                     Int      @id @default(autoincrement())
+  sellerId               Int      @unique
+  deliveryResponsibility String
+  deliveryCoverage       String
+  deliveryType           String
+  deliveryTimeMin        Int?
+  deliveryTimeMax        Int?
+  shippingChargeType     String
+  shippingCharge         Int?
+  internationalDelivery  Boolean  @default(false)
+  installationAvailable  String?
+  installationCharge     Int?
+  createdAt              DateTime @default(now())
+
+  seller Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+/// =========================
+/// SELLER BANK DETAILS
+/// =========================
+model SellerBankDetails {
+  id Int @id @default(autoincrement())
+
+  accountHolder String
+  bankName      String
+  accountNumber String
+  ifsc          String
+
+  sellerId Int    @unique
+  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+/// =========================
+/// PRODUCT
+/// =========================
+model Product {
+  id           Int      @id @default(autoincrement())
+  name         String
+  price        Float
+  productType  String
+  category     String
+  description  String?
+  images       String[]
+  video        String?
+  availability String   @default("available")
+  sellerId     Int
+  createdAt    DateTime @default(now())
+  seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  ratings      Rating[]
+}
+
+/// =========================
+/// ORDER (CUSTOMER LEVEL)
+/// =========================
+model Order {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  customerEmail String
+  customerName  String
+  address       String
+  paymentMethod String
+
+  subtotal       Float
+  casaCharge     Float
+  deliveryCharge Float
+  grandTotal     Float
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+}
+
+/// =========================
+/// ORDER ITEM (SELLER LEVEL)
+/// =========================
+model OrderItem {
+  id      Int   @id @default(autoincrement())
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  sellerId Int
+  seller   Seller @relation(fields: [sellerId], references: [id])
+
+  materialId   Int
+  materialName String
+  supplierName String
+  imageUrl     String?
+
+  quantity     Int
+  pricePerUnit Float
+  totalAmount  Float
+
+  status String @default("pending") // existing
+
+  // NEW: return and refund fields
+  returnStatus      ReturnStatus @default(NONE)
+  returnReason      String?
+  returnRequestedAt DateTime?
+  returnResolvedAt  DateTime?
+
+  refundAmount      Float?
+  refundStatus      RefundStatus @default(NONE)
+  refundProcessedAt DateTime?
+
+  // ✅ DELIVERY SNAPSHOT
+  deliveryTimeMin       Int?
+  deliveryTimeMax       Int?
+  shippingChargeType    String?
+  shippingCharge        Int?
+  installationAvailable String?
+  installationCharge    Int?
+
+  createdAt DateTime @default(now())
+  rating    Rating?
+
+  // relation to ReturnRequest (one-to-one)
+  returnRequest ReturnRequest?
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  orderItemId Int       @unique
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+}
+
+model Designer {
+  id           Int     @id @default(autoincrement())
+  fullname     String
+  email        String  @unique
+  mobile       String  @unique
+  location     String?
+  passwordHash String
+  availability String  @default("Available")
+
+  profile      DesignerProfile?
+  works        DesignerWork[]
+  hireRequests DesignerHireRequest[]
+
+  ratings DesignerRating[]
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  userRatings UserRating[]
+}
+
+model DesignerOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model DesignerProfile {
+  id         Int @id @default(autoincrement())
+  designerId Int @unique
+
+  experience   String?
+  portfolio    String?
+  designerType String?
+  bio          String?
+  profileImage String?
+
+  designer Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DesignerWork {
+  id         Int @id @default(autoincrement())
+  designerId Int
+
+  image       String
+  description String?
+
+  designer Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model DesignerHireRequest {
+  id Int @id @default(autoincrement())
+
+  // 🔐 OWNER (CRITICAL)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 🎨 DESIGNER
+  designerId Int
+  designer   Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
+
+  // SNAPSHOT (for display only)
+  fullName String
+  email    String
+  mobile   String
+  location String
+
+  budget       Int
+  workType     String
+  timelineDate DateTime?
+  description  String?
+  status       String    @default("pending")
+
+  createdAt DateTime @default(now())
+
+  rating     DesignerRating?
+  userRating UserRating?
+}
+
+model DesignerRating {
+  id            Int @id @default(autoincrement())
+  designerId    Int
+  hireRequestId Int @unique
+
+  reviewerName String?
+  stars        Int // 1–5
+  review       String?
+
+  createdAt DateTime @default(now())
+
+  designer    Designer            @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  hireRequest DesignerHireRequest @relation(fields: [hireRequestId], references: [id], onDelete: Cascade)
+}
+
+model UserRating {
+  id            Int      @id @default(autoincrement())
+  hireRequestId Int      @unique
+  designerId    Int?
+  reviewerName  String? // name of the designer who rated the user
+  stars         Int // 1-5
+  review        String?
+  createdAt     DateTime @default(now())
+
+  // relations
+  hireRequest DesignerHireRequest @relation(fields: [hireRequestId], references: [id], onDelete: Cascade)
+  designer    Designer?           @relation(fields: [designerId], references: [id], onDelete: Cascade)
+}
+
+model ReturnRequest {
+  id          Int       @id @default(autoincrement())
+  orderItemId Int       @unique
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // snapshot
+  productName String
+  sellerId    Int
+  sellerName  String?
+
+  reason String
+  note   String?
+  images String[]
+
+  requestedAt DateTime @default(now())
+
+  // 🔑 APPROVAL FLOW
+  sellerApprovalStatus ApprovalStatus @default(PENDING)
+  adminApprovalStatus  ApprovalStatus @default(PENDING)
+
+  sellerApprovedAt DateTime?
+  adminApprovedAt  DateTime?
+
+  sellerDecisionNote String?
+  adminDecisionNote  String?
+
+  // 💰 REFUND
+  refundMethod  RefundMethod?
+  refundAmount  Float?
+  refundStatus  RefundStatus @default(NONE)
+  refundDetails String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
