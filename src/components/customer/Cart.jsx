@@ -1,5 +1,8 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "./Cart.css";
@@ -12,19 +15,28 @@ import {
 } from "../../utils/cart";
 
 const Cart = () => {
-  const navigate = useNavigate();
-  const [basketItems, setBasketItems] = useState([]);
+  const router = useRouter();
+  const [basketItems, setBasketItems] = useState(() => {
+    if (typeof window !== "undefined") {
+      const cart = loadCart();
+      return Array.isArray(cart) ? cart : [];
+    }
+    return [];
+  });
 
   /* ===============================
      LOAD CART
   =============================== */
   const refreshCart = () => {
-    const cart = loadCart();
-    setBasketItems(Array.isArray(cart) ? cart : []);
+    // Ensure this runs only on client
+    if (typeof window !== "undefined") {
+        const cart = loadCart();
+        setBasketItems(Array.isArray(cart) ? cart : []);
+    }
   };
 
   useEffect(() => {
-    refreshCart();
+    // Effect cleanup or external system synchronization if needed
   }, []);
 
   /* ===============================
@@ -74,8 +86,6 @@ const Cart = () => {
 
   /* ===============================
      CHECKOUT NAVIGATION 
-     - Save cart under the same key utils/cart.js uses: "casa_cart"
-     - Clear singleCheckoutItem so Checkout reads the full cart
   =============================== */
   const handleCheckout = () => {
     if (!basketItems.length) {
@@ -83,18 +93,14 @@ const Cart = () => {
       return;
     }
 
-    // Save full cart under the same key used by utils/loadCart()
-    // utils/cart.js uses CART_KEY = "casa_cart"
     try {
       localStorage.setItem("casa_cart", JSON.stringify(basketItems));
     } catch (err) {
       console.error("Failed to save cart to localStorage", err);
     }
 
-    // Ensure single-checkout is cleared so Checkout loads the full cart.
     clearSingleCheckoutItem();
-
-    navigate("/checkout");
+    router.push("/checkout");
   };
 
   return (
@@ -114,22 +120,21 @@ const Cart = () => {
                   key={item.materialId}
                   className="cart-card"
                 >
-                  {/* IMAGE */}
                   <div className="cart-img-box">
-                    <img
+                    <Image
                       src={item.image || sample}
                       className="cart-img"
                       alt={item.name}
+                      width={200}
+                      height={200}
                       onError={(e) => {
-                        e.target.src = sample;
+                        e.target.src = sample.src || sample;
                       }}
                     />
                   </div>
 
-                  {/* DETAILS */}
                   <div className="cart-details">
                     <h3>{item.name}</h3>
-
                     <p className="cart-price">
                       ₹
                       {(
@@ -173,10 +178,8 @@ const Cart = () => {
             )}
           </div>
 
-          {/* SUMMARY */}
           <aside className="cart-summary">
             <h2>Order Summary</h2>
-
             <div className="summary-row total">
               <span>Total</span>
               <span>₹{subtotal.toLocaleString()}</span>

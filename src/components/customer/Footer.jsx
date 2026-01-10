@@ -1,34 +1,35 @@
-import React from 'react'
+"use client";
+
+import React from 'react';
+import Link from 'next/link'; // CHANGED
+import Image from 'next/image';
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 import "./Footer.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover.png";
 
 export default function Footer() {
-  const Brand = ({ children }) => <span className="brand">{children}</span>;
-
   return (
     <footer className="footer">
       <div className="footer-container">
         {/* Brand */}
         <div className="footer-brand">
-          <img
+          <Image
             src={CoreToCoverLogo}
             alt="CoreToCover"
             className="footer-logo"
+            width={200}
+            height={60}
           />
           <p className="footer-tagline">
             Everything your interior project needs, in one place.
           </p>
         </div>
 
-
         {/* Links */}
         <ul className="footer-links">
-          <li><a href="/">Home</a></li>
-          <li><a href="/about">About</a></li>
-          {/* <li><a href="#">Products</a></li>
-          <li><a href="#">Suppliers</a></li> */}
-          <li><a href="/contact">Contact</a></li>
+          <li><Link href="/">Home</Link></li>
+          <li><Link href="/about">About</Link></li>
+          <li><Link href="/contact">Contact</Link></li>
         </ul>
 
         {/* Social Icons */}
@@ -39,7 +40,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom */}
       <div className="footer-bottom">
         © {new Date().getFullYear()} Core2Cover. All rights reserved.
       </div>

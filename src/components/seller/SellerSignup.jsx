@@ -1,5 +1,9 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import {
   sendSellerOtp,
@@ -9,12 +13,10 @@ import {
 import "./SellerSignup.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
-
-
 const SellerSignup = () => {
   const Brand = ({ children }) => <span className="brand">{children}</span>;
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [form, setForm] = useState({
     name: "",
@@ -41,7 +43,6 @@ const SellerSignup = () => {
 
   useEffect(() => {
     if (emailVerified) {
-      // small timeout so transition finishes and input is visible
       setTimeout(() => passwordRef.current?.focus(), 160);
     }
   }, [emailVerified]);
@@ -101,13 +102,13 @@ const SellerSignup = () => {
       localStorage.setItem("sellerId", res.data.sellerId);
       window.dispatchEvent(new Event("storage"));
 
-      navigate("/businessdetails");
+      router.push("/businessdetails");
     } catch (err) {
       const status = err?.response?.status;
 
       if (status === 409) {
         alert("Account already exists. Please login.");
-        navigate("/sellerlogin");
+        router.push("/sellerlogin");
       } else if (status === 403) {
         alert("Please verify your email before signup.");
       } else {
@@ -122,10 +123,12 @@ const SellerSignup = () => {
   return (
     <div className="signup-container">
       <div className="signup-card">
-        <img
+        <Image
           src={CoreToCoverLogo}
           alt="CoreToCover"
           className="brand-logo"
+          width={200}
+          height={100}
         />
         <h2>Create Seller Account</h2>
         <p className="subtitle">Start selling on <Brand>Core2Cover</Brand></p>
@@ -263,7 +266,7 @@ const SellerSignup = () => {
                 checked={form.terms}
                 onChange={handleChange}
               />
-              I agree to the <Link to="/terms">Terms & Conditions</Link>
+              I agree to the <Link href="/terms">Terms & Conditions</Link>
             </label>
 
             {/* Submit */}
@@ -278,7 +281,7 @@ const SellerSignup = () => {
             {/* Login */}
             <p className="login-link">
               Already have an account?{" "}
-              <Link to="/sellerlogin">Login</Link>
+              <Link href="/sellerlogin">Login</Link>
             </p>
           </div>
         </form>

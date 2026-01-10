@@ -1,6 +1,9 @@
-// src/components/Navbar/Navbar.jsx
+"use client";
+
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";  
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import "./Navbar.css";
 import {
   FaSearch,
@@ -12,25 +15,27 @@ import {
 } from "react-icons/fa";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
-const Navbar = () => {
-  const Brand = ({ children }) => <span className="brand">{children}</span>;
+const Brand = ({ children }) => <span className="brand">{children}</span>;
 
+const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const currentPageTitle = location.state?.page || "Readymade Products";
+  const currentPageTitle = "Readymade Products"; // Default for Navbar context
 
   /* =========================
      SYNC SEARCH WITH URL
   ========================= */
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const q = params.get("search") || "";
-    setSearchQuery(q);
-  }, [location.search]);
+    // Only available on client
+    const q = searchParams.get("search") || "";
+    queueMicrotask(() => {
+      setSearchQuery(q);
+    });
+  }, [searchParams]);
 
   /* =========================
      HANDLE SEARCH
@@ -41,7 +46,7 @@ const Navbar = () => {
     const query = searchQuery.trim();
     if (!query) return;
 
-    navigate(`/searchresults?search=${encodeURIComponent(query)}`);
+    router.push(`/searchresults?search=${encodeURIComponent(query)}`);
     setMenuOpen(false);
   };
 
@@ -50,12 +55,14 @@ const Navbar = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link to="/" className="nav-link nav-logo-link">
+            <Link href="/" className="nav-link nav-logo-link">
               <span className="nav-logo-wrap">
-                <img
+                <Image
                   src={CoreToCoverLogo}
                   alt="CoreToCover"
                   className="nav-logo"
+                  width={40}
+                  height={40}
                 />
                 <Brand>Core2Cover</Brand>
               </span>
@@ -86,31 +93,31 @@ const Navbar = () => {
           <div className="nav-right">
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
               <li>
-                <Link to="/userprofile" className="nav-link">
+                <Link href="/userprofile" className="nav-link">
                   <FaUser /> Profile
                 </Link>
               </li>
 
               <li>
-                <Link to="/myhireddesigners" className="nav-link">
+                <Link href="/myhireddesigners" className="nav-link">
                   <FaUserGraduate /> My Hired Designers
                 </Link>
               </li>
 
               <li>
-                <Link to="/cart" className="cart-btn">
+                <Link href="/cart" className="cart-btn">
                   <FaShoppingCart /> Cart
                 </Link>
               </li>
 
               <li>
-                <Link to="/sellersignup" className="seller-btn">
+                <Link href="/sellersignup" className="seller-btn">
                   Become a Seller
                 </Link>
               </li>
 
               <li>
-                <Link to="/designersignup" className="seller-btn">
+                <Link href="/designersignup" className="seller-btn">
                   I am a Designer
                 </Link>
               </li>
@@ -126,7 +133,6 @@ const Navbar = () => {
       {/* Mobile Search */}
       <div className="search-container">
         <form onSubmit={handleSearch} className="search_form mobile">
-          {/* <FaSearch className="search-ico" /> */}
           <input
             className="search_input"
             type="text"

@@ -1,5 +1,9 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import "./DesignerSignup.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import {
@@ -10,7 +14,7 @@ import {
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_1.png";
 
 const DesignerSignup = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [form, setForm] = useState({
     fullname: "",
@@ -32,27 +36,19 @@ const DesignerSignup = () => {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [error, setError] = useState("");
 
-  // ref to focus password after verification
   const passwordRef = useRef(null);
 
   useEffect(() => {
     if (emailVerified) {
-      // small timeout so transition finishes
       setTimeout(() => passwordRef.current?.focus(), 160);
     }
   }, [emailVerified]);
 
-  /* =========================
-     HANDLE INPUT CHANGE
-  ========================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
   };
 
-  /* =========================
-     SEND EMAIL OTP
-  ========================= */
   const handleSendOtp = async () => {
     if (!form.email) {
       setError("Enter email first");
@@ -74,9 +70,6 @@ const DesignerSignup = () => {
     }
   };
 
-  /* =========================
-     VERIFY EMAIL OTP
-  ========================= */
   const handleVerifyOtp = async () => {
     if (!otp) {
       setError("Enter OTP");
@@ -98,9 +91,6 @@ const DesignerSignup = () => {
     }
   };
 
-  /* =========================
-     SUBMIT SIGNUP
-  ========================= */
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
@@ -126,11 +116,10 @@ const DesignerSignup = () => {
         password: form.password,
       });
 
-      // adapt to your response shape
       const designerId = res?.designer?.id || res?.data?.designer?.id || res?.data?.id;
       if (designerId) localStorage.setItem("designerId", designerId);
 
-      navigate("/designer_profile_setup");
+      router.push("/designer_profile_setup");
     } catch (err) {
       console.error("DESIGNER SIGNUP ERROR:", err);
 
@@ -147,10 +136,12 @@ const DesignerSignup = () => {
   return (
     <div className="designer-signup-page">
       <div className="ds-auth-box">
-        <img
+        <Image
           src={CoreToCoverLogo}
           alt="CoreToCover"
           className="brand-logo"
+          width={100}
+          height={100}
         />
         <p className="ds-sub">Join as a Designer</p>
 
@@ -183,7 +174,6 @@ const DesignerSignup = () => {
             />
           </div>
 
-          {/* OTP SECTION */}
           <div className="ds-field ds-full">
             <div className="ds-otp-actions">
               <button
@@ -252,7 +242,6 @@ const DesignerSignup = () => {
             />
           </div>
 
-          {/* Hidden until verified: password / confirm / availability / submit */}
           <div
             className={`ds-reveal ${emailVerified ? "show" : ""}`}
             aria-hidden={!emailVerified}
@@ -319,7 +308,7 @@ const DesignerSignup = () => {
 
           <p className="ds-footer">
             Already registered?{" "}
-            <Link to="/designerlogin" className="ds-link">
+            <Link href="/designerlogin" className="ds-link">
               Login
             </Link>
           </p>

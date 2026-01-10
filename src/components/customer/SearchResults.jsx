@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useSearchParams } from "next/navigation"; // CHANGED
 import Navbar from "./Navbar";
 import ProductCard from "./ProductCard";
 import Footer from "./Footer";
@@ -7,67 +9,47 @@ import "./SearchResults.css";
 import api from "../../api/axios";
 
 const SearchResults = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const searchQuery = queryParams.get("search") || "";
+  const searchParams = useSearchParams(); // CHANGED
+  const searchQuery = searchParams.get("search") || ""; // CHANGED
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     FETCH SEARCH RESULTS
-  ========================= */
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setResults([]);
-      setLoading(false);
+      // Defer state updates to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setResults([]);
+        setLoading(false);
+      });
       return;
     }
-
-    setLoading(true);
-
-    api
-      .get("/products/search", {
-        params: { q: searchQuery },
-      })
+    queueMicrotask(() => {
+ setLoading(true); // Set loading true when a new search query is initiated
+    });
+    // Relative path used by axios instance
+    api.get("/products/search", { params: { q: searchQuery } })
       .then((res) => {
         setResults(Array.isArray(res.data) ? res.data : []);
       })
-      .catch(() => {
-        setResults([]);
-      })
+      .catch(() => setResults([]))
       .finally(() => setLoading(false));
   }, [searchQuery]);
 
   return (
     <>
       <Navbar />
-
       <div className="results">
         <h2>Search Results</h2>
-        <p>
-          Showing results for: <strong>{searchQuery}</strong>
-        </p>
+        <p>Showing results for: <strong>{searchQuery}</strong></p>
 
         <div className="product-grid">
-          {loading && (
-            <p style={{ gridColumn: "1 / -1" }}>Searching…</p>
+          {loading && <p style={{ gridColumn: "1 / -1" }}>Searching…</p>}
+          {!loading && results.length === 0 && (
+            <p style={{ gridColumn: "1 / -1", color: "#6b7280" }}>No product found.</p>
           )}
 
-          {!loading && searchQuery.trim() === "" && (
-            <p style={{ gridColumn: "1 / -1", color: "#6b7280" }}>
-              Please enter a search term.
-            </p>
-          )}
-
-          {!loading && searchQuery.trim() !== "" && results.length === 0 && (
-            <p style={{ gridColumn: "1 / -1", color: "#6b7280" }}>
-              No product found matching your search term.
-            </p>
-          )}
-
-          {!loading &&
-            results.map((product) => (
+          {!loading && results.map((product) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
@@ -76,11 +58,8 @@ const SearchResults = () => {
                 category={product.category}
                 price={product.price}
                 description={product.description}
-
-                /* ✅ USE DIRECTLY */
                 images={product.images || []}
                 image={product.images?.[0] || null}
-
                 seller={product.sellerName}
                 origin={product.location}
                 availability={product.availability}
@@ -90,10 +69,8 @@ const SearchResults = () => {
             ))}
         </div>
       </div>
-
       <Footer />
     </>
   );
 };
-
 export default SearchResults;

@@ -1,34 +1,30 @@
+"use client";
+
 import React, { useState, useMemo, useEffect } from "react";
 import Navbar from "./Navbar";
 import ProductCard from "./ProductCard";
 import Footer from "./Footer";
 import "./ProductListing.css";
-import { useLocation } from "react-router-dom";
+import { useSearchParams } from "next/navigation";
 
 const ProductListing = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const location = useLocation();
+  const searchParams = useSearchParams();
 
   /* =========================================
      PAGE TITLE & DESCRIPTION
   ========================================= */
-  const currentPageTitle =
-    location.state?.page || "Readymade Products";
-
-  const currentPageDesc =
-    location.state?.desc ||
-    "Find the perfect product that enhances your quality of living.";
+  const currentPageTitle = searchParams.get("page") || "Readymade Products";
+  const currentPageDesc = searchParams.get("desc") || "Find the perfect product that enhances your quality of living.";
 
   /* =========================================
      DETERMINE PRODUCT TYPE
      finished | material
   ========================================= */
-  const pageProductType = currentPageTitle
-    .toLowerCase()
-    .includes("raw")
+  const pageProductType = currentPageTitle.toLowerCase().includes("raw")
     ? "material"
     : "finished";
 
@@ -36,9 +32,8 @@ const ProductListing = () => {
      FETCH PRODUCTS FROM BACKEND
   ========================================= */
   useEffect(() => {
-    setLoading(true);
-
-    fetch(`http://localhost:3001/products?type=${pageProductType}`)
+    // Changed from localhost:3001 to relative /api path
+    fetch(`/api/products?type=${pageProductType}`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(Array.isArray(data) ? data : []);
@@ -96,23 +91,11 @@ const ProductListing = () => {
         {/* Product Grid */}
         <div className="product-grid">
           {loading ? (
-            <div
-              style={{
-                padding: "20px",
-                gridColumn: "1 / -1",
-                color: "#6b7280",
-              }}
-            >
+            <div style={{ padding: "20px", gridColumn: "1 / -1", color: "#6b7280" }}>
               Loading products...
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div
-              style={{
-                padding: "20px",
-                gridColumn: "1 / -1",
-                color: "#6b7280",
-              }}
-            >
+            <div style={{ padding: "20px", gridColumn: "1 / -1", color: "#6b7280" }}>
               No products available.
             </div>
           ) : (
@@ -128,11 +111,8 @@ const ProductListing = () => {
                 availability={product.availability}
                 avgRating={product.avgRating}
                 ratingCount={product.ratingCount}
-
                 images={product.images || []}
                 video={product.video}
-
-                // ✅ FIXED HERE
                 seller={product.seller}
                 origin={
                   product.sellerBusiness
@@ -144,7 +124,6 @@ const ProductListing = () => {
           )}
         </div>
       </section>
-
       <Footer />
     </>
   );

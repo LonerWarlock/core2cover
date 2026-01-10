@@ -1,5 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+"use client";
+
+import React, { useState, useRef, useEffect, Image } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
 import {
   customerSignup,
@@ -10,7 +13,7 @@ import "./Signup.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
 export default function Signup() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [form, setForm] = useState({
     name: "",
@@ -131,7 +134,7 @@ export default function Signup() {
       });
 
       alert("Account created successfully. Please login.");
-      navigate("/login");
+      router.push("/login");
     } catch (err) {
       alert(err?.response?.data?.message || "Signup failed");
     } finally {
@@ -142,8 +145,8 @@ export default function Signup() {
   return (
     <div className="signup-page">
       <div className="signup-box login-box">
-        <img
-          src={CoreToCoverLogo}
+        <Image
+          src={CoreToCoverLogo.src || CoreToCoverLogo}
           alt="CoreToCover"
           className="brand-logo"
         />
@@ -282,7 +285,7 @@ export default function Signup() {
           </div>
 
           <p className="links">
-            Already have an account? <Link to="/login">Sign in</Link>
+            Already have an account? <Link href="/login">Sign in</Link>
           </p>
         </form>
       </div>

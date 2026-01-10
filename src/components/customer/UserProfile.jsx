@@ -1,17 +1,22 @@
-// File: src/components/UserProfile.jsx
+"use client";
 
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import "./UserProfile.css";
 import Navbar from "./Navbar";
 import MyOrders from "./MyOrders";
 import { getUserByEmail, updateUserProfile } from "../../api/user";
 
-
 const UserProfile = () => {
-  const navigate = useNavigate();
-
-  const userEmail = localStorage.getItem("userEmail");
+  const router = useRouter();
+  
+  // Initialize state safely for SSR
+  const [userEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("userEmail");
+    }
+    return null;
+  });
 
   /* ==============================
      LOGOUT & NAVIGATION
@@ -19,11 +24,11 @@ const UserProfile = () => {
   const handleLogout = () => {
     localStorage.clear();
     alert("You have been logged out.");
-    navigate("/");
+    router.push("/");
   };
 
   const handleBack = () => {
-    navigate(-1);
+    router.back();
   };
 
   /* ==============================
@@ -43,8 +48,10 @@ const UserProfile = () => {
      FETCH USER FROM DB
   ============================== */
   useEffect(() => {
+    if (userEmail === null) return; // Wait for client-side load
+
     if (!userEmail) {
-      navigate("/login");
+      router.push("/login");
       return;
     }
 
@@ -59,7 +66,7 @@ const UserProfile = () => {
     };
 
     loadUser();
-  }, [userEmail, navigate]);
+  }, [userEmail, router]);
 
 
   /* ==============================
@@ -178,12 +185,11 @@ const UserProfile = () => {
         </div>
         <hr />
 
-        {/* ✅ REAL ORDERS FROM DB */}
+        {/* Orders */}
         <div className="orders">
           <MyOrders />
         </div>
       </div>
-
     </>
   );
 };
