@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"; // Import Next.js Image
 import { useRouter, useSearchParams } from "next/navigation";
 import "./Navbar.css";
 import {
@@ -15,8 +15,6 @@ import {
 } from "react-icons/fa";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
-const Brand = ({ children }) => <span className="brand">{children}</span>;
-
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,30 +22,32 @@ const Navbar = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const currentPageTitle = "Readymade Products"; // Default for Navbar context
+  const currentPageTitle = "Readymade Products";
 
-  /* =========================
-     SYNC SEARCH WITH URL
-  ========================= */
   useEffect(() => {
-    // Only available on client
-    const q = searchParams.get("search") || "";
+    // Defer state update to avoid synchronous setState in effect
+    // This ensures that the component has rendered once before updating state based on searchParams
     queueMicrotask(() => {
-      setSearchQuery(q);
+      const q = searchParams.get("search") || "";
+      if (searchQuery !== q) setSearchQuery(q);
     });
-  }, [searchParams]);
+  }, [searchParams, searchQuery]);
 
-  /* =========================
-     HANDLE SEARCH
-  ========================= */
   const handleSearch = (e) => {
     e.preventDefault();
-
     const query = searchQuery.trim();
     if (!query) return;
-
     router.push(`/searchresults?search=${encodeURIComponent(query)}`);
     setMenuOpen(false);
+  };
+
+  const handleProfileClick = (e) => {
+    const isLoggedIn = typeof window !== "undefined" && localStorage.getItem("userEmail");
+    if (!isLoggedIn) {
+      e.preventDefault();
+      router.push("/login");
+      setMenuOpen(false);
+    }
   };
 
   return (
@@ -57,19 +57,20 @@ const Navbar = () => {
           <div className="nav-left">
             <Link href="/" className="nav-link nav-logo-link">
               <span className="nav-logo-wrap">
+                {/* ✅ FIX: Pass the imported object directly to src */}
                 <Image
-                  src={CoreToCoverLogo}
-                  alt="CoreToCover"
+                  src={CoreToCoverLogo} 
+                  alt="CoreToCover" 
                   className="nav-logo"
-                  width={40}
-                  height={40}
+                  width={50} // Optional: Ensure it has a base size if CSS fails to load
+                  height={50} // Optional: Ensure it has a base size
+                  style={{ width: 'auto', height: 'auto', maxHeight: '50px' }} // CSS override
                 />
-                <Brand>Core2Cover</Brand>
+                <span className="brand">Core2Cover</span>
               </span>
             </Link>
           </div>
 
-          {/* Center: Desktop Search */}
           <div className="nav-center">
             <form onSubmit={handleSearch} className="search_form">
               <input
@@ -89,15 +90,18 @@ const Navbar = () => {
             </form>
           </div>
 
-          {/* Right */}
           <div className="nav-right">
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
               <li>
-                <Link href="/userprofile" className="nav-link">
+                <Link 
+                  href="/userprofile" 
+                  className="nav-link" 
+                  onClick={handleProfileClick}
+                >
                   <FaUser /> Profile
                 </Link>
               </li>
-
+              
               <li>
                 <Link href="/myhireddesigners" className="nav-link">
                   <FaUserGraduate /> My Hired Designers
@@ -122,7 +126,6 @@ const Navbar = () => {
                 </Link>
               </li>
             </ul>
-
             <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <FaTimes /> : <FaBars />}
             </div>
@@ -130,7 +133,6 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Mobile Search */}
       <div className="search-container">
         <form onSubmit={handleSearch} className="search_form mobile">
           <input

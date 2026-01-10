@@ -1,6 +1,9 @@
-// src/components/auth/Login.jsx
+"use client";
+
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import Image from "next/image"; // Changed to next/image
+import { useRouter } from "next/navigation"; // Changed from react-router-dom
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { customerLogin } from "../../api/auth";
 import "./Login.css";
@@ -12,7 +15,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const router = useRouter(); // Changed to useRouter
 
   const isEmailValid = (val) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
@@ -21,7 +24,6 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // client-side validation
     if (!email.trim() || !password) {
       setError("Please enter both email and password.");
       return;
@@ -34,23 +36,13 @@ export default function Login() {
     setLoading(true);
     try {
       const response = await customerLogin({ email: email.trim(), password });
-
-      /*
-        customerLogin usually returns an axios response.
-        axios-responses store payload in response.data
-        so use response?.data as the canonical source.
-      */
       const data = response?.data ?? response;
 
-      // Expectation: backend returns { user: {...}, token: "..." }
-      // Save token + (optionally) user info for UI convenience.
       if (data?.token) {
         localStorage.setItem("token", data.token);
       }
 
-      // Keep existing localStorage usage for UI (safe as long as backend trusts JWT)
       if (data?.user) {
-        // remove only auth-related keys to avoid wiping unrelated localStorage
         localStorage.removeItem("userId");
         localStorage.removeItem("userEmail");
         localStorage.removeItem("userName");
@@ -60,10 +52,8 @@ export default function Login() {
         localStorage.setItem("userName", data.user.name ?? "");
       }
 
-      // Navigate to homepage (or your post-login route)
-      navigate("/");
+      router.push("/"); // Changed to router.push
     } catch (err) {
-      // Try to surface backend message if present
       const msg =
         err?.response?.data?.message ||
         err?.message ||
@@ -78,11 +68,15 @@ export default function Login() {
     <div className="login-page">
       <main className="login-box" aria-labelledby="login-heading">
 
-        {/* LOGO */}
-        <img
+        {/* FIX: Use Image component and pass the object directly */}
+        <Image
           src={CoreToCoverLogo}
           alt="CoreToCover"
           className="brand-logo"
+          width={150} // Provide a fallback width/height just in case CSS fails, or rely on 'auto' via CSS
+          height={50}
+          style={{ width: 'auto', height: 'auto', maxWidth: '200px' }} // CSS control
+          priority // Loads this image faster as it's above the fold
         />
 
         <h2 id="login-heading">Sign in</h2>
@@ -145,7 +139,7 @@ export default function Login() {
           </div>
 
           <p className="helper-line">
-            Don’t have an account? <Link to="/signup">Create one</Link>
+            Don’t have an account? <Link href="/signup">Create one</Link>
           </p>
         </form>
       </main>

@@ -1,31 +1,47 @@
 import api from "./axios";
 
-// Public
-export const getAllDesigners = () => api.get("/designers");
-export const getDesignerInfo = (id) => api.get(`/designer/${id}/info`);
-export const hireDesigner = (id, data) => api.post(`/designer/${id}/hire`, data);
+// Designer Login
+export const designerLogin = (data) => {
+  return api.post("/designer/login", data);
+};
 
-// Designer Dashboard
-export const getDesignerBasic = (id) => api.get(`/designer/${id}/basic`);
-export const updateDesignerAvailability = (id, availability) => api.patch(`/designer/${id}/availability`, { availability });
-export const getWorkRequests = (id) => api.get(`/designer/${id}/work-requests`);
-export const updateRequestStatus = (id, status) => api.patch(`/designer/work-request/${id}/status`, { status });
+// Designer Signup
+export const designerSignup = (data) => {
+  return api.post("/designer/signup", data);
+};
 
-// Profile & Portfolio
-export const setupDesignerProfile = (formData) => api.post("/designer/profile", formData, {
-    headers: { "Content-Type": "multipart/form-data" }
-});
-export const getDesignerEditProfile = (id) => api.get(`/designer/${id}/edit-profile`);
-export const updateDesignerEditProfile = (id, formData) => api.put(`/designer/${id}/edit-profile`, formData, {
-    headers: { "Content-Type": "multipart/form-data" }
-});
-export const getDesignerPortfolio = (id) => api.get(`/designer/${id}/portfolio`);
-export const addPortfolioWork = (id, formData) => api.post(`/designer/${id}/work`, formData, {
-    headers: { "Content-Type": "multipart/form-data" }
-});
-export const deletePortfolioWork = (workId) => api.delete(`/designer/work/${workId}`);
+// Send OTP
+export const sendDesignerOtp = (email) => {
+  return api.post("/designer/send-otp", { email });
+};
 
-// Ratings
-export const rateDesigner = (id, data) => api.post(`/designer/${id}/rate`, data);
-export const rateUser = (id, data) => api.post(`/designer/${id}/rate-user`, data);
-export const getUserRatings = (userId) => api.get(`/client/${userId}/ratings`);
+// Verify OTP
+export const verifyDesignerOtp = (email, otp) => {
+  return api.post("/designer/verify-otp", { email, otp });
+};
+
+// Get Basic Info (for dashboard)
+export const getDesignerBasic = (id) => {
+  return api.get(`/designer/${id}/basic`).then((res) => res.data);
+};
+
+// Update Availability
+export const updateDesignerAvailability = (id, status) => {
+  return api.put(`/designer/${id}/availability`, { status });
+};
+
+// Hire a Designer (Client -> Designer)
+export const hireDesigner = (designerId, data) => {
+  return api.post(`/designer/${designerId}/hire`, data);
+};
+
+// ✅ FIX: Add getClientHiredDesigners
+export const getClientHiredDesigners = ({ userId }) => {
+  // Pass userId as a query param or in body depending on your API
+  return api.get(`/client/hired-designers?userId=${userId}`);
+};
+
+// ✅ FIX: Add rateDesigner
+export const rateDesigner = (designerId, data) => {
+  return api.post(`/designer/${designerId}/rate`, data);
+};

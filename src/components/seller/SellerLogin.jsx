@@ -2,22 +2,25 @@
 
 import React, { useState } from "react";
 import "./SellerLogin.css";
-// import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // CHANGED
-import { sellerLogin } from "../../api/sellerAuth"; // Ensure this file exists or use axios directly
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { sellerLogin } from "../../api/sellerAuth";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
 const SellerLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword] = useState(false);
-  const router = useRouter(); // CHANGED
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return alert("Please enter email and password.");
+    if (!email || !password) {
+      alert("Please enter email and password.");
+      return;
+    }
 
     try {
       const res = await sellerLogin({ email, password });
@@ -25,8 +28,7 @@ const SellerLogin = () => {
       localStorage.setItem("sellerEmail", res.data.seller.email);
       localStorage.setItem("sellerProfile", JSON.stringify(res.data.seller));
       window.dispatchEvent(new Event("storage"));
-      
-      router.push("/sellerdashboard"); // CHANGED
+      router.push("/sellerdashboard");
     } catch (err) {
       alert(err?.response?.data?.message || "Invalid email or password");
     }
@@ -35,26 +37,59 @@ const SellerLogin = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <Image src={CoreToCoverLogo.src || CoreToCoverLogo} alt="CoreToCover" className="brand-logo" />
+        <Image
+          src={CoreToCoverLogo}
+          alt="CoreToCover"
+          className="brand-logo"
+          width={150}
+          height={50}
+          style={{ width: 'auto', height: 'auto', maxWidth: '200px' }}
+        />
         <h4>Welcome back, Seller</h4>
+        <p className="subtitle">Log in to manage your store</p>
+
         <form onSubmit={handleSubmit}>
-          {/* Inputs remain same */}
           <div className="input-groups">
             <label>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input
+              type="email"
+              placeholder="seller@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
+
           <div className="input-groups">
             <label>Password</label>
-            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <div className="password-fld">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="toggle_btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
 
           <p className="signup-text">
-            Don’t have a seller account? <Link href="/sellersignup">Sign up</Link>
+            Don’t have a seller account?{" "}
+            <Link href="/sellersignup">Sign up</Link>
           </p>
+
           <button type="submit" className="login-btn">Login</button>
         </form>
       </div>
     </div>
   );
 };
+
 export default SellerLogin;

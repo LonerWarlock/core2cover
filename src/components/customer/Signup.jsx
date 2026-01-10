@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect, Image } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
 import {
@@ -36,28 +37,19 @@ export default function Signup() {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // ref to autofocus the password input after verification
   const passwordRef = useRef(null);
 
   useEffect(() => {
     if (emailVerified) {
-      // small delay so animation finishes before focusing
       setTimeout(() => passwordRef.current?.focus(), 160);
     }
   }, [emailVerified]);
 
-  /* =========================
-     HANDLE INPUT CHANGE
-  ========================= */
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  /* =========================
-     VALIDATION
-  ========================= */
   const validate = () => {
     const e = {};
-
     if (!form.name.trim()) e.name = "Full name is required";
     if (!form.email.trim()) e.email = "Email is required";
     if (!emailVerified) e.email = "Email must be verified";
@@ -74,15 +66,11 @@ export default function Signup() {
     return Object.keys(e).length === 0;
   };
 
-  /* =========================
-     SEND OTP
-  ========================= */
   const handleSendOtp = async () => {
     if (!form.email.trim()) {
       setErrors({ email: "Enter email first" });
       return;
     }
-
     try {
       setSendingOtp(true);
       await sendCustomerOtp(form.email.trim().toLowerCase());
@@ -95,12 +83,8 @@ export default function Signup() {
     }
   };
 
-  /* =========================
-     VERIFY OTP
-  ========================= */
   const handleVerifyOtp = async () => {
     if (!otp.trim()) return;
-
     try {
       setVerifyingOtp(true);
       await verifyCustomerOtp(
@@ -116,9 +100,6 @@ export default function Signup() {
     }
   };
 
-  /* =========================
-     SUBMIT SIGNUP
-  ========================= */
   const handleSignup = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -146,14 +127,18 @@ export default function Signup() {
     <div className="signup-page">
       <div className="signup-box login-box">
         <Image
-          src={CoreToCoverLogo.src || CoreToCoverLogo}
+          src={CoreToCoverLogo}
           alt="CoreToCover"
           className="brand-logo"
+          width={150}
+          height={50}
+          style={{ width: 'auto', height: 'auto', maxWidth: '200px' }}
         />
         <h2 className="signup-title">Create Customer Account</h2>
 
         <form className="signup-form" onSubmit={handleSignup}>
-          <div className="field">
+           {/* Form inputs remain largely the same, logic is updated */}
+           <div className="field">
             <label>Full Name</label>
             <input name="name" value={form.name} onChange={handleChange} />
             {errors.name && <small className="error"><FaTimes /> {errors.name}</small>}
@@ -191,13 +176,7 @@ export default function Signup() {
                 onClick={handleSendOtp}
                 disabled={otpSent || sendingOtp || emailVerified}
               >
-                {emailVerified
-                  ? "Email Verified"
-                  : otpSent
-                    ? "OTP Sent"
-                    : sendingOtp
-                      ? "Sending..."
-                      : "Send OTP"}
+                {emailVerified ? "Email Verified" : otpSent ? "OTP Sent" : sendingOtp ? "Sending..." : "Send OTP"}
               </button>
 
               {otpSent && (
@@ -220,11 +199,8 @@ export default function Signup() {
             </div>
           )}
 
-          {emailVerified && (
-            <p className="otp-verified">Email verified ✓</p>
-          )}
+          {emailVerified && <p className="otp-verified">Email verified ✓</p>}
 
-          {/* reveal until emailVerified */}
           <div className={`pw-reveal ${emailVerified ? "show" : ""}`} aria-hidden={!emailVerified}>
             <div className="field">
               <label>Password</label>
@@ -240,7 +216,6 @@ export default function Signup() {
                   type="button"
                   className="pw-toggle"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
@@ -261,7 +236,6 @@ export default function Signup() {
                   type="button"
                   className="pw-toggle"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
                 >
                   {showConfirm ? <FaEyeSlash /> : <FaEye />}
                 </button>
