@@ -22,7 +22,7 @@ export default function Footer() {
             priority
           />
           <p className="footer-tagline">
-            Interior project needs, in one place.
+            From design to finish, in one place
           </p>
         </div>
         {/* Right: Copyright */}

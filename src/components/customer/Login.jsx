@@ -64,85 +64,41 @@ export default function Login() {
     }
   };
 
-   return (
+  return (
     <div className="login-page">
-      <main className="login-box" aria-labelledby="login-heading">
+      <div className="login-box">
+        <div className="login-header">
+          <h1 className="brand-heading">Core2Cover</h1>
+          <p className="login-subtitle">Welcome back! Please enter your details.</p>
+        </div>
 
-        {/* FIX: Use Image component and pass the object directly */}
-        <Image
-          src={CoreToCoverLogo}
-          alt="CoreToCover"
-          className="brand-logo"
-          width={150} // Provide a fallback width/height just in case CSS fails, or rely on 'auto' via CSS
-          height={50}
-          style={{ width: 'auto', height: 'auto', maxWidth: '200px' }} // CSS control
-          priority // Loads this image faster as it's above the fold
-        />
-
-        <h2 id="login-heading">Sign in</h2>
-
-        <form onSubmit={handleSubmit} noValidate>
-          {error && (
-            <div className="form-error" role="alert" aria-live="assertive">
-              {error}
-            </div>
-          )}
-
-          <div className="form-row">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        <form className="login-form">
+          <div className="input-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="name@example.com" required />
           </div>
 
-          <div className="password_wrap">
-            <label htmlFor="password">Password</label>
-
-            <div className="password-input">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setShowPassword((s) => !s)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+          <div className="input-group">
+            <label>Password</label>
+            <div className="password-wrap">
+              <input type="password" placeholder="••••••••" required />
+              <button type="button" className="pw-toggle">
+                {/* Insert Eye Icon here */}
               </button>
             </div>
           </div>
 
-          <div className="form-actions">
-            <button
-              type="submit"
-              disabled={loading}
-              className="submit-btn"
-            >
-              {loading ? "Signing in..." : "Login"}
-            </button>
+          <div className="login-utilities">
+            <a href="/forgot-password" hidden className="forgot-link">Forgot Password?</a>
           </div>
 
-          <p className="helper-line">
-            Don’t have an account? <Link href="/signup">Create one</Link>
-          </p>
+          <button type="submit" className="login-btn">Log In</button>
         </form>
-      </main>
+
+        <div className="login-footer">
+          Don't have an account? <a href="/signup">Sign Up</a>
+        </div>
+      </div>
     </div>
   );
 }

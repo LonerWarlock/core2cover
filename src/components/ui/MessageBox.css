@@ -1,0 +1,68 @@
+/* src/components/ui/MessageBox.css */
+.message-box-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  min-width: 300px;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  border: 1px solid rgba(96, 110, 82, 0.1);
+  overflow: hidden;
+  animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Types */
+.message-box-container.success { border-left: 5px solid #606e52; }
+.message-box-container.error { border-left: 5px solid #d93025; }
+.message-box-container.info { border-left: 5px solid #91a56e; }
+
+.message-icon { font-size: 1.2rem; }
+.success .message-icon { color: #606e52; }
+.error .message-icon { color: #d93025; }
+
+.message-text {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.message-close {
+  background: none;
+  border: none;
+  color: #8f8b84;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  transition: color 0.2s;
+}
+
+.message-close:hover { color: #333; }
+
+/* Progress Bar Animation */
+.message-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(96, 110, 82, 0.2);
+  width: 100%;
+  animation: progress linear forwards;
+}
+
+@keyframes progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}

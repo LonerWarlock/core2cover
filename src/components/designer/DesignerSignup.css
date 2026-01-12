@@ -1,333 +1,256 @@
+/* =========================================
+   DESIGNER SIGNUP — PREMIUM THEME
+   Palette: Forest Green, Gold, and Ivory
+========================================= */
+
 :root {
-  --green-dark: #606e52;
-  --green: #91a56e;
-  --green-light: #c0cca4;
-  --text-dark: #474747;
-  --muted: #8f8b84;
-  --bg: #f4f6f2;
-  --white: #ffffff;
-  --radius: 14px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  --ease: 240ms cubic-bezier(.2,.9,.3,1);
-  --font-ui: "Helvetica", "Poppins", sans-serif;
+  --ds-forest: #2d3624;
+  --ds-olive: #606e52;
+  --ds-gold: #91a56e;
+  --ds-sand: #f4f7ef;
+  --ds-white: #ffffff;
+  --ds-error: #c23b3b;
+  --ds-shadow: 0 20px 50px rgba(45, 54, 36, 0.15);
+  --ds-ease: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===================================================
-   PAGE WRAPPER (THIS SCOPES EVERYTHING!)
-=================================================== */
 .designer-signup-page {
   min-height: 100vh;
+  background: linear-gradient(135deg, #fdfdfb 0%, #e8efdc 100%);
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: var(--bg);
-  padding: 30px;
-  font-family: var(--font-ui);
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: "Helvetica", Arial, sans-serif;
 }
 
-/* ===================================================
-   AUTH BOX
-=================================================== */
 .ds-auth-box {
   width: 100%;
-  max-width: 760px;
-  background: var(--white);
-  border-radius: var(--radius);
-  padding: 40px 38px;
-  box-shadow: var(--shadow);
+  max-width: 650px;
+  /* Wider for designer grid */
+  background: var(--ds-white);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: var(--ds-shadow);
+  border: 1px solid rgba(96, 110, 82, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Logo + Subtitle */
-.ds-logo {
-  text-align: center;
-  font-weight: 800;
-  font-size: 2rem;
-  color: var(--green-dark);
+.brand-logo {
+  margin-bottom: 10px;
+  object-fit: contain;
 }
 
 .ds-sub {
-  text-align: center;
-  margin-bottom: 16px;
-  color: var(--muted);
-  font-size: 1rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--ds-forest);
+  margin-bottom: 25px;
+  letter-spacing: -0.5px;
 }
 
-.ds-note {
-  margin: 14px 0 22px;
-  background: var(--green-light);
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  color: var(--green-dark);
-}
-
-/* Auth Error */
-.ds-error {
-  color: #c23b3b;
-  font-weight: 700;
-  margin: 8px 0;
-}
-
-/* ===================================================
-   FORM — 2 COLUMNS
-=================================================== */
+/* =========================================
+   FORM GRID
+========================================= */
 .ds-form {
+  width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px 26px;
+  /* Two columns on desktop */
+  gap: 20px;
 }
 
-/* Full-width fields */
-.ds-field.ds-full {
+.ds-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Fields that span full width */
+.ds-full {
   grid-column: span 2;
 }
 
-/* Fields */
 .ds-field label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ds-forest);
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.ds-field input[type="text"],
-.ds-field input[type="email"],
-.ds-field input[type="tel"] {
+.ds-form input:not([type="checkbox"]) {
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid var(--green-light);
-  background: #f9faf8;
-  outline: none;
-  transition: var(--ease);
+  border: 1.5px solid rgba(96, 110, 82, 0.15);
+  background: #fdfdfd;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: #333;
+  transition: var(--ds-ease);
+  box-sizing: border-box;
 }
 
-.ds-field input:focus {
-  border-color: var(--green-dark);
-  box-shadow: 0 0 0 2px rgba(96,110,82,0.12);
+.ds-form input:focus {
+  outline: none;
+  border-color: var(--ds-gold);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(145, 165, 110, 0.1);
 }
 
-/* ===================================================
-   OTP / ACTION ROW
-=================================================== */
+.ds-disabled {
+  background: #f5f5f5 !important;
+  color: #999 !important;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   OTP SECTION
+========================================= */
 .ds-otp-actions {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 12px;
+  margin-top: 10px;
   flex-wrap: wrap;
 }
 
 .ds-otp-input {
-  flex: 1 1 220px;
-  min-width: 150px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--green-light);
-  background: #fff;
-  font-weight: 700;
+  max-width: 150px !important;
+  text-align: center;
+  letter-spacing: 2px;
 }
 
-/* Primary button style (used for main actions) */
+/* =========================================
+   REVEAL SECTION
+========================================= */
+.ds-reveal {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.6s ease, opacity 0.4s ease;
+}
+
+.ds-reveal.show {
+  max-height: 1000px;
+  opacity: 1;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(96, 110, 82, 0.1);
+}
+
+.ds-password-wrap {
+  position: relative;
+}
+
+.ds-toggle-visibility {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ds-olive);
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  font-size: 1.1rem;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
 .ds-btn {
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: linear-gradient(90deg, var(--green-dark), var(--green));
+  background: var(--ds-forest);
   color: white;
   border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform var(--ease), box-shadow var(--ease), filter var(--ease);
-  display: inline-flex;
+  transition: var(--ds-ease);
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .ds-btn:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(96, 110, 82, 0.25);
+  background: var(--ds-olive);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(45, 54, 36, 0.2);
+}
+
+.ds-btn.small {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  background: var(--ds-olive);
 }
 
 .ds-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* a smaller secondary button look */
-.ds-btn.small {
-  padding: 10px 12px;
-  height: 44px;
+/* =========================================
+   FOOTER & ERRORS
+========================================= */
+.ds-error {
+  width: 100%;
+  background: #fff1f1;
+  color: var(--ds-error);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+  border: 1px solid rgba(194, 59, 59, 0.2);
 }
 
-/* ===================================================
-   PASSWORD / VISIBILITY
-=================================================== */
-.ds-password-wrap {
-  position: relative;
-}
-
-.ds-toggle-visibility {
-  position: absolute;
-  right: 12px;
-  top: 38%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  font-size: 1.05rem;
-  color: var(--green-dark);
-  cursor: pointer;
-}
-
-/* disabled / placeholder style for readonly input */
-.ds-disabled {
-  background: #f1f5f1;
-  border: 1px solid #dcdcdc;
-  color: var(--muted);
-}
-
-/* ===================================================
-   REVEAL: hidden until email verified
-=================================================== */
-.ds-reveal {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 340ms var(--ease), opacity 260ms var(--ease), margin-top var(--ease);
-  margin-top: 0;
-  pointer-events: none;
-}
-
-.ds-reveal.show {
-  max-height: 1000px; /* big enough to fit content */
-  opacity: 1;
-  margin-top: 14px;
-  pointer-events: auto;
-  display: contents;
-}
-
-/* ensure reveal children spacing */
-.ds-reveal .ds-field {
-  margin-top: 8px;
-}
-
-/* ===================================================
-   FOOTER / LINK
-=================================================== */
 .ds-footer {
   grid-column: span 2;
   text-align: center;
-  margin-top: 18px;
-  color: var(--muted);
+  margin-top: 25px;
+  color: #666;
+  font-weight: 600;
 }
 
 .ds-link {
-  color: var(--green-dark);
-  font-weight: 700;
+  color: var(--ds-forest);
+  text-decoration: none;
+  font-weight: 800;
 }
 
-/* ===================================================
-   RESPONSIVE
-=================================================== */
-@media (max-width: 760px) {
+.ds-link:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   RESPONSIVE (TABLET & MOBILE)
+========================================= */
+@media (max-width: 768px) {
+
+  .ds-form,
+  .ds-reveal {
+    grid-template-columns: 1fr;
+    /* Single column */
+  }
+
+  .ds-full,
+  .ds-reveal {
+    grid-column: span 1;
+  }
+
   .ds-auth-box {
-    max-width: 100%;
-    padding: 28px 20px;
+    padding: 30px 20px;
   }
-
-  .ds-form {
-    display: block;
-  }
-
-  .ds-field {
-    margin-bottom: 12px;
-  }
-
-  .ds-otp-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .ds-btn {
-    width: 100%;
-  }
-}
-
-.ds-password-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.ds-password-wrap input {
-  width: 100%;
-  padding: 13px 46px 13px 14px; /* space for eye icon */
-  border-radius: 14px;
-  border: 1.5px solid var(--green-light);
-  background: linear-gradient(180deg, #ffffff, #f7f9f4);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--text-dark);
-  outline: none;
-
-  transition:
-    border-color var(--ease),
-    box-shadow var(--ease),
-    transform var(--ease);
-}
-
-.ds-password-wrap input:focus {
-  border-color: var(--green-dark);
-  box-shadow:
-    0 0 0 3px rgba(96, 110, 82, 0.18),
-    0 10px 30px rgba(96, 110, 82, 0.25);
-  transform: translateY(-1px);
-}
-
-.ds-toggle-visibility {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-
-  border-radius: 10px;
-  background: transparent;
-  border: none;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 1.05rem;
-  color: var(--muted);
-  cursor: pointer;
-
-  transition:
-    background var(--ease),
-    color var(--ease),
-    transform var(--ease);
-}
-
-.ds-toggle-visibility:hover {
-  background: rgba(96, 110, 82, 0.12);
-  color: var(--green-dark);
-  transform: translateY(-50%) scale(1.05);
-}
-
-.ds-toggle-visibility:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-/* =========================
-   BRAND LOGO
-========================= */
-.brand-logo {
-  width: 260px;              /* balanced for signup card */
-  margin: 0 auto 18px;       /* center horizontally */
-  display: block;
-  opacity: 0.95;
 }

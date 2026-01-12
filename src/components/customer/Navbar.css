@@ -71,6 +71,7 @@
 .brand-bold {
   font-family: var(--brand-font-bold);
   font-weight: var(--brand-font-bold-weight);
+  font-size: large;
 }
 
 /* =========================================
@@ -84,9 +85,11 @@
 
 .nav-logo-link {
   display: flex;
-  align-items: center; /* Ensures logo and text are on the same baseline */
+  align-items: center;
+  /* Ensures logo and text are on the same baseline */
   text-decoration: none;
-  gap: 12px; /* Consistent spacing between image and brand text */
+  gap: 12px;
+  /* Consistent spacing between image and brand text */
 }
 
 .nav-logo-wrap {
@@ -94,11 +97,11 @@
   align-items: center;
   justify-content: center;
   /* Match this to your brand font-size for perfect baseline alignment */
-  height: 40px; 
+  height: 40px;
 }
 
 .nav-logo {
-  width: 48px;
+  width: 75px;
   height: auto;
   object-fit: contain;
   transition: var(--transition);
@@ -149,6 +152,7 @@
   font-weight: 600;
   font-size: 0.85rem;
   transition: var(--transition);
+  margin-top: 20px;
 }
 
 .seller-btn:hover {
@@ -265,7 +269,7 @@
   .seller-btn {
     display: block;
     text-align: center;
-    margin-top: 10px;
+    margin-left: 28%;
   }
 }
 
@@ -309,14 +313,16 @@
 /* Hide the main nav-links list by default on all screens */
 .nav-links {
   position: fixed;
-  top: 72px; /* nav-height */
-  right: -100%; /* Hidden off-screen */
+  top: 72px;
+  /* nav-height */
+  right: -100%;
+  /* Hidden off-screen */
   width: 300px;
-  height: calc(100vh - 72px);
+  height: calc(100vh - 483px);
   background: white;
   flex-direction: column;
   padding: 40px 20px;
-  box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
   transition: right 0.4s ease;
   z-index: 1000;
   display: flex;
@@ -324,7 +330,8 @@
 }
 
 .nav-links.open {
-  right: 0; /* Slide in */
+  right: 0;
+  /* Slide in */
 }
 
 /* Icons that stay visible next to hamburger on Desktop */
@@ -339,6 +346,7 @@
   color: var(--text-dark);
   transition: color 0.3s;
   text-decoration: none;
+  font-size: smaller;
 }
 
 .nav-icon-link:hover {

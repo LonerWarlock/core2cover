@@ -36,6 +36,11 @@ export default function Signup() {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [errors, setErrors] = useState({});
+  const [msg, setMsg] = useState({ text: "", type: "", show: false });
+
+  const showMessage = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   const passwordRef = useRef(null);
 
@@ -92,7 +97,7 @@ export default function Signup() {
         otp.trim()
       );
       setEmailVerified(true);
-      alert("Email verified successfully");
+      showMessage("Email verified successfully!");
     } catch (err) {
       alert(err?.response?.data?.message || "Invalid OTP");
     } finally {
@@ -124,145 +129,154 @@ export default function Signup() {
   };
 
   return (
-    <div className="signup-page">
-      <div className="signup-box login-box">
-        <Image
-          src={CoreToCoverLogo}
-          alt="CoreToCover"
-          className="brand-logo"
-          width={150}
-          height={50}
-          style={{ width: 'auto', height: 'auto', maxWidth: '200px' }}
+    <>
+      {msg.show && (
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
-        <h2 className="signup-title">Create Customer Account</h2>
+      )}
+      <div className="signup-page">
+        <div className="signup-box login-box">
+          <Image
+            src={CoreToCoverLogo}
+            alt="CoreToCover"
+            className="brand-logo"
+            width={150}
+            height={50}
+            style={{ width: 'auto', height: 'auto', maxWidth: '200px' }}
+          />
+          <h2 className="signup-title">Create Customer Account</h2>
 
-        <form className="signup-form" onSubmit={handleSignup}>
-           {/* Form inputs remain largely the same, logic is updated */}
-           <div className="field">
-            <label>Full Name</label>
-            <input name="name" value={form.name} onChange={handleChange} />
-            {errors.name && <small className="error"><FaTimes /> {errors.name}</small>}
-          </div>
+          <form className="signup-form" onSubmit={handleSignup}>
+            {/* Form inputs remain largely the same, logic is updated */}
+            <div className="field">
+              <label>Full Name</label>
+              <input name="name" value={form.name} onChange={handleChange} />
+              {errors.name && <small className="error"><FaTimes /> {errors.name}</small>}
+            </div>
 
-          <div className="field">
-            <label>Email</label>
-            <input
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              disabled={emailVerified}
-            />
-            {errors.email && <small className="error"><FaTimes /> {errors.email}</small>}
-          </div>
+            <div className="field">
+              <label>Email</label>
+              <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                disabled={emailVerified}
+              />
+              {errors.email && <small className="error"><FaTimes /> {errors.email}</small>}
+            </div>
 
 
-          <div className="field">
-            <label>Phone</label>
-            <input name="phone" value={form.phone} onChange={handleChange} />
-            {errors.phone && <small className="error"><FaTimes /> {errors.phone}</small>}
-          </div>
+            <div className="field">
+              <label>Phone</label>
+              <input name="phone" value={form.phone} onChange={handleChange} />
+              {errors.phone && <small className="error"><FaTimes /> {errors.phone}</small>}
+            </div>
 
-          <div className="field">
-            <label>Address</label>
-            <input name="address" value={form.address} onChange={handleChange} />
-            {errors.address && <small className="error"><FaTimes /> {errors.address}</small>}
-          </div>
+            <div className="field">
+              <label>Address</label>
+              <input name="address" value={form.address} onChange={handleChange} />
+              {errors.address && <small className="error"><FaTimes /> {errors.address}</small>}
+            </div>
 
-          {!emailVerified && (
-            <div className="field full">
-              <button
-                type="button"
-                className={`otp-btn ${otpSent ? "sent" : ""}`}
-                onClick={handleSendOtp}
-                disabled={otpSent || sendingOtp || emailVerified}
-              >
-                {emailVerified ? "Email Verified" : otpSent ? "OTP Sent" : sendingOtp ? "Sending..." : "Send OTP"}
-              </button>
+            {!emailVerified && (
+              <div className="field full">
+                <button
+                  type="button"
+                  className={`otp-btn ${otpSent ? "sent" : ""}`}
+                  onClick={handleSendOtp}
+                  disabled={otpSent || sendingOtp || emailVerified}
+                >
+                  {emailVerified ? "Email Verified" : otpSent ? "OTP Sent" : sendingOtp ? "Sending..." : "Send OTP"}
+                </button>
 
-              {otpSent && (
-                <>
+                {otpSent && (
+                  <>
+                    <input
+                      placeholder="Enter OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyOtp}
+                      disabled={verifyingOtp}
+                      className="otp-verify-btn"
+                    >
+                      {verifyingOtp ? "Verifying..." : "Verify OTP"}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {emailVerified && <p className="otp-verified">Email verified ✓</p>}
+
+            <div className={`pw-reveal ${emailVerified ? "show" : ""}`} aria-hidden={!emailVerified}>
+              <div className="field">
+                <label>Password</label>
+                <div className="password-wrap">
                   <input
-                    placeholder="Enter OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    ref={passwordRef}
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
                   />
                   <button
                     type="button"
-                    onClick={handleVerifyOtp}
-                    disabled={verifyingOtp}
-                    className="otp-verify-btn"
+                    className="pw-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    {verifyingOtp ? "Verifying..." : "Verify OTP"}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
-                </>
-              )}
-            </div>
-          )}
-
-          {emailVerified && <p className="otp-verified">Email verified ✓</p>}
-
-          <div className={`pw-reveal ${emailVerified ? "show" : ""}`} aria-hidden={!emailVerified}>
-            <div className="field">
-              <label>Password</label>
-              <div className="password-wrap">
-                <input
-                  ref={passwordRef}
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                />
-                <button
-                  type="button"
-                  className="pw-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
+                </div>
+                {errors.password && <small className="error"><FaTimes /> {errors.password}</small>}
               </div>
-              {errors.password && <small className="error"><FaTimes /> {errors.password}</small>}
-            </div>
 
-            <div className="field">
-              <label>Confirm Password</label>
-              <div className="password-wrap">
-                <input
-                  type={showConfirm ? "text" : "password"}
-                  name="confirmPassword"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                />
-                <button
-                  type="button"
-                  className="pw-toggle"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                >
-                  {showConfirm ? <FaEyeSlash /> : <FaEye />}
-                </button>
+              <div className="field">
+                <label>Confirm Password</label>
+                <div className="password-wrap">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                  />
+                  <button
+                    type="button"
+                    className="pw-toggle"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                  >
+                    {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <small className="error"><FaTimes /> {errors.confirmPassword}</small>}
               </div>
-              {errors.confirmPassword && <small className="error"><FaTimes /> {errors.confirmPassword}</small>}
+
+              <label className="terms">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                />
+                I agree to terms
+              </label>
+              {errors.terms && <small className="error"><FaTimes /> {errors.terms}</small>}
+
+              <button type="submit" disabled={loading || !emailVerified} className="create-btn">
+                {loading ? "Creating..." : "Create Account"}
+              </button>
             </div>
 
-            <label className="terms">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-              />
-              I agree to terms
-            </label>
-            {errors.terms && <small className="error"><FaTimes /> {errors.terms}</small>}
-
-            <button type="submit" disabled={loading || !emailVerified} className="create-btn">
-              {loading ? "Creating..." : "Create Account"}
-            </button>
-          </div>
-
-          <p className="links">
-            Already have an account? <Link href="/login">Sign in</Link>
-          </p>
-        </form>
+            <p className="links">
+              Already have an account? <Link href="/login">Sign in</Link>
+            </p>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
