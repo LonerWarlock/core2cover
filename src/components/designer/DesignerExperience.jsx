@@ -1,6 +1,10 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import "./DesignerExperience.css";
-import { Link } from "react-router-dom";
+import "./DesignerDashboard.css"
+import Link from "next/link";
+import Image from "next/image";
 import {
   FaBars,
   FaTimes,
@@ -8,9 +12,11 @@ import {
   FaTrashAlt,
   FaSave,
 } from "react-icons/fa";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png"
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png"
 
 const Brand = ({ children }) => <span className="brand">{children}</span>;
+const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
+
 const DesignerExperience = () => {
   const [works, setWorks] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -146,32 +152,37 @@ const DesignerExperience = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link to="/designerdashboard" className="nav-link nav-logo-link">
+            <Link href="/designerdashboard" className="nav-link nav-logo-link">
               <span className="nav-logo-wrap">
-                <img
+                <Image
                   src={CoreToCoverLogo}
-                  alt="CoreToCover"
-                  className="nav-logo"
-                /><Brand>Core2Cover</Brand>
+                  alt="CoreToCover Logo"
+                  width={120}
+                  height={50}
+                  priority
+                  // Ensure 'auto' is wrapped in single or double quotes
+                  style={{ height: 'auto', width: '50px' }}
+                />
+                <span className="brand"><BrandBold>Core2Cover</BrandBold></span>
               </span>
             </Link>
           </div>
 
           <div className="nav-right">
+
+            {/* Hamburger visible on Laptop/Desktop too */}
+            <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <FaTimes /> : <FaBars />}
+            </div>
+
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
+
               <li>
-                <Link to="/login" className="seller-btn">
+                <Link href="/designersignup" className="seller-btn" onClick={() => setMenuOpen(false)}>
                   Login as Customer
                 </Link>
               </li>
             </ul>
-
-            <div
-              className="hamburger"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <FaTimes /> : <FaBars />}
-            </div>
           </div>
         </div>
       </header>

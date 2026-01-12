@@ -1,10 +1,12 @@
+"use client"; //
+
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import "./DesignerPortfolio.css";
 import { saveDesignerPortfolio } from "../../api/designer";
 
 const DesignerPortfolio = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const designerId = localStorage.getItem("designerId");
 
   const [works, setWorks] = useState([
@@ -186,7 +188,7 @@ const DesignerPortfolio = () => {
             <button
               type="button"
               className="dp-skip"
-              onClick={() => navigate("/designerdashboard")}
+              onClick={() => router.push("/designerdashboard")}
             >
               Skip for Now →
             </button>

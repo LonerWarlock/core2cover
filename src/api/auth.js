@@ -1,4 +1,9 @@
+/* src/api/auth.js */
 import api from "./axios";
+
+/* =========================================
+   CUSTOMER AUTHENTICATION
+========================================= */
 
 // Customer Login
 export const customerLogin = (data) => {
@@ -19,6 +24,10 @@ export const sendCustomerOtp = (email) => {
 export const verifyCustomerOtp = (email, otp) => {
   return api.post("/customer/verify-otp", { email, otp });
 };
+
+/* =========================================
+   SELLER AUTHENTICATION
+========================================= */
 
 // Seller Login
 export const sellerLogin = (data) => {

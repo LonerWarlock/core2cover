@@ -1,19 +1,25 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import "./DesignerEditProfile.css";
+import "./DesignerDashboard.css";
 import { FaCamera, FaBars, FaTimes } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import {
   getDesignerEditProfile,
   updateDesignerEditProfile,
 } from "../../api/designer";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png"
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 
 const Brand = ({ children }) => <span className="brand">{children}</span>;
-const DesignerEditProfile = () => {
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
-  const designerId = localStorage.getItem("designerId");
+const DesignerEditProfile = () => {
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [designerId, setDesignerId] = useState(null);
 
   const [form, setForm] = useState({
     fullname: "",
@@ -32,16 +38,21 @@ const DesignerEditProfile = () => {
   const [error, setError] = useState("");
 
   /* =========================
-     REDIRECT IF NOT LOGGED IN
+      INITIALISE & AUTH CHECK
   ========================= */
   useEffect(() => {
-    if (!designerId) {
-      navigate("/designersignup");
+    if (typeof window !== "undefined") {
+      const id = localStorage.getItem("designerId");
+      if (!id) {
+        router.push("/designersignup");
+      } else {
+        setDesignerId(id);
+      }
     }
-  }, [designerId, navigate]);
+  }, [router]);
 
   /* =========================
-     FETCH PROFILE (API)
+      FETCH PROFILE (API)
   ========================= */
   useEffect(() => {
     if (!designerId) return;
@@ -65,19 +76,19 @@ const DesignerEditProfile = () => {
       })
       .catch((err) => {
         console.error(err);
-        setError("Failed to load profile");
+        setError("Failed to load profile details.");
       });
   }, [designerId]);
 
   /* =========================
-     INPUT CHANGE
+      INPUT CHANGE
   ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   /* =========================
-     IMAGE CHANGE
+      IMAGE CHANGE
   ========================= */
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -88,7 +99,7 @@ const DesignerEditProfile = () => {
   };
 
   /* =========================
-     SUBMIT UPDATE (API)
+      SUBMIT UPDATE (API)
   ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -108,8 +119,8 @@ const DesignerEditProfile = () => {
 
       await updateDesignerEditProfile(designerId, formData);
 
-      alert("Profile updated successfully");
-      navigate("/designerdashboard");
+      alert("Profile updated successfully ✅");
+      router.push("/designerdashboard");
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to update profile");
@@ -120,17 +131,21 @@ const DesignerEditProfile = () => {
 
   return (
     <>
-      {/* NAVBAR — kept unchanged intentionally */}
+      {/* NAVBAR */}
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link to="/designerdashboard" className="nav-link nav-logo-link">
+            <Link href="/designerdashboard" className="nav-link nav-logo-link">
               <span className="nav-logo-wrap">
-                <img
+                <Image
                   src={CoreToCoverLogo}
                   alt="CoreToCover"
-                  className="nav-logo"
-                /><Brand>Core2Cover</Brand>
+                  width={120}
+                  height={50}
+                  priority
+                  style={{ height: 'auto', width: '50px' }}
+                />
+                <BrandBold>Core2Cover</BrandBold>
               </span>
             </Link>
           </div>
@@ -138,14 +153,14 @@ const DesignerEditProfile = () => {
           <div className="nav-right">
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
               <li>
-                <Link to="/login" className="seller-btn">
+                <Link href="/login" className="seller-btn">
                   Login as Customer
                 </Link>
               </li>
             </ul>
 
             <div
-              className="hamburger"
+              className="hamburger always-visible"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? <FaTimes /> : <FaBars />}
@@ -154,7 +169,7 @@ const DesignerEditProfile = () => {
         </div>
       </header>
 
-      {/* PAGE — all classes prefixed with dep- */}
+      {/* PAGE */}
       <div className="dep-page">
         <div className="dep-container dep-reveal">
           <h1 className="dep-title">Edit Profile</h1>
@@ -164,11 +179,12 @@ const DesignerEditProfile = () => {
 
           {error && <p className="dep-error">{error}</p>}
 
-          {/* IMAGE */}
+          {/* IMAGE SECTION */}
           <div className="dep-image-section">
             <div className="dep-image-wrapper">
               {preview ? (
-                <img src={preview} alt="Profile" className="dep-profile-img" />
+                /* Native img is fine for previews/dynamic blobs */
+                <img src={preview} alt="Profile Preview" className="dep-profile-img" />
               ) : (
                 <div className="dep-placeholder">
                   <FaCamera className="dep-camera-icon" />
@@ -179,8 +195,10 @@ const DesignerEditProfile = () => {
                 Change Photo
                 <input
                   type="file"
+                  name="profileImage"
                   accept="image/*"
                   onChange={handleImageUpload}
+                  hidden
                 />
               </label>
             </div>
@@ -190,41 +208,81 @@ const DesignerEditProfile = () => {
           <form className="dep-form" onSubmit={handleSubmit}>
             <div className="dep-field">
               <label>Full Name</label>
-              <input name="fullname" value={form.fullname} onChange={handleChange} required />
+              <input
+                name="fullname"
+                placeholder="Enter full name"
+                value={form.fullname}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="dep-field">
               <label>Email</label>
-              <input type="email" name="email" value={form.email} onChange={handleChange} required />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="dep-field">
               <label>Mobile Number</label>
-              <input name="mobile" value={form.mobile} onChange={handleChange} required />
+              <input
+                name="mobile"
+                placeholder="Mobile number"
+                value={form.mobile}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="dep-field">
               <label>Location</label>
-              <input name="location" value={form.location} onChange={handleChange} />
+              <input
+                name="location"
+                placeholder="City, State"
+                value={form.location}
+                onChange={handleChange}
+              />
             </div>
 
             <div className="dep-field">
-              <label>Experience</label>
-              <input type="number" name="experience" value={form.experience} onChange={handleChange} />
+              <label>Experience (Years)</label>
+              <input
+                type="number"
+                name="experience"
+                placeholder="e.g. 5"
+                value={form.experience}
+                onChange={handleChange}
+              />
             </div>
 
             <div className="dep-field">
               <label>Portfolio Link</label>
-              <input name="portfolio" value={form.portfolio} onChange={handleChange} />
+              <input
+                name="portfolio"
+                placeholder="https://behance.net/yourname"
+                value={form.portfolio}
+                onChange={handleChange}
+              />
             </div>
 
-            <div className="dep-field">
+            <div className="dep-field dep-full">
               <label>Bio</label>
-              <textarea name="bio" value={form.bio} onChange={handleChange} />
+              <textarea
+                name="bio"
+                placeholder="Tell clients about your style..."
+                value={form.bio}
+                onChange={handleChange}
+              />
             </div>
 
-            <button className="dep-save-btn" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+            <button type="submit" className="dep-save-btn" disabled={loading}>
+              {loading ? "Saving Changes..." : "Save Changes"}
             </button>
           </form>
         </div>

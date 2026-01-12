@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import "./SellerDeliveryUpdate.css";
 import Sidebar from "./Sidebar";
@@ -5,9 +7,11 @@ import {
     getSellerDeliveryDetails,
     saveSellerDeliveryDetails,
 } from "../../api/seller";
+import MessageBox from "../ui/MessageBox";
 
 const SellerDeliveryUpdate = () => {
-    const sellerId = localStorage.getItem("sellerId");
+    const [sellerId, setSellerId] = useState(null);
+    const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
     const emptyDelivery = {
         deliveryResponsibility: "",
@@ -26,36 +30,41 @@ const SellerDeliveryUpdate = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // ✅ SINGLE, VALID useEffect
+    const triggerMsg = (text, type = "success") => {
+        setMsg({ text, type, show: true });
+    };
+
+    // Handle Hydration and Storage
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const sid = localStorage.getItem("sellerId");
+            setSellerId(sid);
+        }
+    }, []);
+
+    // Fetch existing details
     useEffect(() => {
         if (!sellerId) return;
 
         getSellerDeliveryDetails(sellerId)
             .then((res) => {
                 const data = res.data;
-
                 setDelivery({
                     ...data,
-                    // ensure STRING for select
                     installationAvailable:
                         data.installationAvailable === true ||
-                            data.installationAvailable === "yes"
+                        data.installationAvailable === "yes"
                             ? "yes"
                             : "no",
-
-                    // ensure BOOLEAN for checkbox
                     internationalDelivery:
                         data.internationalDelivery === true ||
                         data.internationalDelivery === "yes",
                 });
-
                 setIsEditMode(true);
             })
-
             .catch(() => {
-                // 404 = first time seller
                 setDelivery(emptyDelivery);
-                setIsEditMode(false); // add mode
+                setIsEditMode(false);
             })
             .finally(() => setLoading(false));
     }, [sellerId]);
@@ -70,27 +79,33 @@ const SellerDeliveryUpdate = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
             await saveSellerDeliveryDetails({
                 sellerId: Number(sellerId),
                 ...delivery,
             });
-
-            alert(
+            triggerMsg(
                 isEditMode
-                    ? "Delivery details updated ✅"
-                    : "Delivery details saved ✅"
+                    ? "Delivery details updated successfully ✅"
+                    : "Delivery details saved successfully ✅",
+                "success"
             );
         } catch {
-            alert("Failed to save delivery details");
+            triggerMsg("Failed to save delivery details", "error");
         }
     };
 
-    if (loading) return null;
+    if (loading && sellerId) return <div className="ms-root"><Sidebar /><div className="delivery-container">Loading...</div></div>;
 
     return (
         <div className="ms-root">
+            {msg.show && (
+                <MessageBox 
+                    message={msg.text} 
+                    type={msg.type} 
+                    onClose={() => setMsg({ ...msg, show: false })} 
+                />
+            )}
             <Sidebar />
 
             <div className="delivery-container">
@@ -103,7 +118,7 @@ const SellerDeliveryUpdate = () => {
 
                     <p>
                         {isEditMode
-                            ? "Manage how you deliver products"
+                            ? "Manage how you deliver products to Core2Cover customers"
                             : "Add delivery details to start selling"}
                     </p>
 
@@ -147,9 +162,7 @@ const SellerDeliveryUpdate = () => {
                             >
                                 <option value="">Select</option>
                                 <option value="courier">Courier / Surface</option>
-                                <option value="seller-transport">
-                                    Seller Transport
-                                </option>
+                                <option value="seller-transport">Seller Transport</option>
                             </select>
                         </div>
 
@@ -188,6 +201,7 @@ const SellerDeliveryUpdate = () => {
                                 <option value="fixed">Fixed</option>
                             </select>
                         </div>
+
                         <div className="input-group">
                             <label>Installation Available *</label>
                             <select
@@ -214,7 +228,6 @@ const SellerDeliveryUpdate = () => {
                             </div>
                         )}
 
-
                         {delivery.shippingChargeType === "fixed" && (
                             <div className="input-group">
                                 <label>Shipping Charge (₹)</label>
@@ -231,18 +244,15 @@ const SellerDeliveryUpdate = () => {
                             <input
                                 type="checkbox"
                                 name="internationalDelivery"
+                                id="intl-check"
                                 checked={delivery.internationalDelivery}
                                 onChange={handleChange}
                             />
-                            <label>Can deliver internationally</label>
+                            <label htmlFor="intl-check">Can deliver internationally</label>
                         </div>
 
-
-
                         <button className="primary-btn" type="submit">
-                            {isEditMode
-                                ? "Update Delivery Details"
-                                : "Save Delivery Details"}
+                            {isEditMode ? "Update Details" : "Save Details"}
                         </button>
                     </form>
                 </div>

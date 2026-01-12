@@ -19,69 +19,261 @@
   --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
   --shadow-hover: 0 18px 48px rgba(0, 0, 0, 0.14);
 
-  --transition: 260ms cubic-bezier(.2,.9,.3,1);
+  --transition: 260ms cubic-bezier(.2, .9, .3, 1);
 
   --star-gold: #f4b400;
   --danger: #dc2626;
+
+  --brand-font: "CaviarDreams", sans-serif;
+  --brand-font-bold: "CaviarDreams", sans-serif;
+  --brand-font-weight: 400;
+  --brand-font-bold-weight: 700;
 }
+
+@font-face {
+  font-family: "CaviarDreams";
+  src: url("/fonts/CaviarDreams.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "CaviarDreams";
+  src: url("/fonts/CaviarDreams_Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
 
 /* ===============================
    NAVBAR
 =============================== */
-.dd-navbar {
-  background: var(--white);
-  box-shadow: var(--shadow-soft);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+
+.brand {
+  font-family: var(--brand-font);
+  font-weight: var(--brand-font-weight);
+  letter-spacing: -0.4px;
+  color: var(--olive);
+  align-items: center;  
 }
 
-.dd-nav-container {
-  max-width: 1200px;
+.brand-bold {
+  font-family: var(--brand-font-bold);
+  font-weight: var(--brand-font-bold-weight);
+  font-size: large;
+}
+
+/* =========================================
+   CASA — PREMIUM NAVBAR STYLES
+   Designer Dashboard Focus
+========================================= */
+
+.navbar {
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 80px;
+  /* Fixed height for consistent vertical centering */
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-container {
+  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.dd-logo {
-  font-family: "Big Caslon", serif;
-  font-size: 1.6rem;
-  color: var(--green-dark);
-  margin: 0;
-}
-
-.dd-nav-link {
-  text-decoration: none;
-}
-
-.dd-nav-right {
+/* --- LOGO & BRAND ALIGNMENT --- */
+.nav-left {
   display: flex;
   align-items: center;
-  gap: 18px;
 }
 
-.dd-nav-links {
+.nav-logo-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* Space between logo image and text */
+}
+
+/* ===============================
+   NAVBAR BRAND STYLING
+=============================== */
+
+/* This targets the outer span */
+.brand {
+  font-family: var(--brand-font);
+  font-weight: var(--brand-font-weight);
+  letter-spacing: -0.4px;
+  color: var(--green-dark); /* Changed from --olive to match your tokens */
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* This targets the inner span inside BrandBold */
+.brand-bold {
+  font-family: var(--brand-font-bold) !important;
+  font-weight: var(--brand-font-bold-weight) !important;
+  font-size: 1.6rem; /* Ensures it matches the size of the non-bold version */
+  letter-spacing: -0.5px;
+}
+
+/* --- RIGHT SECTION & NAVIGATION --- */
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links {
   list-style: none;
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
-.dd-seller-btn {
-  padding: 8px 14px;
-  border-radius: 999px;
+.seller-btn {
+  background: #606e52;
+  color: #ffffff !important;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: transform 0.2s, background 0.2s;
+  display: inline-block;
+}
+
+.seller-btn:hover {
+  background: #91a56e;
+  transform: translateY(-1px);
+}
+
+/* --- HAMBURGER MENU --- */
+.hamburger {
+  display: none;
+  /* Hidden by default on desktop */
+  font-size: 1.5rem;
+  color: #606e52;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+/* --- RESPONSIVE LOGIC --- */
+@media (max-width: 992px) {
+  .hamburger.always-visible {
+    display: block;
+    /* Force visible as per your JSX class */
+  }
+
+  .hamburger {
+    display: block;
+    position: relative;
+    z-index: 1100;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    /* Hidden off-screen */
+    width: 280px;
+    height: 100vh;
+    background: #ffffff;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+    z-index: 1050;
+  }
+
+  .nav-links.open {
+    right: 0;
+    width: 50%;
+        height: 20%;
+    /* Slide in */
+  }
+
+  .nav-links li {
+    margin: 15px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand {
+    font-size: 1.3rem;
+  }
+
+  .nav-container {
+    padding: 0 16px;
+  }
+}
+
+.seller-btn {
   background: var(--green-dark);
-  color: #fff;
+  color: white !important;
+  padding: 10px 22px;
+  border-radius: 25px;
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9rem;
+  transition: var(--transition);
+  display: inline-block;
 }
 
-.dd-hamburger {
+.seller-btn:hover {
+  background: var(--green-mid);
+  transform: translateY(-1px);
+}
+
+.hamburger {
   display: none;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  color: var(--green-dark);
   cursor: pointer;
+}
+
+/* ===============================
+   MOBILE NAVBAR LOGIC
+=============================== */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-links {
+    display: none;
+    /* Hide by default on mobile */
+    flex-direction: column;
+    position: absolute;
+    top: 70px;
+    width: 100%;
+    background: var(--white);
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    gap: 15px;
+  }
+
+  .nav-links.open {
+    display: flex;
+    /* Show when menuOpen is true */
+  }
 }
 
 /* ===============================
@@ -171,7 +363,7 @@
   box-shadow: var(--shadow-soft);
   cursor: pointer;
   transition: var(--transition);
-  border: 1px solid rgba(96,110,82,0.15);
+  border: 1px solid rgba(96, 110, 82, 0.15);
 }
 
 .dd-card:hover {
@@ -360,10 +552,21 @@
   animation: ddFadeIn 0.6s ease forwards;
 }
 
-.dd-delay-1 { animation-delay: 0.1s; }
-.dd-delay-2 { animation-delay: 0.2s; }
-.dd-delay-3 { animation-delay: 0.3s; }
-.dd-delay-4 { animation-delay: 0.4s; }
+.dd-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.dd-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.dd-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.dd-delay-4 {
+  animation-delay: 0.4s;
+}
 
 @keyframes ddFadeIn {
   to {
@@ -375,9 +578,15 @@
 /* ===============================
    RESPONSIVE
 =============================== */
-@media (max-width: 768px) {
+@media (max-width: 769px) {
   .dd-header {
     flex-direction: column;
+  }
+
+  .nav-links-open {
+    display: flex;
+    width: 254px;
+    height: 50px;
   }
 
   .dd-review-row {
@@ -388,3 +597,35 @@
     min-width: auto;
   }
 }
+
+/* Ensure nav-links are visible on Desktop */
+@media (min-width: 769px) {
+  .nav-links {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    position: static !important;
+    background: none !important;
+  }
+
+  .hamburger {
+    display: none !important;
+  }
+}
+
+/* Style the seller-btn inside the Designer Dashboard */
+.seller-btn {
+  background: var(--green-dark);
+  color: white !important;
+  padding: 10px 20px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.seller-btn:hover {
+  background: var(--green-mid);
+}
+

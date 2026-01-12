@@ -1,26 +1,42 @@
-// File: src/components/seller/EditBusinessDetails.jsx
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import "./BusinessDetails.css";
 import {
     getSellerBusinessDetails,
     updateSellerBusinessDetails,
 } from "../../api/seller";
 import Sidebar from "./Sidebar";
+import MessageBox from "../ui/MessageBox";
 
 const EditBusinessDetails = () => {
-    const navigate = useNavigate();
-    const sellerId = localStorage.getItem("sellerId");
-
+    const router = useRouter();
+    const [sellerId, setSellerId] = useState(null);
     const [business, setBusiness] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
+    const triggerMsg = (text, type = "success") => {
+        setMsg({ text, type, show: true });
+    };
+
+    // Safe access to localStorage in Next.js
     useEffect(() => {
-        if (!sellerId) {
-            navigate("/sellerlogin");
-            return;
+        if (typeof window !== "undefined") {
+            const sid = localStorage.getItem("sellerId");
+            if (!sid) {
+                router.push("/sellerlogin");
+            } else {
+                setSellerId(sid);
+            }
         }
+    }, [router]);
+
+    // Fetch existing details
+    useEffect(() => {
+        if (!sellerId) return;
 
         getSellerBusinessDetails(sellerId)
             .then((res) => {
@@ -28,13 +44,14 @@ const EditBusinessDetails = () => {
             })
             .catch((err) => {
                 if (err.response?.status === 404) {
-                    navigate("/editbusinessdetails");
+                    // Redirect to create if not found, or stay to add new
+                    router.push("/business_details");
                 } else {
-                    alert("Failed to load business details");
+                    triggerMsg("Failed to load business details", "error");
                 }
             })
             .finally(() => setLoading(false));
-    }, [sellerId, navigate]);
+    }, [sellerId, router]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -47,25 +64,39 @@ const EditBusinessDetails = () => {
 
         try {
             await updateSellerBusinessDetails(sellerId, business);
-            alert("Business details updated successfully ✅");
-            navigate("/editbusinessdetails");
+            triggerMsg("Business details updated successfully ✅", "success");
         } catch (err) {
-            alert("Failed to update business details");
+            triggerMsg("Failed to update business details", "error");
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return (
+        <div className="sma-root">
+            <Sidebar />
+            <div className="business_container">
+                <p>Loading business details...</p>
+            </div>
+        </div>
+    );
+    
     if (!business) return null;
 
     return (
         <div className="sma-root">
+            {msg.show && (
+                <MessageBox 
+                    message={msg.text} 
+                    type={msg.type} 
+                    onClose={() => setMsg({ ...msg, show: false })} 
+                />
+            )}
             <Sidebar />
             <div className="business_container">
                 <div className="business-card">
                     <h2>Edit Business Details</h2>
-                    <p>Update your store information</p>
+                    <p>Update your store information at Core2Cover</p>
 
                     <form onSubmit={handleSubmit}>
                         <div className="input-group">
@@ -134,7 +165,7 @@ const EditBusinessDetails = () => {
                         </div>
 
                         <button type="submit" className="primary-btn" disabled={saving}>
-                            {saving ? "Saving..." : "Update Business Details"}
+                            {saving ? "Saving Changes..." : "Update Business Details"}
                         </button>
                     </form>
                 </div>

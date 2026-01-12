@@ -21,6 +21,39 @@
   --de-font-serif: "Big Caslon", serif;
 
   --de-transition: 260ms cubic-bezier(.2, .9, .3, 1);
+
+  --brand-font: "CaviarDreams", sans-serif;
+  --brand-font-bold: "CaviarDreams", sans-serif;
+  --brand-font-weight: 400;
+  --brand-font-bold-weight: 700;
+}
+
+@font-face {
+  font-family: "CaviarDreams";
+  src: url("/fonts/CaviarDreams.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "CaviarDreams";
+  src: url("/fonts/CaviarDreams_Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
+.brand {
+  font-family: var(--brand-font);
+  font-weight: var(--brand-font-weight);
+  letter-spacing: -0.4px;
+  color: var(--olive);
+  align-items: center;
+}
+
+.brand-bold {
+  font-family: var(--brand-font-bold);
+  font-weight: var(--brand-font-bold-weight);
+  font-size: large;
 }
 
 /* ===========================================================

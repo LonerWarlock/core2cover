@@ -1,11 +1,14 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import "./SellerReturns.css";
 import {
   getSellerReturns,
   approveReturn,
   rejectReturn,
-} from "../../api/sellerReturn";
+} from "../../api/seller";
 import Sidebar from "./Sidebar";
+import MessageBox from "../ui/MessageBox";
 
 /* =========================
    SAFE HELPERS
@@ -28,22 +31,39 @@ const deriveReturnStatus = (r) => {
 };
 
 export default function SellerReturns() {
+  const [sellerId, setSellerId] = useState(null);
   const [returns, setReturns] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   /* 🔹 Reject modal state */
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedReturnId, setSelectedReturnId] = useState(null);
 
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
+
+  /* =========================
+     INITIALISE
+  ========================= */
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSellerId(localStorage.getItem("sellerId"));
+    }
+  }, []);
+
   /* =========================
      FETCH RETURNS
   ========================= */
   useEffect(() => {
-    getSellerReturns()
+    if (!sellerId) return;
+
+    getSellerReturns(sellerId)
       .then((res) => setReturns(res.data.returns || []))
       .catch(() => setReturns([]));
-  }, []);
+  }, [sellerId]);
 
   /* =========================
      APPROVE RETURN
@@ -63,9 +83,9 @@ export default function SellerReturns() {
         )
       );
 
-      alert("Return approved successfully");
+      triggerMsg("Return approved successfully");
     } catch (err) {
-      alert(err?.response?.data?.message || "Failed to approve return");
+      triggerMsg(err?.response?.data?.message || "Failed to approve return", "error");
     } finally {
       setLoadingId(null);
     }
@@ -82,7 +102,7 @@ export default function SellerReturns() {
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      alert("Please provide a rejection reason");
+      triggerMsg("Please provide a rejection reason", "error");
       return;
     }
 
@@ -99,9 +119,9 @@ export default function SellerReturns() {
       );
 
       setRejectModalOpen(false);
-      alert("Return rejected");
+      triggerMsg("Return rejected", "success");
     } catch (err) {
-      alert(err?.response?.data?.message || "Failed to reject return");
+      triggerMsg(err?.response?.data?.message || "Failed to reject return", "error");
     } finally {
       setLoadingId(null);
     }
@@ -109,13 +129,20 @@ export default function SellerReturns() {
 
   return (
     <div className="ms-root">
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
       <Sidebar />
 
       <div className="seller-returns-page">
         <h2 className="page-title">Return Requests</h2>
 
         {returns.length === 0 && (
-          <p className="empty-text">No return requests</p>
+          <p className="empty-text">No return requests found for your store.</p>
         )}
 
         <div className="returns-grid">
@@ -124,25 +151,17 @@ export default function SellerReturns() {
 
             return (
               <div key={r.id} className="return-card">
-                {/* ================= HEADER ================= */}
                 <div className="card-header">
                   <h3>{r.productName}</h3>
                   <span className={`status-pill ${safeLower(status)}`}>
-                    {status}
+                    {status.replace("_", " ")}
                   </span>
                 </div>
 
-                {/* ================= BODY ================= */}
                 <div className="card-body">
-                  <p>
-                    <strong>Customer:</strong> {r.user?.name || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {r.user?.email || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Reason:</strong> {r.reason}
-                  </p>
+                  <p><strong>Customer:</strong> {r.user?.name || "N/A"}</p>
+                  <p><strong>Email:</strong> {r.user?.email || "N/A"}</p>
+                  <p><strong>Reason:</strong> {r.reason}</p>
 
                   {r.images?.length > 0 && (
                     <div className="return-images">
@@ -157,17 +176,12 @@ export default function SellerReturns() {
                     </div>
                   )}
 
-                  <p>
-                    <strong>Refund Amount:</strong> ₹{r.refundAmount || 0}
-                  </p>
-
+                  <p><strong>Refund Amount:</strong> ₹{r.refundAmount || 0}</p>
                   <p className="date">
-                    Requested on{" "}
-                    {new Date(r.requestedAt).toLocaleDateString()}
+                    Requested on {new Date(r.requestedAt).toLocaleDateString()}
                   </p>
                 </div>
 
-                {/* ================= ACTIONS ================= */}
                 {status === "REQUESTED" && (
                   <div className="card-actions dual">
                     <button
@@ -192,32 +206,23 @@ export default function SellerReturns() {
         </div>
       </div>
 
-      {/* =========================
-         REJECT MODAL
-      ========================= */}
       {rejectModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <h3>Reject Return</h3>
-            <p>Please provide a reason for rejecting this return.</p>
+            <h3>Reject Return Request</h3>
+            <p>Please provide a reason for rejecting this return to the customer.</p>
 
             <textarea
-              placeholder="Enter rejection reason..."
+              placeholder="e.g. Item returned in damaged condition..."
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
             />
 
             <div className="modal-actions">
-              <button
-                className="cancel-btn"
-                onClick={() => setRejectModalOpen(false)}
-              >
+              <button className="cancel-btn" onClick={() => setRejectModalOpen(false)}>
                 Cancel
               </button>
-              <button
-                className="confirm-reject-btn"
-                onClick={handleReject}
-              >
+              <button className="confirm-reject-btn" onClick={handleReject}>
                 Reject Return
               </button>
             </div>

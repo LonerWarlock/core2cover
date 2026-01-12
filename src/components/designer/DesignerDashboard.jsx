@@ -6,12 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaPalette, FaEdit, FaUserTie, FaHandshake, FaBars, FaTimes, FaToggleOn, FaToggleOff } from "react-icons/fa";
 import { getDesignerBasic, updateDesignerAvailability } from "../../api/designer";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 import Image from "next/image";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
+// 1. Import MessageBox
+import MessageBox from "../ui/MessageBox"; 
 
-const Brand = ({ children }) => <span className="brand">{children}</span>;
-
-// ... renderStarsInline helper remains same ...
+const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
 const DesignerDashboard = () => {
   const router = useRouter();
@@ -19,12 +19,20 @@ const DesignerDashboard = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerName, setDesignerName] = useState("Designer");
   const [loadingAvailability, setLoadingAvailability] = useState(false);
-  //const [ratingsSummary, setRatingsSummary] = useState(null);
-  //const [ratingsError, setRatingsError] = useState("");
   const [designerId, setDesignerId] = useState(null);
 
+  // 2. Message Box State
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  // 3. Helper to trigger the message box
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
+
   useEffect(() => {
-    setDesignerId(localStorage.getItem("designerId"));
+    if (typeof window !== "undefined") {
+      setDesignerId(localStorage.getItem("designerId"));
+    }
   }, []);
 
   useEffect(() => {
@@ -36,85 +44,131 @@ const DesignerDashboard = () => {
         setAvailable(data.availability === "Available");
       })
       .catch((err) => console.error(err));
-
-    // FIX: Use relative API path
-    const loadRatings = async () => {
-      try {
-        const res = await fetch(`/api/designer/${designerId}/ratings`);
-        if (!res.ok) throw new Error("Failed to load ratings");
-        const data = await res.json();
-        setRatingsSummary(data);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        setRatingsError("Failed to load ratings");
-      }
-    };
-    loadRatings();
   }, [designerId]);
 
   const toggleAvailability = async () => {
-    if (!designerId) return;
+    if (!designerId) {
+      triggerMsg("Session expired. Please login again.", "error");
+      return;
+    }
+
     const newStatus = available ? "Unavailable" : "Available";
+
     try {
       setLoadingAvailability(true);
       await updateDesignerAvailability(designerId, newStatus);
-      setAvailable(!available);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) { alert("Failed to update availability"); } finally { setLoadingAvailability(false); }
+      setAvailable(newStatus === "Available");
+      
+      // Replace alert with triggerMsg
+      triggerMsg(`You are now ${newStatus}`, "success");
+    } catch (err) {
+      console.error("Failed to update availability:", err);
+      // Replace alert with triggerMsg
+      triggerMsg(err.response?.data?.message || "Failed to update availability", "error");
+    } finally {
+      setLoadingAvailability(false);
+    }
   };
-
-  // ... (JSX remains similar, ensure onClick navigation uses router.push) ...
 
   return (
     <>
+      {/* 4. Render MessageBox */}
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
+
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link href="/designerdashboard" className="nav-link nav-logo-link">
-               <span className="nav-logo-wrap"><Image src={CoreToCoverLogo.src || CoreToCoverLogo} alt="Logo" className="nav-logo" /><Brand>Core2Cover</Brand></span>
+            <Link href="/designerdashboard" className="nav-logo-link">
+              <span className="nav-logo-wrap">
+                <Image
+                  src={CoreToCoverLogo}
+                  alt="CoreToCover Logo"
+                  width={120}
+                  height={50}
+                  priority
+                  style={{ height: 'auto', width: '50px' }}
+                />
+                <BrandBold>Core2Cover</BrandBold>
+              </span>
             </Link>
           </div>
+
           <div className="nav-right">
-             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
-               <li><Link href="/login" className="seller-btn">Login as Customer</Link></li>
-             </ul>
-             <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <FaTimes /> : <FaBars />}</div>
+            <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <FaTimes /> : <FaBars />}
+            </div>
+
+            <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
+              <li>
+                <Link href="/login" className="seller-btn" onClick={() => setMenuOpen(false)}>
+                  Login as Customer
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
       </header>
 
       <div className="dd-dashboard">
-        {/* ... Header Section ... */}
         <div className="dd-header dd-reveal">
-           <div className="dd-header-left"><h1 className="dd-title">Welcome, {designerName}</h1><p className="dd-sub">Manage your portfolio...</p></div>
-           {/* ... Ratings Summary ... */}
+          <div className="dd-header-left">
+            <h1 className="dd-title">Welcome, {designerName}</h1>
+            <p className="dd-sub">Manage your portfolio and leads from your private dashboard.</p>
+          </div>
         </div>
 
         <div className="dd-grid">
           <div className="dd-card dd-reveal dd-delay-1" onClick={() => router.push("/designerexperience")}>
-             <div className="dd-icon"><FaPalette /></div><h3>My Portfolio</h3><p>Upload...</p>
-          </div>
-          <div className="dd-card dd-reveal dd-delay-2" onClick={() => router.push("/designerworkreceived")}>
-             <div className="dd-icon"><FaHandshake /></div><h3>Work Received</h3><p>See customers...</p>
-          </div>
-          <div className="dd-card dd-reveal dd-delay-3" onClick={() => router.push("/designereditprofile")}>
-             <div className="dd-icon"><FaEdit /></div><h3>Edit Profile</h3><p>Update details...</p>
+            <div className="dd-icon"><FaPalette /></div>
+            <h3>My Portfolio</h3>
+            <p>Upload and showcase your best design works.</p>
           </div>
           
+          <div className="dd-card dd-reveal dd-delay-2" onClick={() => router.push("/designerworkreceived")}>
+            <div className="dd-icon"><FaHandshake /></div>
+            <h3>Work Received</h3>
+            <p>View and manage project requests from customers.</p>
+          </div>
+
+          <div className="dd-card dd-reveal dd-delay-3" onClick={() => router.push("/designereditprofile")}>
+            <div className="dd-icon"><FaEdit /></div>
+            <h3>Edit Profile</h3>
+            <p>Update your bio, location, and professional details.</p>
+          </div>
+
           <div className="dd-card dd-reveal dd-delay-4">
-            <div className="dd-icon"><FaUserTie /></div><h3>Designer Settings</h3>
+            <div className="dd-icon"><FaUserTie /></div>
+            <h3>Designer Settings</h3>
             <div className="dd-setting-card">
-               <div className="dd-setting-info"><h3>Availability</h3></div>
-               <button className="dd-toggle-btn" onClick={toggleAvailability} disabled={loadingAvailability}>
-                 {available ? <FaToggleOn className="dd-toggle-icon dd-on" /> : <FaToggleOff className="dd-toggle-icon dd-off" />}
-               </button>
+              <div className="dd-setting-info">
+                <h3>Availability</h3>
+                <p style={{ fontSize: '0.8rem' }}>
+                  {available ? "Showing in search results" : "Currently hidden from search"}
+                </p>
+              </div>
+              <button 
+                className="dd-toggle-btn" 
+                onClick={toggleAvailability} 
+                disabled={loadingAvailability}
+              >
+                {available ? (
+                  <FaToggleOn className="dd-toggle-icon dd-on" />
+                ) : (
+                  <FaToggleOff className="dd-toggle-icon dd-off" />
+                )}
+              </button>
             </div>
           </div>
         </div>
-        
-        {/* ... Reviews Section ... */}
       </div>
     </>
   );
 };
+
 export default DesignerDashboard;

@@ -1,15 +1,22 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar"
+// Replace react-router-dom with next/navigation
+import { useRouter } from "next/navigation"; 
+import Sidebar from "./Sidebar";
 import "./SellerBankDetails.css";
 import {
   getSellerBankDetails,
   saveSellerBankDetails,
 } from "../../api/seller";
+import MessageBox from "../ui/MessageBox";
 
 const SellerBankDetails = () => {
-  const navigate = useNavigate();
-  const sellerId = localStorage.getItem("sellerId");
+  const router = useRouter();
+  const [sellerId, setSellerId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   const [form, setForm] = useState({
     accountHolder: "",
@@ -18,17 +25,26 @@ const SellerBankDetails = () => {
     ifsc: "",
   });
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   /* =========================
-     FETCH BANK DETAILS
+     INITIALISE & FETCH
   ========================= */
   useEffect(() => {
-    if (!sellerId) {
-      navigate("/sellerlogin");
-      return;
+    if (typeof window !== "undefined") {
+      const storedId = localStorage.getItem("sellerId");
+      if (!storedId) {
+        router.push("/sellerlogin");
+      } else {
+        setSellerId(storedId);
+      }
     }
+  }, [router]);
+
+  useEffect(() => {
+    if (!sellerId) return;
 
     const loadBankDetails = async () => {
       try {
@@ -36,15 +52,15 @@ const SellerBankDetails = () => {
         if (res.data) {
           setForm(res.data);
         }
-      } catch {
-        // no bank details yet — safe to ignore
+      } catch (err) {
+        console.log("No existing bank details found.");
       } finally {
         setLoading(false);
       }
     };
 
     loadBankDetails();
-  }, [sellerId, navigate]);
+  }, [sellerId]);
 
   /* =========================
      HANDLERS
@@ -60,7 +76,7 @@ const SellerBankDetails = () => {
     const { accountHolder, bankName, accountNumber, ifsc } = form;
 
     if (!accountHolder || !bankName || !accountNumber || !ifsc) {
-      alert("Please fill all fields");
+      triggerMsg("Please fill all fields", "error");
       return;
     }
 
@@ -75,78 +91,83 @@ const SellerBankDetails = () => {
         ifsc,
       });
 
-      alert("Bank details saved successfully ✅");
-      navigate("/sellerbankdetails");
+      triggerMsg("Bank details saved successfully ✅", "success");
     } catch (err) {
-      alert(
-        err?.response?.data?.message ||
-        "Failed to save bank details"
+      triggerMsg(
+        err?.response?.data?.message || "Failed to save bank details",
+        "error"
       );
     } finally {
       setSaving(false);
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="ms-root">
-      <Sidebar/>
-    <div className="bs-layout-root">
-      <div className="bs-profile-shell">
-        <h1 className="bs-heading">Bank Details</h1>
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
+      
+      <Sidebar />
+      <div className="bs-layout-root">
+        <div className="bs-profile-shell">
+          <h1 className="bs-heading">Bank Details</h1>
 
-        {loading ? (
-          <p>Loading…</p>
-        ) : (
-          <form className="bs-card bs-bank-form" onSubmit={handleSave}>
-            <label>
-              Account Holder Name
-              <input
-                name="accountHolder"
-                value={form.accountHolder}
-                onChange={handleChange}
-              />
-            </label>
+          {loading ? (
+            <p>Loading…</p>
+          ) : (
+            <form className="bs-card bs-bank-form" onSubmit={handleSave}>
+              <label>
+                Account Holder Name
+                <input
+                  name="accountHolder"
+                  value={form.accountHolder}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
 
-            <label>
-              Bank Name
-              <input
-                name="bankName"
-                value={form.bankName}
-                onChange={handleChange}
-              />
-            </label>
+              <label>
+                Bank Name
+                <input
+                  name="bankName"
+                  value={form.bankName}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
 
-            <label>
-              Account Number
-              <input
-                name="accountNumber"
-                value={form.accountNumber}
-                onChange={handleChange}
-              />
-            </label>
+              <label>
+                Account Number
+                <input
+                  name="accountNumber"
+                  value={form.accountNumber}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
 
-            <label>
-              IFSC Code
-              <input
-                name="ifsc"
-                value={form.ifsc}
-                onChange={handleChange}
-              />
-            </label>
+              <label>
+                IFSC Code
+                <input
+                  name="ifsc"
+                  value={form.ifsc}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
 
-            <button
-              className="bs-btn bs-btn--primary"
-              disabled={saving}
-            >
-              {saving ? "Saving..." : "Save "}
-            </button>
-          </form>
-        )}
+              <button className="bs-btn bs-btn--primary" disabled={saving}>
+                {saving ? "Saving..." : "Save Details"}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );
 };

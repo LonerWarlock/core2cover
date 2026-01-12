@@ -1,12 +1,13 @@
-// File: src/components/seller/SellerBusinessDetails.jsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import "./BusinessDetails.css";
 import { createSellerBusinessDetails } from "../../api/seller";
-
+import MessageBox from "../ui/MessageBox";
 
 const BusinessDetails = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [business, setBusiness] = useState({
     businessName: "",
@@ -19,6 +20,21 @@ const BusinessDetails = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  // Access localStorage safely in Client Component
+  const [sellerId, setSellerId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedId = localStorage.getItem("sellerId");
+      setSellerId(storedId);
+    }
+  }, []);
+
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,16 +45,13 @@ const BusinessDetails = () => {
     e.preventDefault();
 
     if (!business.businessName || !business.sellerType) {
-      alert("Please fill all required fields.");
+      triggerMsg("Please fill all required fields.", "error");
       return;
     }
 
-    // ✅ FIXED KEY
-    const sellerId = localStorage.getItem("sellerId");
-
     if (!sellerId) {
-      alert("Seller not logged in. Please sign up again.");
-      navigate("/sellerlogin");
+      triggerMsg("Seller session expired. Please sign up again.", "error");
+      setTimeout(() => router.push("/sellerlogin"), 2000);
       return;
     }
 
@@ -56,30 +69,43 @@ const BusinessDetails = () => {
         gst: business.gst,
       });
 
-      alert("Business details saved successfully ✅");
-      navigate("/sellerKYC");
+      triggerMsg("Business details saved successfully ✅", "success");
+      
+      // Navigate after a short delay so user can see the success message
+      setTimeout(() => {
+        router.push("/deliverydetails");
+      }, 2000);
+      
     } catch (err) {
-      alert(
-        err?.response?.data?.message ||
-        "Failed to save business details"
+      triggerMsg(
+        err?.response?.data?.message || "Failed to save business details",
+        "error"
       );
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <div className="business-container">
-      <div className="business-card">
-        <h2>Business Details</h2>
-        <p>Tell us about what you sell</p>
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
 
-        <form onSubmit={handleSubmit}>
+      <div className="business-card business-reveal">
+        <h2 className="business-title">Business Details</h2>
+        <p className="business-sub">Tell us about what you sell at Core2Cover</p>
+
+        <form onSubmit={handleSubmit} className="business-form">
           <div className="input-group">
             <label>Business / Store Name *</label>
             <input
               name="businessName"
+              placeholder="e.g. Elegant Interiors"
               value={business.businessName}
               onChange={handleChange}
               required
@@ -94,7 +120,7 @@ const BusinessDetails = () => {
               onChange={handleChange}
               required
             >
-              <option value="">Select</option>
+              <option value="">Select Category</option>
               <option value="interior-products">Interior Products</option>
               <option value="raw-materials">
                 Raw Materials for Interior Products
@@ -104,9 +130,10 @@ const BusinessDetails = () => {
           </div>
 
           <div className="input-group">
-            <label>Address</label>
+            <label>Full Address</label>
             <input
               name="address"
+              placeholder="Shop No, Street, Area"
               value={business.address}
               onChange={handleChange}
             />
@@ -117,6 +144,7 @@ const BusinessDetails = () => {
               <label>City</label>
               <input
                 name="city"
+                placeholder="City"
                 value={business.city}
                 onChange={handleChange}
               />
@@ -126,6 +154,7 @@ const BusinessDetails = () => {
               <label>State</label>
               <input
                 name="state"
+                placeholder="State"
                 value={business.state}
                 onChange={handleChange}
               />
@@ -137,6 +166,7 @@ const BusinessDetails = () => {
               <label>Pincode</label>
               <input
                 name="pincode"
+                placeholder="6-digit code"
                 value={business.pincode}
                 onChange={handleChange}
               />
@@ -146,6 +176,7 @@ const BusinessDetails = () => {
               <label>GST (optional)</label>
               <input
                 name="gst"
+                placeholder="GSTIN Number"
                 value={business.gst}
                 onChange={handleChange}
               />

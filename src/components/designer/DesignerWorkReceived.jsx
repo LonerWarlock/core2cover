@@ -1,7 +1,11 @@
 // File: src/components/designer/DesignerWorkReceived.jsx
+"use client";
+
 import React, { useState, useEffect } from "react";
 import "./DesignerWorkReceived.css";
-import { Link } from "react-router-dom";
+import "./DesignerDashboard.css"
+import Link from "next/link";
+import Image from "next/image";
 import {
   FaBars,
   FaTimes,
@@ -12,12 +16,18 @@ import {
   FaStar,
 } from "react-icons/fa";
 import { LuMapPin } from "react-icons/lu";
-import { getDesignerWorkRequests, rateUser, getClientRatings } from "../../api/designer";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png"
+import {
+  getDesignerWorkRequests,
+  rateUser,
+  getClientHiredDesigners
+} from "../../api/designer";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png"
 
 
 const Brand = ({ children }) => <span className="brand">{children}</span>;
+const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 const DesignerWorkReceived = () => {
+  const [clientHistory, setClientHistory] = useState({});
   const [menuOpen, setMenuOpen] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +58,7 @@ const DesignerWorkReceived = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [designerId]);
+
 
   const fetchData = async () => {
     try {
@@ -174,33 +185,37 @@ const DesignerWorkReceived = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link to="/designerdashboard" className="nav-link nav-logo-link">
+            <Link href="/designerdashboard" className="nav-link nav-logo-link">
               <span className="nav-logo-wrap">
-                <img
+                <Image
                   src={CoreToCoverLogo}
-                  alt="CoreToCover"
-                  className="nav-logo"
+                  alt="CoreToCover Logo"
+                  width={120}
+                  height={50}
+                  priority
+                  // Ensure 'auto' is wrapped in single or double quotes
+                  style={{ height: 'auto', width: '50px' }}
                 />
-                <Brand>Core2Cover</Brand>
+                <span className="brand"><BrandBold>Core2Cover</BrandBold></span>
               </span>
             </Link>
           </div>
 
           <div className="nav-right">
+
+            {/* Hamburger visible on Laptop/Desktop too */}
+            <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <FaTimes /> : <FaBars />}
+            </div>
+
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
+
               <li>
-                <Link to="/login" className="seller-btn">
+                <Link href="/designersignup" className="seller-btn" onClick={() => setMenuOpen(false)}>
                   Login as Customer
                 </Link>
               </li>
             </ul>
-
-            <div
-              className="hamburger"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <FaTimes /> : <FaBars />}
-            </div>
           </div>
         </div>
       </header>
@@ -272,6 +287,12 @@ const DesignerWorkReceived = () => {
               <div className="c2c-dwrx-card-left">
                 <h2 className="c2c-dwrx-client-name">
                   <FaUser /> {job.clientName}
+                  {/* UTILISING getClientHiredDesigners data here */}
+                  {clientHistory[job.userId] > 0 && (
+                    <span className="c2c-dwrx-badge-reputation">
+                      {clientHistory[job.userId]} Projects Completed
+                    </span>
+                  )}
                 </h2>
 
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>

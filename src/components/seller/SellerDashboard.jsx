@@ -20,7 +20,7 @@ const SellerDashboard = () => {
   useEffect(() => {
     const sid = localStorage.getItem("sellerId");
     if (!sid) {
-      router.push("/sellerlogin");
+      router.push("/sellerdashboard");
     } else {
       setSellerId(sid);
     }

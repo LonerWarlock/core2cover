@@ -6,7 +6,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { sellerLogin } from "../../api/sellerAuth";
+import { sellerLogin } from "../../api/auth";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
 const SellerLogin = () => {

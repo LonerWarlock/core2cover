@@ -1,4 +1,4 @@
-// File: src/components/SupplierOrders.jsx
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
@@ -7,47 +7,33 @@ import {
   getSellerOrders,
   updateSellerOrderStatus,
 } from "../../api/seller";
-
-/**
- * Robust Seller Orders UI
- * - tolerant to backend field-name variations
- * - safe optimistic updates with rollback
- * - better logging for debugging
- */
+import MessageBox from "../ui/MessageBox";
 
 const SellerOrders = () => {
   const [orders, setOrders] = useState([]);
   const [confirmingAll, setConfirmingAll] = useState(false);
   const [deliveringAll, setDeliveringAll] = useState(false);
-  const sellerId = localStorage.getItem("sellerId");
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+  const [sellerId, setSellerId] = useState(null);
+
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   /* =========================
-     HELP: Normalizers
+      Normalizers
   ========================= */
   const normalizeOrder = (o) => {
-    // pick id that is likely the order-item id used for status updates
     const orderItemId = o.orderItemId ?? o.id ?? o.order_item_id ?? null;
-
-    // pick status
     const status = o.status ?? o.orderStatus ?? o.order_status ?? "pending";
-
-    // pick material label
     const material = o.material ?? o.materialName ?? o.productName ?? o.name ?? "Item";
-
-    // pick quantity
     const quantity = o.quantity ?? o.trips ?? o.qty ?? 1;
-
-    // pick customer / site
     const customer = o.customer ?? o.customerName ?? o.userName ?? o.customer_email ?? "-";
-
-    // pick time
     const time = o.time ?? o.createdAt ?? o.created_at ?? o.orderTime ?? null;
-
-    // site location
     const siteLocation = o.siteLocation ?? o.site_location ?? o.deliveryAddress ?? "";
 
     return {
-      // keep original
       ...o,
       _orderItemId: orderItemId,
       _status: status,
@@ -60,8 +46,14 @@ const SellerOrders = () => {
   };
 
   /* =========================
-     FETCH SELLER ORDERS
+      INITIALISE & FETCH
   ========================= */
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSellerId(localStorage.getItem("sellerId"));
+    }
+  }, []);
+
   useEffect(() => {
     if (!sellerId) return;
 
@@ -69,14 +61,13 @@ const SellerOrders = () => {
       try {
         const res = await getSellerOrders(sellerId);
         const data = Array.isArray(res.data) ? res.data : [];
-
-        // normalize each order to use stable internal fields
         const normalized = data.map(normalizeOrder);
-
         setOrders(normalized);
       } catch (err) {
         console.error("LOAD SELLER ORDERS ERROR:", err);
-        alert("Failed to load orders (check console).");
+        triggerMsg("Failed to load orders", "error");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -84,15 +75,11 @@ const SellerOrders = () => {
   }, [sellerId]);
 
   /* =========================
-     Helper: updateStatus with rollback
+      Status Updates
   ========================= */
   const updateStatus = async (orderItemId, newStatus) => {
-    if (!orderItemId) {
-      console.error("updateStatus called without an orderItemId", orderItemId);
-      return;
-    }
+    if (!orderItemId) return;
 
-    // optimistic UI change: store prev
     const prev = orders;
     setOrders((prevList) =>
       prevList.map((o) =>
@@ -104,18 +91,14 @@ const SellerOrders = () => {
 
     try {
       await updateSellerOrderStatus(orderItemId, newStatus);
-      // success: nothing else to do (UI already updated)
+      triggerMsg(`Order updated to ${newStatus.replace(/_/g, " ")}`, "success");
     } catch (err) {
       console.error("UPDATE STATUS ERROR:", err);
-      alert("Failed to update order status (server error).");
-      // rollback
+      triggerMsg("Failed to update order status", "error");
       setOrders(prev);
     }
   };
 
-  /* =========================
-     ACCEPT ALL PENDING
-  ========================= */
   const confirmAllOrders = async () => {
     const pending = orders.filter((o) => o._status === "pending");
     if (pending.length === 0) return;
@@ -124,7 +107,6 @@ const SellerOrders = () => {
     setConfirmingAll(true);
     const prev = orders;
 
-    // optimistic update
     setOrders((prevList) =>
       prevList.map((o) => (o._status === "pending" ? { ...o, _status: "confirmed" } : o))
     );
@@ -133,18 +115,15 @@ const SellerOrders = () => {
       await Promise.all(
         pending.map((order) => updateSellerOrderStatus(order._orderItemId ?? order.id, "confirmed"))
       );
+      triggerMsg("All orders accepted", "success");
     } catch (err) {
-      console.error("CONFIRM ALL ERROR:", err);
-      alert("Failed to accept all (check console).");
-      setOrders(prev); // rollback
+      setOrders(prev);
+      triggerMsg("Failed to accept all orders", "error");
     } finally {
       setConfirmingAll(false);
     }
   };
 
-  /* =========================
-     MARK ALL AS DELIVERED
-  ========================= */
   const deliverAllOrders = async () => {
     const confirmed = orders.filter((o) => o._status === "confirmed");
     if (confirmed.length === 0) return;
@@ -161,18 +140,15 @@ const SellerOrders = () => {
       await Promise.all(
         confirmed.map((order) => updateSellerOrderStatus(order._orderItemId ?? order.id, "fulfilled"))
       );
+      triggerMsg("All orders marked as delivered", "success");
     } catch (err) {
-      console.error("DELIVER ALL ERROR:", err);
-      alert("Failed to mark all as delivered (check console).");
       setOrders(prev);
+      triggerMsg("Failed to mark delivered", "error");
     } finally {
       setDeliveringAll(false);
     }
   };
 
-  /* =========================
-     HELPERS
-  ========================= */
   const openMaps = (location) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -186,24 +162,26 @@ const SellerOrders = () => {
         setOrders((prev) => prev.map((o) => (o._orderItemId === id || o.id === id ? { ...o, copied: false } : o)));
       }, 1200);
     } catch (err) {
-      console.error("COPY LOCATION ERROR:", err);
-      alert("Failed to copy location (check clipboard permissions).");
+      triggerMsg("Failed to copy location", "error");
     }
   };
 
   const hasPendingOrders = orders.some((o) => o._status === "pending");
   const hasConfirmedOrders = orders.some((o) => o._status === "confirmed");
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="orders-layout">
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
       <Sidebar />
-      <div className="notification-scrollable" />
 
       <div className="orders-content">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 20 }}>
           <h1>Customer Orders</h1>
 
           <div style={{ display: "flex", gap: 8 }}>
@@ -220,7 +198,9 @@ const SellerOrders = () => {
           </div>
         </div>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <p>Loading orders...</p>
+        ) : orders.length === 0 ? (
           <p className="no-orders">No orders received yet.</p>
         ) : (
           <ul className="orders-list">
@@ -228,34 +208,23 @@ const SellerOrders = () => {
               <li key={order._orderItemId ?? order.id} className={`order-item ${order._status}`}>
                 <div className="order-top">
                   <div className="order-header">
-                    <strong>{order._material}</strong>  <span>Quantity - {order._quantity}</span>
+                    <strong>{order._material}</strong> <span>Quantity - {order._quantity}</span>
                   </div>
-
                   <div className="order-meta">
-                    <span className="meta-item">
-                      Customer: <strong>{order._customer}</strong>
-                    </span>
-
-                    <span className="meta-item">
-                      Order Placed:{" "}
-                      <strong>
-                        {order._time ? new Date(order._time).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
-                      </strong>
-                    </span>
+                    <span className="meta-item">Customer: <strong>{order._customer}</strong></span>
+                    <span className="meta-item">Placed: <strong>{order._time ? new Date(order._time).toLocaleString("en-IN") : "—"}</strong></span>
                   </div>
                 </div>
 
                 <div className="order-body">
                   <div className="order-left">
                     <div className="order-status">
-                      Status: <span className={`status-label ${order._status}`}>{order._status}</span>
+                      Status: <span className={`status-label ${order._status}`}>{order._status.replace(/_/g, " ")}</span>
                     </div>
-
                     <div className="site-row">
                       <button type="button" className="site-button" onClick={() => openMaps(order._siteLocation)}>
                         📍 {order._siteLocation || "View location"}
                       </button>
-
                       <button type="button" className="site-copy" onClick={() => copyLocation(order._siteLocation, order._orderItemId ?? order.id)}>
                         {order.copied ? "Copied" : "Copy"}
                       </button>
@@ -265,52 +234,19 @@ const SellerOrders = () => {
                   <div className="order-actions">
                     {order._status === "pending" && (
                       <>
-                        <button
-                          onClick={() => updateStatus(order._orderItemId ?? order.id, "confirmed")}
-                          className="confirm-btn"
-                        >
-                          Accept Order
-                        </button>
-                        <button
-                          onClick={() => updateStatus(order._orderItemId ?? order.id, "rejected")}
-                          className="reject-btn"
-                        >
-                          Reject
-                        </button>
+                        <button onClick={() => updateStatus(order._orderItemId ?? order.id, "confirmed")} className="confirm-btn">Accept</button>
+                        <button onClick={() => updateStatus(order._orderItemId ?? order.id, "rejected")} className="reject-btn">Reject</button>
                       </>
                     )}
-
                     {order._status === "confirmed" && (
-                      <>
-                        <button
-                          onClick={() =>
-                            updateStatus(order._orderItemId ?? order.id, "out_for_delivery")
-                          }
-                          className="confirm-btn"
-                        >
-                          Out For Delivery
-                        </button>
-                      </>
+                      <button onClick={() => updateStatus(order._orderItemId ?? order.id, "out_for_delivery")} className="confirm-btn">Out For Delivery</button>
                     )}
-
                     {order._status === "out_for_delivery" && (
-                      <button
-                        onClick={() =>
-                          updateStatus(order._orderItemId ?? order.id, "fulfilled")
-                        }
-                        className="fulfill-btn"
-                      >
-                        ✅ Mark as Delivered
-                      </button>
+                      <button onClick={() => updateStatus(order._orderItemId ?? order.id, "fulfilled")} className="fulfill-btn">✅ Mark Delivered</button>
                     )}
-
                     {order._status === "fulfilled" && <span className="badge fulfilled">Delivered</span>}
                     {order._status === "rejected" && <span className="badge rejected">Rejected</span>}
-
-                    {order._status === "cancelled" && (
-                      <span className="badge rejected">Cancelled by customer</span>
-                    )}
-
+                    {order._status === "cancelled" && <span className="badge rejected">Cancelled</span>}
                   </div>
                 </div>
               </li>

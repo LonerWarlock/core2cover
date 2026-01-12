@@ -1,3 +1,5 @@
+"use client"; // Necessary for Next.js 13+ App Router
+
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import "./SellerProducts.css";
@@ -11,7 +13,7 @@ import {
 } from "../../api/seller";
 
 /* ===============================
-   AVAILABILITY FORMATTER
+    AVAILABILITY FORMATTER
 =============================== */
 const formatAvailability = (value) => {
   switch (value) {
@@ -28,11 +30,8 @@ const formatAvailability = (value) => {
   }
 };
 
-
-
-
 /* ===============================
-   PRODUCT TYPE & CATEGORY
+    PRODUCT TYPE & CATEGORY
 ================================ */
 const productCategories = {
   finished: [
@@ -56,15 +55,15 @@ const productCategories = {
   ],
 };
 
-
 const SellerProducts = () => {
   const [materials, setMaterials] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [slideIndex, setSlideIndex] = useState({});
+  const [sellerId, setSellerId] = useState(null);
 
   /* ===============================
-     REVIEWS STATE ✅
+      REVIEWS STATE ✅
   ================================ */
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [ratingData, setRatingData] = useState({
@@ -89,19 +88,27 @@ const SellerProducts = () => {
   });
 
   /* =========================
-     FETCH PRODUCTS
+      SAFE STORAGE ACCESS
   ========================= */
   useEffect(() => {
-    const sellerId = localStorage.getItem("sellerId");
+    if (typeof window !== "undefined") {
+      setSellerId(localStorage.getItem("sellerId"));
+    }
+  }, []);
+
+  /* =========================
+      FETCH PRODUCTS
+  ========================= */
+  useEffect(() => {
     if (!sellerId) return;
 
     getSellerProducts(sellerId)
       .then((res) => setMaterials(res.data || []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [sellerId]);
 
   /* =========================
-     SLIDESHOW
+      SLIDESHOW
   ========================= */
   useEffect(() => {
     const timer = setInterval(() => {
@@ -118,7 +125,7 @@ const SellerProducts = () => {
   }, [materials]);
 
   /* =========================
-     STAR RENDER
+      STAR RENDER
   ========================= */
   const renderStars = (rating = 0) => {
     const rounded = Math.round(rating);
@@ -128,7 +135,7 @@ const SellerProducts = () => {
   };
 
   /* =========================
-     LOAD REVIEWS (🔥 CORE PART)
+      LOAD REVIEWS
   ========================= */
   const viewReviews = async (product) => {
     setSelectedProduct(product);
@@ -141,7 +148,6 @@ const SellerProducts = () => {
         reviews: res.data.reviews || [],
       });
 
-      // 👇 scroll to top when viewing reviews
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setRatingData({ avgRating: 0, count: 0, reviews: [] });
@@ -149,7 +155,7 @@ const SellerProducts = () => {
   };
 
   /* =========================
-     START EDIT
+      START EDIT
   ========================= */
   const startEdit = (m) => {
     setEditingId(m.id);
@@ -176,7 +182,7 @@ const SellerProducts = () => {
   const cancelEdit = () => setEditingId(null);
 
   /* =========================
-     FORM HANDLERS
+      FORM HANDLERS
   ========================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -231,7 +237,7 @@ const SellerProducts = () => {
   };
 
   /* =========================
-     SAVE EDIT
+      SAVE EDIT
   ========================= */
   const saveEdit = async () => {
     try {
@@ -271,7 +277,7 @@ const SellerProducts = () => {
   };
 
   /* =========================
-     DELETE PRODUCT
+      DELETE PRODUCT
   ========================= */
   const removeMaterial = async (id) => {
     if (!window.confirm("Delete this product?")) return;
@@ -286,9 +292,7 @@ const SellerProducts = () => {
       <main className="ms-main">
         <h1 className="ms-title">My Products</h1>
 
-        {/* ===============================
-            REVIEWS PANEL (TOP)
-        ================================ */}
+        {/* REVIEWS PANEL (TOP) */}
         {selectedProduct && (
           <section className="ms-reviews-panel">
             <h3 className="ms-reviews-title">
@@ -330,8 +334,6 @@ const SellerProducts = () => {
         {/* EDIT PANEL */}
         {editingId && (
           <section className="ms-edit-panel">
-
-            {/* HEADER */}
             <div className="ms-edit-header">
               <h2 className="ms-edit-title">Edit Product</h2>
               <p className="ms-edit-sub">
@@ -339,12 +341,9 @@ const SellerProducts = () => {
               </p>
             </div>
 
-            {/* ================= BASIC INFO ================= */}
             <div className="ms-edit-section">
               <h4 className="ms-edit-section-title">Basic Information</h4>
-
               <div className="ms-edit-grid">
-
                 <div className="ms-field">
                   <label className="ms-label">Product Name</label>
                   <input
@@ -355,7 +354,6 @@ const SellerProducts = () => {
                   />
                 </div>
 
-                {/* PRODUCT TYPE */}
                 <div className="ms-field">
                   <label className="ms-label">Product Type</label>
                   <select
@@ -367,7 +365,7 @@ const SellerProducts = () => {
                       setEditForm((p) => ({
                         ...p,
                         productType: value,
-                        category: "", // reset category on type change
+                        category: "", 
                       }));
                     }}
                   >
@@ -377,7 +375,6 @@ const SellerProducts = () => {
                   </select>
                 </div>
 
-                {/* CATEGORY */}
                 <div className="ms-field">
                   <label className="ms-label">Category</label>
                   <select
@@ -401,7 +398,6 @@ const SellerProducts = () => {
                       ))}
                   </select>
                 </div>
-
 
                 <div className="ms-field">
                   <label className="ms-label">Price (₹)</label>
@@ -442,14 +438,12 @@ const SellerProducts = () => {
               </div>
             </div>
 
-            {/* ================= IMAGES ================= */}
             <div className="ms-edit-section">
               <h4 className="ms-edit-section-title">Product Images</h4>
-
               <div className="ms-media-grid">
                 {editForm.existingImages.map((img) => (
                   <div key={img} className="ms-media-card">
-                    <img src={img} className="ms-preview" />
+                    <img src={img} className="ms-preview" alt="Existing" />
                     <button
                       className="ms-btn ms-btn--ghost"
                       onClick={() => removeExistingImage(img)}
@@ -459,7 +453,6 @@ const SellerProducts = () => {
                   </div>
                 ))}
               </div>
-
               <input
                 className="ms-file"
                 type="file"
@@ -469,10 +462,8 @@ const SellerProducts = () => {
               />
             </div>
 
-            {/* ================= VIDEO ================= */}
             <div className="ms-edit-section">
               <h4 className="ms-edit-section-title">Product Video</h4>
-
               <div className="ms-media-grid">
                 {editForm.existingVideo && (
                   <video
@@ -490,14 +481,12 @@ const SellerProducts = () => {
                   />
                 )}
               </div>
-
               <input
                 className="ms-file"
                 type="file"
                 accept="video/*"
                 onChange={handleVideoSelect}
               />
-
               <button
                 className="ms-btn ms-btn--ghost"
                 onClick={removeVideo}
@@ -506,7 +495,6 @@ const SellerProducts = () => {
               </button>
             </div>
 
-            {/* ================= ACTIONS ================= */}
             <div className="ms-edit-actions">
               <button
                 className="ms-btn ms-btn--primary"
@@ -514,7 +502,6 @@ const SellerProducts = () => {
               >
                 Save Changes
               </button>
-
               <button
                 className="ms-btn ms-btn--outline"
                 onClick={cancelEdit}
@@ -522,12 +509,8 @@ const SellerProducts = () => {
                 Cancel
               </button>
             </div>
-
           </section>
         )}
-
-
-
 
         {/* GRID */}
         <section className="ms-grid">
@@ -550,26 +533,20 @@ const SellerProducts = () => {
                   className="ms-thumb"
                   alt={m.name}
                 />
-
-                {/* BODY */}
                 <div className="ms-body">
                   <h3 className="ms-name">{m.name}</h3>
                   <p className="ms-price">₹{Number(m.price).toLocaleString()}</p>
-
                   <p className={`ms-meta stock-${m.availability}`}>
                     Status: <strong>{formatAvailability(m.availability)}</strong>
                   </p>
-
                   <p className="ms-meta">
                     Category: <strong>{m.category}</strong>
                   </p>
-
                   <p className="ms-meta">
                     Type: <strong>{m.productType}</strong>
                   </p>
                 </div>
 
-                {/* ACTIONS */}
                 <div className="ms-actions">
                   <button
                     className="ms-btn ms-btn--outline"
@@ -577,14 +554,12 @@ const SellerProducts = () => {
                   >
                     Edit
                   </button>
-
                   <button
                     className="ms-btn ms-btn--danger"
                     onClick={() => removeMaterial(m.id)}
                   >
                     Delete
                   </button>
-
                   <button
                     className="ms-btn ms-btn--outline"
                     onClick={() => viewReviews(m)}
@@ -596,8 +571,6 @@ const SellerProducts = () => {
             );
           })}
         </section>
-
-
       </main>
     </div>
   );

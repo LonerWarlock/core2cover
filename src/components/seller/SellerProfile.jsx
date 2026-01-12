@@ -1,13 +1,15 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import "./SellerProfile.css";
 import Sidebar from "./Sidebar";
 import { getSellerProfile, updateSellerProfile } from "../../api/seller";
-
+import MessageBox from "../ui/MessageBox";
 
 const SellerProfile = () => {
-  const navigate = useNavigate();
-  const sellerId = Number(localStorage.getItem("sellerId"));
+  const router = useRouter();
+  const [sellerId, setSellerId] = useState(null);
 
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
@@ -15,91 +17,110 @@ const SellerProfile = () => {
     email: "",
     phone: "",
   });
+  
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   /* =========================
-     FETCH SELLER PROFILE
+      INITIALISE & AUTH CHECK
   ========================= */
   useEffect(() => {
-    if (!sellerId || isNaN(sellerId)) {
-      navigate("/sellerlogin");
-      return;
+    if (typeof window !== "undefined") {
+      const sid = localStorage.getItem("sellerId");
+      if (!sid || isNaN(Number(sid))) {
+        router.push("/sellerlogin");
+      } else {
+        setSellerId(Number(sid));
+      }
     }
+  }, [router]);
+
+  /* =========================
+      FETCH SELLER PROFILE
+  ========================= */
+  useEffect(() => {
+    if (!sellerId) return;
 
     const loadProfile = async () => {
       try {
         const res = await getSellerProfile(sellerId);
+        const data = res.data || res; // Tolerant to API structure
 
-        setProfile(res.data);
+        setProfile(data);
         setFormData({
-          name: res.data.name || "",
-          email: res.data.email || "",
-          phone: res.data.phone || "",
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
         });
       } catch (err) {
-        alert("Failed to load profile");
+        triggerMsg("Failed to load profile", "error");
         localStorage.removeItem("sellerId");
-        navigate("/sellerlogin", { replace: true });
+        router.replace("/sellerlogin");
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [sellerId, navigate]);
-
+  }, [sellerId, router]);
 
   /* =========================
-     SAVE PROFILE
+      SAVE PROFILE
   ========================= */
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.phone.trim()) {
-      alert("Name and phone are required");
+      triggerMsg("Name and phone are required", "error");
       return;
     }
 
     setSaving(true);
-
     try {
       const res = await updateSellerProfile(sellerId, {
         name: formData.name,
         phone: formData.phone,
       });
 
+      // Optimistically update or use response data
+      const updatedSeller = res.data?.seller || res.data || res;
+      
       setProfile((prev) => ({
         ...prev,
-        name: res.data.seller.name,
-        phone: res.data.seller.phone,
+        name: updatedSeller.name,
+        phone: updatedSeller.phone,
       }));
 
       setIsEditing(false);
-      alert("Profile updated successfully ✅");
+      triggerMsg("Profile updated successfully ✅", "success");
     } catch (err) {
-      alert(
-        err?.response?.data?.message ||
-        "Failed to update profile"
+      triggerMsg(
+        err?.response?.data?.message || "Failed to update profile",
+        "error"
       );
     } finally {
       setSaving(false);
     }
   };
 
-
   const handleLogout = () => {
     localStorage.removeItem("sellerId");
     window.dispatchEvent(new Event("storage"));
-    navigate("/sellerlogin");
+    router.push("/sellerlogin");
   };
-
 
   if (loading) {
     return (
       <div className="bs-layout-root">
         <Sidebar />
         <div className="bs-profile-shell">
-          <h2>Loading profile…</h2>
+          <div className="loading-container">
+            <h2>Initialising profile…</h2>
+          </div>
         </div>
       </div>
     );
@@ -107,50 +128,81 @@ const SellerProfile = () => {
 
   return (
     <div className="bs-layout-root">
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
       <Sidebar />
       <div className="bs-profile-shell">
-        <h1 className="bs-heading">Seller Profile</h1>
+        <h1 className="bs-heading">Seller Account</h1>
 
         {!isEditing ? (
-          <div className="bs-card">
-            <p><strong>Name:</strong> {profile.name}</p>
-            <p><strong>Email:</strong> {profile.email}</p>
-            <p><strong>Phone:</strong> {profile.phone}</p>
-            <p><strong>Location:</strong> {profile.location}</p>
+          <div className="bs-card profile-view-card">
+            <div className="profile-info-group">
+              <p><strong>Business Name:</strong> {profile.name}</p>
+              <p><strong>Login Email:</strong> {profile.email}</p>
+              <p><strong>Contact Number:</strong> {profile.phone}</p>
+              <p><strong>Primary Location:</strong> {profile.location || "Not specified"}</p>
+            </div>
 
-            <button className="bs-btn bs-btn--primary" onClick={() => setIsEditing(true)}>
-              Edit Profile
-            </button>
-            <button className="bs-btn bs-btn--ghost" onClick={handleLogout}>
-              Logout
-            </button>
+            <div className="profile-actions">
+              <button className="bs-btn bs-btn--primary" onClick={() => setIsEditing(true)}>
+                Edit Profile
+              </button>
+              <button className="bs-btn bs-btn--ghost" onClick={handleLogout}>
+                Logout Account
+              </button>
+            </div>
           </div>
         ) : (
           <form
-            className="bs-edit-form"
+            className="bs-card bs-edit-form"
             onSubmit={(e) => {
               e.preventDefault();
               handleSave();
             }}
           >
-            {["name", "email", "phone"].map((field) => (
+            <div className="input-field">
+              <label>Full Name / Business Name</label>
               <input
-                key={field}
-                name={field}
-                value={formData[field]}
-                onChange={(e) =>
-                  setFormData({ ...formData, [field]: e.target.value })
-                }
-                disabled={field === "email"}
+                name="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
               />
-            ))}
+            </div>
 
-            <button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
-            </button>
-            <button type="button" onClick={() => setIsEditing(false)}>
-              Cancel
-            </button>
+            <div className="input-field">
+              <label>Email Address (Immutable)</label>
+              <input
+                name="email"
+                value={formData.email}
+                disabled
+                className="disabled-input"
+              />
+            </div>
+
+            <div className="input-field">
+              <label>Phone Number</label>
+              <input
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="form-buttons">
+              <button type="submit" className="bs-btn bs-btn--primary" disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button type="button" className="bs-btn bs-btn--ghost" onClick={() => setIsEditing(false)}>
+                Cancel
+              </button>
+            </div>
           </form>
         )}
       </div>

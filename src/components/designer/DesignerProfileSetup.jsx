@@ -1,10 +1,12 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import "./DesignerProfileSetup.css";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { saveDesignerProfile } from "../../api/designer";
 
 const DesignerProfileSetup = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const designerId = localStorage.getItem("designerId");
 
   const [form, setForm] = useState({
@@ -23,11 +25,17 @@ const DesignerProfileSetup = () => {
      REDIRECT IF NO DESIGNER
   ========================= */
   useEffect(() => {
-    if (!designerId) {
-      navigate("/designersignup");
+    // This code only runs in the browser
+    const storedId = localStorage.getItem("designerId");
+    if (storedId) {
+      setDesignerId(storedId);
+    } else {
+      // Optional: Redirect to signup if no ID is found
+      // router.push("/designersignup");
     }
-  }, [designerId, navigate]);
+  }, []);
 
+  
   /* =========================
      IMAGE UPLOAD
   ========================= */
@@ -73,7 +81,7 @@ const DesignerProfileSetup = () => {
       await saveDesignerProfile(formData);
 
       // ✅ next step
-      navigate("/designerportfolio");
+      router.push("/designerportfolio");
     } catch (err) {
       console.error("PROFILE SETUP ERROR:", err);
 

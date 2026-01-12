@@ -8,13 +8,13 @@ import {
   getSingleCheckoutItem,
   clearSingleCheckoutItem,
 } from "../../utils/cart";
-import { useRouter } from "next/navigation"; // CHANGED
+import { useRouter } from "next/navigation";
 import "./Checkout.css";
 import Navbar from "./Navbar";
 import COD from "../../assets/images/COD.png";
-//import GooglePay from "../../assets/images/GooglePay.png";
-//import Paytm from "../../assets/images/Paytm.png";
-//import PhonePe from "../../assets/images/PhonePe.jpg";
+import GooglePay from "../../assets/images/GooglePay.png";
+import Paytm from "../../assets/images/Paytm.png";
+import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
 
@@ -22,11 +22,11 @@ const formatINR = (n = 0) =>
   `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 export default function Checkout() {
-  const router = useRouter(); // CHANGED
+  const router = useRouter();
 
   const [items, setItems] = useState([]);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState(""); // Initialize empty to avoid hydration mismatch
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [loading, setLoading] = useState(false);
@@ -34,8 +34,9 @@ export default function Checkout() {
   const [useCreditForFullAmount, setUseCreditForFullAmount] = useState(false);
 
   useEffect(() => {
-    // Client-side only logic
-    setEmail(localStorage.getItem("userEmail") || "");
+    // Client-side initialization
+    const userEmail = localStorage.getItem("userEmail") || "";
+    setEmail(userEmail);
 
     const single = getSingleCheckoutItem();
     const rawItems = single ? [single] : getCart();
@@ -47,7 +48,6 @@ export default function Checkout() {
 
     setItems(normalized);
 
-    const userEmail = localStorage.getItem("userEmail");
     if (userEmail) {
       api
         .get(`/user/${encodeURIComponent(userEmail)}`)
@@ -65,17 +65,6 @@ export default function Checkout() {
       })
       .catch(() => setCredit(0));
   }, []);
-
-  // ... [Quantity helpers remain exactly the same: updateQuantity, increment, decrement] ...
-  //   const updateQuantity = (index, newQty) => {
-  //     let q = Number(newQty);
-  //     if (Number.isNaN(q) || q < 1) q = 1;
-  //     setItems((prev) => {
-  //       const copy = [...prev];
-  //       copy[index] = { ...copy[index], quantity: Math.floor(q) };
-  //       return copy;
-  //     });
-  //   };
 
   const increment = (index) => {
     setItems((prev) => {
@@ -104,34 +93,22 @@ export default function Checkout() {
 
     items.forEach((it) => {
       const qty = Number(it.quantity || 1);
-      const unitPrice = Number(
-        it.amountPerTrip || it.pricePerTrip || it.price || 0
-      );
+      const unitPrice = Number(it.amountPerTrip || it.pricePerTrip || it.price || 0);
       subtotal += unitPrice * qty;
 
       if (it.shippingChargeType !== "free" && Number(it.shippingCharge) > 0) {
         deliveryCharge += Number(it.shippingCharge);
       }
 
-      if (
-        it.installationAvailable === "yes" &&
-        Number(it.installationCharge) > 0
-      ) {
+      if (it.installationAvailable === "yes" && Number(it.installationCharge) > 0) {
         installationTotal += Number(it.installationCharge) * qty;
       }
     });
 
     const casaCharge = Math.round(subtotal * 0.02);
-    const grandTotal =
-      subtotal + deliveryCharge + installationTotal + casaCharge;
+    const grandTotal = subtotal + deliveryCharge + installationTotal + casaCharge;
 
-    return {
-      subtotal,
-      deliveryCharge,
-      installationTotal,
-      casaCharge,
-      grandTotal,
-    };
+    return { subtotal, deliveryCharge, installationTotal, casaCharge, grandTotal };
   }, [items]);
 
   const handlePlaceOrder = async () => {
@@ -146,29 +123,25 @@ export default function Checkout() {
 
     const summary = computeSummary;
     const creditUsed = useCreditForFullAmount ? Number(summary.grandTotal) : 0;
+    
     if (useCreditForFullAmount && credit < summary.grandTotal) {
       alert("Insufficient store credit.");
       return;
     }
 
-    // Prepare payload
     const ordersPayload = items.map((it) => ({
       supplierId: Number(it.supplierId),
       materialId: Number(it.materialId || it.productId || 0),
       materialName: it.name || it.materialName || it.productName || "",
       supplierName: it.supplier || it.supplierName || "",
       trips: Number(it.quantity || 1),
-      amountPerTrip: Number(
-        it.amountPerTrip || it.pricePerTrip || it.price || 0
-      ),
+      amountPerTrip: Number(it.amountPerTrip || it.pricePerTrip || it.price || 0),
       deliveryTimeMin: it.deliveryTimeMin ?? null,
       deliveryTimeMax: it.deliveryTimeMax ?? null,
       shippingChargeType: it.shippingChargeType ?? "free",
       shippingCharge: it.shippingCharge ? Number(it.shippingCharge) : 0,
       installationAvailable: it.installationAvailable ?? "no",
-      installationCharge: it.installationCharge
-        ? Number(it.installationCharge)
-        : 0,
+      installationCharge: it.installationCharge ? Number(it.installationCharge) : 0,
       imageUrl: it.image || null,
     }));
 
@@ -179,9 +152,7 @@ export default function Checkout() {
         checkoutDetails: {
           name,
           address,
-          paymentMethod: useCreditForFullAmount
-            ? "store_credit"
-            : paymentMethod,
+          paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod,
         },
         orders: ordersPayload,
         summary,
@@ -192,7 +163,7 @@ export default function Checkout() {
         clearSingleCheckoutItem();
         clearCart();
         alert("Order placed successfully!");
-        router.push("/userprofile"); // CHANGED
+        router.push("/userprofile");
       } else {
         alert("Order placed but unexpected server response.");
       }
@@ -232,7 +203,6 @@ export default function Checkout() {
 
         <div className="checkout-grid">
           <section className="checkout-left">
-            {/* Shipping & Payment Cards (Same as before) */}
             <div className="checkout-card">
               <h2>Shipping & Contact</h2>
               <label className="form-row">
@@ -241,10 +211,7 @@ export default function Checkout() {
               </label>
               <label className="form-row">
                 <span>Email</span>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} />
               </label>
               <label className="form-row">
                 <span>Address</span>
@@ -257,22 +224,51 @@ export default function Checkout() {
             </div>
 
             <div className="checkout-card">
-              {/* Payment Options (simplified for brevity, logic remains) */}
               <h2>Payment</h2>
               <div className="payment-options">
-                {/* ... existing payment buttons ... */}
                 <button
                   type="button"
-                  className={`payment-option ${
-                    paymentMethod === "cod" ? "active" : ""
-                  }`}
+                  disabled={useCreditForFullAmount}
+                  className={`payment-option ${paymentMethod === "cod" ? "active" : ""}`}
                   onClick={() => setPaymentMethod("cod")}
                 >
-                  <Image src={COD} alt="COD" width={40} height={25} />{" "}
+                  <Image src={COD} alt="COD" width={40} height={25} />
                   <span>Cash on Delivery</span>
                 </button>
-                {/* Add others similarly using .src if imported images */}
+
+                <button
+                  type="button"
+                  disabled={useCreditForFullAmount}
+                  className={`payment-option ${paymentMethod === "gpay" ? "active" : ""}`}
+                  onClick={() => setPaymentMethod("gpay")}
+                >
+                  <Image src={GooglePay} alt="Google Pay" width={40} height={25} />
+                  <span>Google Pay</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={useCreditForFullAmount}
+                  className={`payment-option ${paymentMethod === "paytm" ? "active" : ""}`}
+                  onClick={() => setPaymentMethod("paytm")}
+                >
+                  <Image src={Paytm} alt="Paytm" width={40} height={25} />
+                  <span>Paytm</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={useCreditForFullAmount}
+                  className={`payment-option ${paymentMethod === "phonepe" ? "active" : ""}`}
+                  onClick={() => setPaymentMethod("phonepe")}
+                >
+                  <Image src={PhonePe} alt="PhonePe" width={40} height={25} />
+                  <span>PhonePe</span>
+                </button>
               </div>
+              {useCreditForFullAmount && (
+                <p className="payment-note">Payment method locked to Store Credit.</p>
+              )}
             </div>
 
             <div className="checkout-card">
@@ -286,7 +282,7 @@ export default function Checkout() {
                         ? it.image
                         : it.image
                         ? `/${it.image}`
-                        : sample
+                        : "/placeholder.png"
                     }
                     alt={it.name}
                     width={80}
@@ -300,15 +296,10 @@ export default function Checkout() {
                         {formatINR(Number(it.amountPerTrip || 0))}
                       </div>
                     </div>
-                    {/* ... Quantity controls ... */}
                     <div className="checkout-quantity">
-                      <button type="button" onClick={() => decrement(idx)}>
-                        −
-                      </button>
+                      <button type="button" onClick={() => decrement(idx)}>−</button>
                       <input type="number" value={it.quantity} readOnly />
-                      <button type="button" onClick={() => increment(idx)}>
-                        +
-                      </button>
+                      <button type="button" onClick={() => increment(idx)}>+</button>
                     </div>
                   </div>
                 </div>
@@ -318,7 +309,24 @@ export default function Checkout() {
 
           <aside className="checkout-right">
             <div className="summary-card">
-              {/* ... Summary details same as before ... */}
+              <h2>Order Summary</h2>
+              <div className="summary-row">
+                <span>Items Subtotal</span>
+                <span>{formatINR(computeSummary.subtotal)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Delivery Charges</span>
+                <span>{formatINR(computeSummary.deliveryCharge)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Installation Charges</span>
+                <span>{formatINR(computeSummary.installationTotal)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Platform Fee (CASA)</span>
+                <span>{formatINR(computeSummary.casaCharge)}</span>
+              </div>
+              <hr />
               <div className="summary-row total">
                 <span>Total</span>
                 <span>{formatINR(computeSummary.grandTotal)}</span>
