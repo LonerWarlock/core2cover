@@ -38,8 +38,8 @@ export async function POST(request) {
     });
 
     return NextResponse.json({ message: "OTP sent" });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
+    console.error("Full Error Details:", err);
     return NextResponse.json({ message: "Failed to send OTP" }, { status: 500 });
   }
 }

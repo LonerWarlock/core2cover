@@ -13,13 +13,20 @@ import Image from "next/image";
 /* ... Status Helper Functions Remain the Same ... */
 const getOrderStatusMeta = (status) => {
   switch (status) {
-    case "pending": return { text: "Processing", className: "status-processing" };
-    case "confirmed": return { text: "Confirmed", className: "status-confirmed" };
-    case "out_for_delivery": return { text: "Out for Delivery", className: "status-out-for-delivery" };
-    case "fulfilled": return { text: "Delivered", className: "status-delivered" };
-    case "rejected": return { text: "Rejected", className: "status-cancelled" };
-    case "cancelled": return { text: "Cancelled", className: "status-cancelled" };
-    default: return { text: "Processing", className: "status-processing" };
+    case "pending":
+      return { text: "Processing", className: "status-processing" };
+    case "confirmed":
+      return { text: "Confirmed", className: "status-confirmed" };
+    case "out_for_delivery":
+      return { text: "Out for Delivery", className: "status-out-for-delivery" };
+    case "fulfilled":
+      return { text: "Delivered", className: "status-delivered" };
+    case "rejected":
+      return { text: "Rejected", className: "status-cancelled" };
+    case "cancelled":
+      return { text: "Cancelled", className: "status-cancelled" };
+    default:
+      return { text: "Processing", className: "status-processing" };
   }
 };
 
@@ -37,17 +44,38 @@ const getFinalOrderStatus = (orderStatus, returnInfo) => {
   if (!returnInfo) return getOrderStatusMeta(orderStatus);
   const derived = deriveReturnStatus(returnInfo);
   switch (derived) {
-    case "REQUESTED": return { text: "Return Requested", className: "status-return-requested" };
-    case "UNDER_REVIEW": return { text: "Processing Return Request", className: "status-return-under-review" };
+    case "REQUESTED":
+      return { text: "Return Requested", className: "status-return-requested" };
+    case "UNDER_REVIEW":
+      return {
+        text: "Processing Return Request",
+        className: "status-return-under-review",
+      };
     case "APPROVED":
-      if (returnInfo.refundStatus === "COMPLETED") return { text: "Refund Completed", className: "status-refund-completed" };
-      return { text: returnInfo.refundMethod === "STORE_CREDIT" ? "Returned (Store Credit)" : "Refund Processing", className: "status-returned" };
-    case "REJECTED": return { text: "Return Rejected", className: "status-return-rejected" };
-    default: return getOrderStatusMeta(orderStatus);
+      if (returnInfo.refundStatus === "COMPLETED")
+        return {
+          text: "Refund Completed",
+          className: "status-refund-completed",
+        };
+      return {
+        text:
+          returnInfo.refundMethod === "STORE_CREDIT"
+            ? "Returned (Store Credit)"
+            : "Refund Processing",
+        className: "status-returned",
+      };
+    case "REJECTED":
+      return { text: "Return Rejected", className: "status-return-rejected" };
+    default:
+      return getOrderStatusMeta(orderStatus);
   }
 };
 
-const RETURN_REASONS = ["Damaged or defective product", "Wrong item delivered", "Product not as described"];
+const RETURN_REASONS = [
+  "Damaged or defective product",
+  "Wrong item delivered",
+  "Product not as described",
+];
 const RETURN_LIMIT_DAYS = 2;
 const MS_IN_DAY = 1000 * 60 * 60 * 24;
 
@@ -64,7 +92,7 @@ export default function MyOrders() {
   const [returnImages, setReturnImages] = useState({});
   const [refundMethod, setRefundMethod] = useState({});
   const [credit, setCredit] = useState(0);
-  
+
   // FIX: Initialize userEmail in state to avoid hydration mismatch
   const [userEmail, setUserEmail] = useState(null);
 
@@ -73,7 +101,11 @@ export default function MyOrders() {
   }, []);
 
   const canCancelOrder = (order) => {
-    if (order.orderStatus !== "confirmed" || order.orderStatus === "out_for_delivery") return false;
+    if (
+      order.orderStatus !== "confirmed" ||
+      order.orderStatus === "out_for_delivery"
+    )
+      return false;
     const orderDate = new Date(order.createdAt);
     const diffDays = (Date.now() - orderDate.getTime()) / MS_IN_DAY;
     return diffDays <= RETURN_LIMIT_DAYS;
@@ -83,7 +115,11 @@ export default function MyOrders() {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     try {
       await cancelOrder(orderId);
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, orderStatus: "rejected" } : o)));
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId ? { ...o, orderStatus: "rejected" } : o
+        )
+      );
       alert("Order cancelled successfully");
     } catch (err) {
       alert(err?.response?.data?.message || "Failed to cancel order");
@@ -92,36 +128,60 @@ export default function MyOrders() {
 
   useEffect(() => {
     if (!userEmail) return;
-    api.get(`/orders/user/${encodeURIComponent(userEmail)}`)
+    api
+      .get(`/orders/user/${encodeURIComponent(userEmail)}`)
       .then((res) => setOrders(Array.isArray(res.data) ? res.data : []))
       .catch(() => setOrders([]));
   }, [userEmail]);
 
   useEffect(() => {
     if (!userEmail) return;
-    getUserReturns().then((res) => {
+    getUserReturns()
+      .then((res) => {
         const arr = res.data.returns || [];
         const map = {};
-        arr.forEach((r) => { map[r.orderItemId] = r; });
+        arr.forEach((r) => {
+          map[r.orderItemId] = r;
+        });
         setReturnsMap(map);
-        const anyFullyApproved = arr.some((r) => (r.sellerApprovalStatus || "").toUpperCase() === "APPROVED" && (r.adminApprovalStatus || "").toUpperCase() === "APPROVED");
+        const anyFullyApproved = arr.some(
+          (r) =>
+            (r.sellerApprovalStatus || "").toUpperCase() === "APPROVED" &&
+            (r.adminApprovalStatus || "").toUpperCase() === "APPROVED"
+        );
         if (anyFullyApproved) {
-          getUserCredit().then((cRes) => setCredit(Number(cRes.data.credit || 0))).catch(() => { });
+          getUserCredit()
+            .then((cRes) => setCredit(Number(cRes.data.credit || 0)))
+            .catch(() => {});
         }
-      }).catch(() => { });
+      })
+      .catch(() => {});
   }, [userEmail]);
 
   useEffect(() => {
-    getUserCredit().then((res) => setCredit(res.data.credit || 0)).catch(() => { });
+    getUserCredit()
+      .then((res) => setCredit(res.data.credit || 0))
+      .catch(() => {});
   }, []);
 
   const submitRating = async (orderItemId) => {
     const stars = ratings[orderItemId];
     const comment = reviews[orderItemId] || "";
-    if (!stars) { alert("Please select a rating"); return; }
+    if (!stars) {
+      alert("Please select a rating");
+      return;
+    }
     try {
-      await api.post(`/order/item/${orderItemId}/rate`, { stars, comment, userEmail });
-      setOrders((prev) => prev.map((o) => (o.orderItemId === orderItemId ? { ...o, isRated: true } : o)));
+      await api.post(`/order/item/${orderItemId}/rate`, {
+        stars,
+        comment,
+        userEmail,
+      });
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.orderItemId === orderItemId ? { ...o, isRated: true } : o
+        )
+      );
       setOpenRating((p) => ({ ...p, [orderItemId]: false }));
       alert("Thank you for your review ⭐");
     } catch (err) {
@@ -132,17 +192,28 @@ export default function MyOrders() {
   const handleReturnSubmit = async (order) => {
     const reason = returnReason[order.orderItemId];
     const method = refundMethod[order.orderItemId];
-    if (!reason) { alert("Please select a return reason"); return; }
-    if (!method) { alert("Please select refund preference"); return; }
+    if (!reason) {
+      alert("Please select a return reason");
+      return;
+    }
+    if (!method) {
+      alert("Please select refund preference");
+      return;
+    }
     const orderDate = new Date(order.createdAt);
     const diffDays = (Date.now() - orderDate.getTime()) / MS_IN_DAY;
-    if (diffDays > RETURN_LIMIT_DAYS) { alert("Return period expired (2 days limit)"); return; }
+    if (diffDays > RETURN_LIMIT_DAYS) {
+      alert("Return period expired (2 days limit)");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("orderItemId", order.orderItemId);
     formData.append("reason", reason);
     formData.append("refundMethod", method);
-    (returnImages[order.orderItemId] || []).forEach((file) => { formData.append("images", file); });
+    (returnImages[order.orderItemId] || []).forEach((file) => {
+      formData.append("images", file);
+    });
 
     setReturnLoading(order.orderItemId);
     try {
@@ -159,19 +230,50 @@ export default function MyOrders() {
   };
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((o) => (o.productName || "").toLowerCase().includes(query.toLowerCase()));
+    return orders.filter((o) =>
+      (o.productName || "").toLowerCase().includes(query.toLowerCase())
+    );
   }, [orders, query]);
 
   return (
     <div className="orders-page">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
         <h2 className="orders-title">Your Orders</h2>
-        <div style={{ position: "fixed", bottom: 20, right: 20, zIndex: 1000, background: " #FFFFFF", color: "#606E52", padding: "10px 16px", borderRadius: 999, fontWeight: 600, border: "1px solid #bae6fd", boxShadow: "0 4px 10px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", gap: 6 }}>
+        <div
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            zIndex: 1000,
+            background: " #FFFFFF",
+            color: "#606E52",
+            padding: "10px 16px",
+            borderRadius: 999,
+            fontWeight: 600,
+            border: "1px solid #bae6fd",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           Store Credit: ₹{credit}
         </div>
       </div>
 
-      <input className="order-search" placeholder="Search your orders..." value={query} onChange={(e) => setQuery(e.target.value)} />
+      <input
+        className="order-search"
+        placeholder="Search your orders..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
 
       <div className="orders-lists">
         {filteredOrders.map((order) => {
@@ -180,68 +282,230 @@ export default function MyOrders() {
           const isDelivered = order.orderStatus === "fulfilled";
 
           // FIX: Image URL relative
-          const imgSrc = order.imageUrl 
-             ? (order.imageUrl.startsWith("http") ? order.imageUrl : `/${order.imageUrl}`)
-             : sample.src || sample;
+          const imgSrc = order.imageUrl
+            ? order.imageUrl.startsWith("http")
+              ? order.imageUrl
+              : `/${order.imageUrl}`
+            : sample.src || sample;
 
           return (
             <article key={order.orderItemId} className="order-card">
-              <Image src={imgSrc} className="order-img" alt={order.productName} />
+              <Image
+                src={imgSrc}
+                className="order-img"
+                alt={order.productName || "Product Image"}
+                width={100}
+                height={100}
+                style={{ objectFit: "cover" }}
+              />
               <div className="order-info">
                 <div className="order-header">
                   <h3 className="order-name">{order.productName}</h3>
-                  <span className={`order-status ${statusMeta.className}`}>{statusMeta.text}</span>
+                  <span className={`order-status ${statusMeta.className}`}>
+                    {statusMeta.text}
+                  </span>
                 </div>
                 {/* ... Meta Info ... */}
                 <div className="order-meta">
-                  <p><strong>Order ID:</strong> {order.id}</p>
-                  <p><strong>Seller:</strong> {order.sellerName}</p>
-                  <p><strong>Quantity:</strong> {order.quantity}</p>
-                  <p><strong>Total:</strong> ₹{order.totalAmount}</p>
+                  <p>
+                    <strong>Order ID:</strong> {order.id}
+                  </p>
+                  <p>
+                    <strong>Seller:</strong> {order.sellerName}
+                  </p>
+                  <p>
+                    <strong>Quantity:</strong> {order.quantity}
+                  </p>
+                  <p>
+                    <strong>Total:</strong> ₹{order.totalAmount}
+                  </p>
                 </div>
 
                 {canCancelOrder(order) && (
-                  <button className="cancel-btn" onClick={() => handleCancelOrder(order.id)}>Cancel Order</button>
+                  <button
+                    className="cancel-btn"
+                    onClick={() => handleCancelOrder(order.id)}
+                  >
+                    Cancel Order
+                  </button>
                 )}
 
                 {isDelivered && (
                   <>
                     {returnInfo ? (
                       <div className="rated-pill">
-                        {deriveReturnStatus(returnInfo) === "REQUESTED" && <span style={{ color: "#92400e" }}>Return requested <GiSandsOfTime /></span>}
-                        {deriveReturnStatus(returnInfo) === "UNDER_REVIEW" && <span style={{ color: "#2563eb" }}>Processing Return Request</span>}
-                        {deriveReturnStatus(returnInfo) === "APPROVED" && <span style={{ color: "#047857" }}>Return approved ✅</span>}
-                        {deriveReturnStatus(returnInfo) === "REJECTED" && <span style={{ color: "#b91c1c" }}>Return rejected</span>}
+                        {deriveReturnStatus(returnInfo) === "REQUESTED" && (
+                          <span style={{ color: "#92400e" }}>
+                            Return requested <GiSandsOfTime />
+                          </span>
+                        )}
+                        {deriveReturnStatus(returnInfo) === "UNDER_REVIEW" && (
+                          <span style={{ color: "#2563eb" }}>
+                            Processing Return Request
+                          </span>
+                        )}
+                        {deriveReturnStatus(returnInfo) === "APPROVED" && (
+                          <span style={{ color: "#047857" }}>
+                            Return approved ✅
+                          </span>
+                        )}
+                        {deriveReturnStatus(returnInfo) === "REJECTED" && (
+                          <span style={{ color: "#b91c1c" }}>
+                            Return rejected
+                          </span>
+                        )}
                       </div>
                     ) : openReturnBox[order.orderItemId] ? (
                       <div className="order-rating">
-                        <select className="order-review" value={returnReason[order.orderItemId] || ""} onChange={(e) => setReturnReason((p) => ({ ...p, [order.orderItemId]: e.target.value }))}>
+                        <select
+                          className="order-review"
+                          value={returnReason[order.orderItemId] || ""}
+                          onChange={(e) =>
+                            setReturnReason((p) => ({
+                              ...p,
+                              [order.orderItemId]: e.target.value,
+                            }))
+                          }
+                        >
                           <option value="">Select return reason</option>
-                          {RETURN_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                          {RETURN_REASONS.map((r) => (
+                            <option key={r} value={r}>
+                              {r}
+                            </option>
+                          ))}
                         </select>
                         <div className="refund-method">
-                          <label><input type="radio" name={`refund-${order.orderItemId}`} value="STORE_CREDIT" checked={refundMethod[order.orderItemId] === "STORE_CREDIT"} onChange={() => setRefundMethod((p) => ({ ...p, [order.orderItemId]: "STORE_CREDIT" }))} /> Store Credit (Instant)</label>
-                          <label style={{ marginLeft: 12 }}><input type="radio" name={`refund-${order.orderItemId}`} value="ORIGINAL_PAYMENT" checked={refundMethod[order.orderItemId] === "ORIGINAL_PAYMENT"} onChange={() => setRefundMethod((p) => ({ ...p, [order.orderItemId]: "ORIGINAL_PAYMENT" }))} /> Original Payment</label>
+                          <label>
+                            <input
+                              type="radio"
+                              name={`refund-${order.orderItemId}`}
+                              value="STORE_CREDIT"
+                              checked={
+                                refundMethod[order.orderItemId] ===
+                                "STORE_CREDIT"
+                              }
+                              onChange={() =>
+                                setRefundMethod((p) => ({
+                                  ...p,
+                                  [order.orderItemId]: "STORE_CREDIT",
+                                }))
+                              }
+                            />{" "}
+                            Store Credit (Instant)
+                          </label>
+                          <label style={{ marginLeft: 12 }}>
+                            <input
+                              type="radio"
+                              name={`refund-${order.orderItemId}`}
+                              value="ORIGINAL_PAYMENT"
+                              checked={
+                                refundMethod[order.orderItemId] ===
+                                "ORIGINAL_PAYMENT"
+                              }
+                              onChange={() =>
+                                setRefundMethod((p) => ({
+                                  ...p,
+                                  [order.orderItemId]: "ORIGINAL_PAYMENT",
+                                }))
+                              }
+                            />{" "}
+                            Original Payment
+                          </label>
                         </div>
-                        <input type="file" multiple accept="image/*" className="order-review" onChange={(e) => setReturnImages((p) => ({ ...p, [order.orderItemId]: Array.from(e.target.files) }))} />
-                        <button className="track-btn" disabled={returnLoading === order.orderItemId} onClick={() => handleReturnSubmit(order)}>{returnLoading === order.orderItemId ? "Submitting..." : "Confirm Return"}</button>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="order-review"
+                          onChange={(e) =>
+                            setReturnImages((p) => ({
+                              ...p,
+                              [order.orderItemId]: Array.from(e.target.files),
+                            }))
+                          }
+                        />
+                        <button
+                          className="track-btn"
+                          disabled={returnLoading === order.orderItemId}
+                          onClick={() => handleReturnSubmit(order)}
+                        >
+                          {returnLoading === order.orderItemId
+                            ? "Submitting..."
+                            : "Confirm Return"}
+                        </button>
                       </div>
                     ) : (
-                      <button className="track-btn" onClick={() => setOpenReturnBox((p) => ({ ...p, [order.orderItemId]: true }))}>Request Return</button>
+                      <button
+                        className="track-btn"
+                        onClick={() =>
+                          setOpenReturnBox((p) => ({
+                            ...p,
+                            [order.orderItemId]: true,
+                          }))
+                        }
+                      >
+                        Request Return
+                      </button>
                     )}
                   </>
                 )}
 
                 {isDelivered && (
                   <>
-                    {order.isRated ? ( <span className="rated-pill">✓ Rated</span> ) : openRating[order.orderItemId] ? (
+                    {order.isRated ? (
+                      <span className="rated-pill">✓ Rated</span>
+                    ) : openRating[order.orderItemId] ? (
                       <div className="order-rating">
-                        <div>{[1, 2, 3, 4, 5].map((star) => (<FaStar key={star} size={18} style={{ cursor: "pointer", marginRight: 4 }} color={(ratings[order.orderItemId] || 0) >= star ? "#facc15" : "#d1d5db"} onClick={() => setRatings((p) => ({ ...p, [order.orderItemId]: star }))} />))}</div>
-                        <textarea className="order-review" placeholder="Write a review (optional)" value={reviews[order.orderItemId] || ""} onChange={(e) => setReviews((p) => ({ ...p, [order.orderItemId]: e.target.value }))} />
-                        <button className="track-btn" onClick={() => submitRating(order.orderItemId)}>Submit Review</button>
+                        <div>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                              key={star}
+                              size={18}
+                              style={{ cursor: "pointer", marginRight: 4 }}
+                              color={
+                                (ratings[order.orderItemId] || 0) >= star
+                                  ? "#facc15"
+                                  : "#d1d5db"
+                              }
+                              onClick={() =>
+                                setRatings((p) => ({
+                                  ...p,
+                                  [order.orderItemId]: star,
+                                }))
+                              }
+                            />
+                          ))}
+                        </div>
+                        <textarea
+                          className="order-review"
+                          placeholder="Write a review (optional)"
+                          value={reviews[order.orderItemId] || ""}
+                          onChange={(e) =>
+                            setReviews((p) => ({
+                              ...p,
+                              [order.orderItemId]: e.target.value,
+                            }))
+                          }
+                        />
+                        <button
+                          className="track-btn"
+                          onClick={() => submitRating(order.orderItemId)}
+                        >
+                          Submit Review
+                        </button>
                       </div>
                     ) : (
-                      <button className="rate-btn" onClick={() => setOpenRating((p) => ({ ...p, [order.orderItemId]: true }))}>Rate Order</button>
+                      <button
+                        className="rate-btn"
+                        onClick={() =>
+                          setOpenRating((p) => ({
+                            ...p,
+                            [order.orderItemId]: true,
+                          }))
+                        }
+                      >
+                        Rate Order
+                      </button>
                     )}
                   </>
                 )}

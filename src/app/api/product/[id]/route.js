@@ -3,7 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
   try {
-    const id = Number(params.id);
+    const resolvedParams = await params;
+    const id = Number(resolvedParams.id);
+    
     if (isNaN(id)) return NextResponse.json(null, { status: 400 });
 
     const product = await prisma.product.findUnique({
@@ -29,23 +31,25 @@ export async function GET(request, { params }) {
       id: product.id,
       sellerId: product.sellerId,
       title: product.name,
-      seller: product.seller.name,
-      origin: product.seller.business
+      // FIX 2: Use optional chaining to prevent crashes if seller data is missing
+      seller: product.seller?.name || "Unknown Seller",
+      origin: product.seller?.business
         ? `${product.seller.business.city}, ${product.seller.business.state}`
         : "Not specified",
       price: product.price,
-      images: product.images, // Full URLs
+      images: product.images, 
       video: product.video,
       description: product.description,
       availability: product.availability,
       avgRating: count ? total / count : 0,
       ratingCount: count,
-      deliveryTimeMin: product.seller.delivery?.deliveryTimeMin ?? null,
-      deliveryTimeMax: product.seller.delivery?.deliveryTimeMax ?? null,
-      installationAvailable: product.seller.delivery?.installationAvailable ?? "no",
-      installationCharge: product.seller.delivery?.installationCharge ?? 0,
-      shippingChargeType: product.seller.delivery?.shippingChargeType ?? "free",
-      shippingCharge: product.seller.delivery?.shippingCharge ?? 0,
+      // SAFELY access nested delivery details
+      deliveryTimeMin: product.seller?.delivery?.deliveryTimeMin ?? null,
+      deliveryTimeMax: product.seller?.delivery?.deliveryTimeMax ?? null,
+      installationAvailable: product.seller?.delivery?.installationAvailable ?? "no",
+      installationCharge: product.seller?.delivery?.installationCharge ?? 0,
+      shippingChargeType: product.seller?.delivery?.shippingChargeType ?? "free",
+      shippingCharge: product.seller?.delivery?.shippingCharge ?? 0,
     });
   } catch (err) {
     console.error("GET PRODUCT ERROR:", err);

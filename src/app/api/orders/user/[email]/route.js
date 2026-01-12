@@ -3,7 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
   try {
-    const email = decodeURIComponent(params.email);
+    // In Next.js 15+, params is a Promise and must be awaited
+    const resolvedParams = await params;
+    const email = decodeURIComponent(resolvedParams.email);
 
     // 1. Find the user by email
     const user = await prisma.user.findUnique({
@@ -30,7 +32,7 @@ export async function GET(request, { params }) {
       },
     });
 
-    // 3. Flatten and format the orders into individual items as per your index.js logic
+    // 3. Flatten and format the orders into individual items
     const formatted = orders.flatMap((order) =>
       order.items.map((item) => ({
         id: order.id,
@@ -38,7 +40,7 @@ export async function GET(request, { params }) {
         orderItemId: item.id,
 
         productName: item.materialName,
-        sellerName: item.seller.name,
+        sellerName: item.seller?.name || "Unknown Seller",
         quantity: item.quantity,
         totalAmount: item.totalAmount,
         imageUrl: item.imageUrl,

@@ -16,11 +16,19 @@ const api = axios.create({
 });
 
 // Request Interceptor (Optional: For adding tokens if you use them)
+// src/api/axios.js
+
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    // You can add logic here to attach tokens from localStorage if needed
-    // const token = localStorage.getItem("token");
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+    // 1. Retrieve the email from localStorage
+    const userEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") : null;
+    
+    // 2. Attach the email using the exact key the backend expects: 'x-user-email'
+    if (userEmail) {
+      config.headers["x-user-email"] = userEmail;
+    }
+    
     return config;
   },
   (error) => {

@@ -12,7 +12,14 @@ const DesignerCard = ({ id, name, category, image }) => {
   return (
     <article className="product-card">
       <div className="product-image-container">
-        {finalImage && <Image src={finalImage} alt={name} className="product-image" />}
+        {finalImage && (<Image 
+    src={finalImage} 
+    alt={name} 
+    className="product-image" 
+    width={300} 
+    height={300} 
+    style={{ objectFit: 'cover' }} 
+  />)}
         <span className="product-badge">{category}</span>
       </div>
       <div className="product-info">

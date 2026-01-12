@@ -2,21 +2,23 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
-  const ratings = await prisma.designerRating.findMany({
-    where: { designerId: Number(params.id) },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    // Await the params Promise to access the id
+    const resolvedParams = await params;
+    const designerId = Number(resolvedParams.id);
 
-  const avg = ratings.length ? ratings.reduce((s, r) => s + r.stars, 0) / ratings.length : 0;
+    if (isNaN(designerId)) {
+      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+    }
 
-  return NextResponse.json({
-    average: Number(avg.toFixed(1)),
-    count: ratings.length,
-    reviews: ratings.map((r) => ({
-      name: r.reviewerName,
-      stars: r.stars,
-      review: r.review,
-      createdAt: r.createdAt,
-    })),
-  });
+    const ratings = await prisma.designerRating.findMany({
+      where: { designerId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(ratings);
+  } catch (err) {
+    console.error("GET DESIGNER RATINGS ERROR:", err);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+  }
 }

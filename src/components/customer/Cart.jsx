@@ -30,8 +30,8 @@ const Cart = () => {
   const refreshCart = () => {
     // Ensure this runs only on client
     if (typeof window !== "undefined") {
-        const cart = loadCart();
-        setBasketItems(Array.isArray(cart) ? cart : []);
+      const cart = loadCart();
+      setBasketItems(Array.isArray(cart) ? cart : []);
     }
   };
 
@@ -78,9 +78,7 @@ const Cart = () => {
   =============================== */
   const subtotal = basketItems.reduce(
     (sum, item) =>
-      sum +
-      (Number(item.amountPerTrip) || 0) *
-        (Number(item.trips) || 1),
+      sum + (Number(item.amountPerTrip) || 0) * (Number(item.trips) || 1),
     0
   );
 
@@ -116,20 +114,23 @@ const Cart = () => {
               <p className="cart-empty">Your cart is empty.</p>
             ) : (
               basketItems.map((item) => (
-                <article
-                  key={item.materialId}
-                  className="cart-card"
-                >
+                <article key={item.materialId} className="cart-card">
                   <div className="cart-img-box">
                     <Image
-                      src={item.image || sample}
+                      // Ensure the src is a valid absolute URL, a proper local path, or the imported object
+                      src={
+                        item.image && item.image.startsWith("http")
+                          ? item.image
+                          : item.image
+                          ? `/${item.image}`
+                          : sample
+                      }
                       className="cart-img"
-                      alt={item.name}
+                      alt={item.name || "Product Image"}
                       width={200}
                       height={200}
-                      onError={(e) => {
-                        e.target.src = sample.src || sample;
-                      }}
+                      style={{ objectFit: "cover" }}
+                      // Remove the standard onError as it doesn't work with next/image the same way as <img>
                     />
                   </div>
 
@@ -138,8 +139,7 @@ const Cart = () => {
                     <p className="cart-price">
                       ₹
                       {(
-                        Number(item.amountPerTrip) *
-                        (Number(item.trips) || 1)
+                        Number(item.amountPerTrip) * (Number(item.trips) || 1)
                       ).toLocaleString()}
                     </p>
 
@@ -150,24 +150,16 @@ const Cart = () => {
                         min="1"
                         value={item.trips}
                         onChange={(e) =>
-                          handleQuantityChange(
-                            item.materialId,
-                            e.target.value
-                          )
+                          handleQuantityChange(item.materialId, e.target.value)
                         }
                         onBlur={(e) =>
-                          handleQuantityBlur(
-                            item.materialId,
-                            e.target.value
-                          )
+                          handleQuantityBlur(item.materialId, e.target.value)
                         }
                       />
 
                       <button
                         className="cart-remove-btn"
-                        onClick={() =>
-                          handleRemove(item.materialId)
-                        }
+                        onClick={() => handleRemove(item.materialId)}
                       >
                         Remove
                       </button>
@@ -195,7 +187,7 @@ const Cart = () => {
           </aside>
         </section>
       </main>
-      <Footer/>
+      <Footer />
     </>
   );
 };
