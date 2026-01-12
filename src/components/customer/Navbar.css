@@ -117,15 +117,6 @@
   align-items: center;
 }
 
-.nav-links {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin: 0;
-  padding: 0;
-}
-
 .nav-link,
 .cart-btn {
   text-decoration: none;
@@ -144,20 +135,135 @@
 }
 
 /* CTA Buttons */
-.seller-btn {
-  background: var(--green-dark);
-  color: var(--white) !important;
-  padding: 8px 18px;
-  border-radius: 50px;
+.nav-links .seller-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--bg-soft, #f9fbf7);
+  /* Light sage tint */
+  color: var(--green-dark);
+  text-decoration: none;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: var(--transition);
-  margin-top: 20px;
+  font-size: 0.95rem;
+  border-radius: 14px;
+  border: 1.5px solid var(--green-light);
+  transition: all 0.3s ease;
+  text-align: center;
 }
 
-.seller-btn:hover {
+.nav-links .seller-btn:hover {
+  background: var(--green-dark);
+  color: var(--white);
+  border-color: var(--green-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(96, 110, 82, 0.2);
+}
+
+.nav-links li:last-child .seller-btn {
+  background: var(--green-dark);
+  color: var(--white);
+  border-color: var(--green-dark);
+}
+
+.nav-links li:last-child .seller-btn:hover {
   background: var(--green-mid);
-  transform: translateY(-1px);
+  border-color: var(--green-mid);
+}
+
+/* Animation for the list items sliding in */
+.nav-links.open li {
+  animation: slideInLinks 0.5s ease forwards;
+  opacity: 0;
+  margin-top: 10px;
+}
+
+.nav-links.open li:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.nav-links.open li:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+@keyframes slideInLinks {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   MOBILE MENU (The Slide-out Drawer)
+========================================= */
+@media (max-width: 768px) {
+
+
+  .nav-links.open {
+    right: 0;
+  }
+
+  /* Centering the buttons like in your screenshot */
+  .nav-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .seller-btn {
+    width: 90%;
+    /* Buttons expand on mobile */
+    max-width: 280px;
+    padding: 15px;
+    font-size: 1rem;
+    justify-content: center;
+  }
+
+  /* Hide Desktop Search if you have a separate mobile bar */
+  .nav-icons-desktop {
+    display: none;
+  }
+}
+
+/* =========================================
+   BACKDROP OVERLAY
+========================================= */
+/* To make it attractive, add a blur behind the menu */
+.menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 2999;
+}
+
+.menu-overlay.show {
+  display: block;
+}
+
+/* =========================================
+   TABLET / LAPTOP 
+========================================= */
+@media (min-width: 769px) and (max-width: 1200px) {
+  .nav-links {
+    width: 300px;
+    /* Thinner sidebar for tablets */
+  }
+
+  .brand-bold {
+    font-size: 1.2rem;
+  }
 }
 
 /* =========================================
@@ -263,7 +369,7 @@
   }
 
   .nav-links li {
-    width: 100%;
+    width: 60%;
   }
 
   .seller-btn {
@@ -280,7 +386,7 @@
 
   /* Hide text logo on very small screens */
   .nav-logo {
-    width: 42px;
+    width: 82px;
   }
 
   .search_form {
@@ -313,20 +419,22 @@
 /* Hide the main nav-links list by default on all screens */
 .nav-links {
   position: fixed;
-  top: 72px;
-  /* nav-height */
+  top: 0;
   right: -100%;
-  /* Hidden off-screen */
-  width: 300px;
-  height: calc(100vh - 483px);
-  background: white;
-  flex-direction: column;
-  padding: 40px 20px;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-  transition: right 0.4s ease;
-  z-index: 1000;
+  /* Hidden by default */
+  width: 337px;
+  height: 45vh;
+
+  background-color: var(--white);
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  padding: 100px 30px;
+  /* Space for the close icon at the top */
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+  transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+  list-style: none;
+  margin: 0;
 }
 
 .nav-links.open {

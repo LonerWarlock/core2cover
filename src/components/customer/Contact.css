@@ -130,8 +130,17 @@
   box-shadow: 0 14px 34px rgba(96,110,82,0.25);
 }
 
-.pd-btn-call{
+.pd_btn_call{
   width: 100%;
+  color: #000000;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform .25s ease, box-shadow .25s ease;
+  
 }
 
 .pd-btn{
