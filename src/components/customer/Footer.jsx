@@ -1,47 +1,43 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link'; // CHANGED
 import Image from 'next/image';
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
+import { MdEmail } from "react-icons/md";
 import "./Footer.css";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover.png";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_1.png";
 
 export default function Footer() {
   return (
     <footer className="footer">
       <div className="footer-container">
-        {/* Brand */}
+        {/* Left: Brand & Tagline */}
         <div className="footer-brand">
           <Image
             src={CoreToCoverLogo}
             alt="CoreToCover"
             className="footer-logo"
-            width={200}
-            height={60}
+            width={180}
+            height={45}
+            priority
           />
           <p className="footer-tagline">
-            Everything your interior project needs, in one place.
+            Interior project needs, in one place.
           </p>
         </div>
-
-        {/* Links */}
-        <ul className="footer-links">
-          <li><Link href="/">Home</Link></li>
-          <li><Link href="/about">About</Link></li>
-          <li><Link href="/contact">Contact</Link></li>
-        </ul>
-
-        {/* Social Icons */}
-        <div className="footer-social">
-          <a href="#"><FaFacebookF /></a>
-          <a href="#"><FaInstagram /></a>
-          <a href="#"><FaTwitter /></a>
+        {/* Right: Copyright */}
+        <div className="footer-bottom">
+          © {new Date().getFullYear()} Core2Cover. All rights reserved.
         </div>
-      </div>
 
-      <div className="footer-bottom">
-        © {new Date().getFullYear()} Core2Cover. All rights reserved.
+        {/* Center: Social Icons */}
+        <div className="footer-social">
+          <a href="#" aria-label="Facebook"><FaFacebookF /></a>
+          <a href="#" aria-label="Instagram"><FaInstagram /></a>
+          <a href="#" aria-label="Twitter"><FaTwitter /></a>
+          <a href="/contact" aria-label="Email"><MdEmail /></a>
+        </div>
+
       </div>
     </footer>
   );

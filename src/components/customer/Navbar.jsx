@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image"; // Import Next.js Image
-import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import "./Navbar.css";
 import {
   FaSearch,
@@ -15,23 +15,29 @@ import {
 } from "react-icons/fa";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
+const Brand = ({ children }) => <span className="brand">{children}</span>;
+const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
+  const isHomePage = pathname === "/";
   const currentPageTitle = "Readymade Products";
 
   useEffect(() => {
-    // Defer state update to avoid synchronous setState in effect
-    // This ensures that the component has rendered once before updating state based on searchParams
-    queueMicrotask(() => {
-      const q = searchParams.get("search") || "";
-      if (searchQuery !== q) setSearchQuery(q);
-    });
-  }, [searchParams, searchQuery]);
+    const q = searchParams.get("search");
+    if (q) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]); // Remove searchQuery from the dependency array!
+
+  const handleInputChange = (e) => {
+    setSearchQuery(e.target.value); // This allows the user to type freely
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -57,100 +63,68 @@ const Navbar = () => {
           <div className="nav-left">
             <Link href="/" className="nav-link nav-logo-link">
               <span className="nav-logo-wrap">
-                {/* ✅ FIX: Pass the imported object directly to src */}
                 <Image
-                  src={CoreToCoverLogo} 
-                  alt="CoreToCover" 
+                  src={CoreToCoverLogo}
+                  alt="CoreToCover"
                   className="nav-logo"
-                  width={50} // Optional: Ensure it has a base size if CSS fails to load
-                  height={50} // Optional: Ensure it has a base size
-                  style={{ width: 'auto', height: 'auto', maxHeight: '50px' }} // CSS override
+                  width={50}
+                  height={50}
+                  priority
                 />
-                <span className="brand">Core2Cover</span>
+                <span className="brand"><BrandBold>Core2Cover</BrandBold></span>
               </span>
             </Link>
           </div>
 
-          <div className="nav-center">
-            <form onSubmit={handleSearch} className="search_form">
-              <input
-                className="search_input"
-                type="text"
-                placeholder={`Search ${currentPageTitle}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="search_button"
-                disabled={!searchQuery.trim()}
-              >
-                <FaSearch className="search-ico" />
-              </button>
-            </form>
-          </div>
-
           <div className="nav-right">
+            {/* Always visible icons on Desktop */}
+            <div className="nav-icons-desktop">
+
+              <Link href="/about" className="nav-icon-link">About Us</Link>
+              <Link href="/cart" className="nav-icon-link"><FaShoppingCart /></Link>
+              <Link href="/userprofile" className="nav-icon-link" onClick={handleProfileClick}><FaUser /></Link>
+            </div>
+
+            {/* Hamburger visible on Laptop/Desktop too */}
+            <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <FaTimes /> : <FaBars />}
+            </div>
+
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
-              <li>
-                <Link 
-                  href="/userprofile" 
-                  className="nav-link" 
-                  onClick={handleProfileClick}
-                >
-                  <FaUser /> Profile
-                </Link>
-              </li>
-              
-              <li>
-                <Link href="/myhireddesigners" className="nav-link">
-                  <FaUserGraduate /> My Hired Designers
-                </Link>
-              </li>
 
+              {/* These are now inside the hamburger for all screen sizes */}
               <li>
-                <Link href="/cart" className="cart-btn">
-                  <FaShoppingCart /> Cart
-                </Link>
-              </li>
-
-              <li>
-                <Link href="/sellersignup" className="seller-btn">
+                <Link href="/sellersignup" className="seller-btn" onClick={() => setMenuOpen(false)}>
                   Become a Seller
                 </Link>
               </li>
-
               <li>
-                <Link href="/designersignup" className="seller-btn">
+                <Link href="/designersignup" className="seller-btn" onClick={() => setMenuOpen(false)}>
                   I am a Designer
                 </Link>
               </li>
             </ul>
-            <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <FaTimes /> : <FaBars />}
-            </div>
           </div>
         </div>
       </header>
 
-      <div className="search-container">
-        <form onSubmit={handleSearch} className="search_form mobile">
-          <input
-            className="search_input"
-            type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="search_button"
-            disabled={!searchQuery.trim()}
-          >
-            <FaSearch />
-          </button>
-        </form>
-      </div>
+      {/* Searchbar only appears if NOT on Home */}
+      {!isHomePage && (
+        <div className="search-container visible">
+          <form onSubmit={handleSearch} className="search_form active-bar">
+            <input
+              className="search_input"
+              type="text"
+              placeholder={`Search ${currentPageTitle}...`}
+              value={searchQuery} // Controlled component
+              onChange={handleInputChange} // Ensure this function is called
+            />
+            <button type="submit" className="search_button" disabled={!searchQuery.trim()}>
+              <FaSearch />
+            </button>
+          </form>
+        </div>
+      )}
     </>
   );
 };
