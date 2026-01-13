@@ -33,7 +33,7 @@ export default function Footer() {
         {/* Center: Social Icons */}
         <div className="footer-social">
           <a href="#" aria-label="Facebook"><FaFacebookF /></a>
-          <a href="#" aria-label="Instagram"><FaInstagram /></a>
+          <a href="https://www.instagram.com/core2cover?igsh=ODdldnJnaHg3eXMz" aria-label="Instagram"><FaInstagram /></a>
           <a href="#" aria-label="Twitter"><FaTwitter /></a>
           <a href="/contact" aria-label="Email"><MdEmail /></a>
         </div>
