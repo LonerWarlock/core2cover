@@ -3,7 +3,7 @@
 ========================================= */
 :root {
   --casa-bg: #f7f8f5;
-;
+  ;
   --surface: #FFFFFF;
 
   --green-dark: #606E52;
@@ -32,12 +32,13 @@
 /* =========================================
    PAGE WRAPPER
 ========================================= */
-.profile{
-    background: var(--casa-bg, #f7f8f5);
+.profile {
+  background: var(--casa-bg, #f7f8f5);
 }
+
 .profile-page {
   min-height: 100vh;
-  background:var(--bg-light);
+  background: var(--bg-light);
   padding: 20px;
   display: flex;
   justify-content: center;
@@ -78,7 +79,7 @@
 
 /* Button */
 .back-button {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   color: var(--green-dark);
@@ -118,7 +119,7 @@
 ========================================= */
 .profile-card {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.99));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.99));
   backdrop-filter: blur(12px);
   padding: 22px;
   border-radius: var(--card-radius);
@@ -142,7 +143,7 @@
   border: none;
   height: 1px;
   margin: 14px 0;
-  background: rgba(96,110,82,0.18);
+  background: rgba(96, 110, 82, 0.18);
 }
 
 .user-info p {
@@ -161,7 +162,7 @@
   padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: rgba(255,255,255,0.96);
+  background: rgba(255, 255, 255, 0.96);
   font-weight: 700;
   color: var(--green-dark);
   transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
@@ -183,6 +184,7 @@
   transition: transform 200ms var(--ease), box-shadow 200ms var(--ease);
   border: none;
 }
+
 .button-group {
   display: flex;
   gap: 12px;
@@ -244,7 +246,7 @@
 
 .myorders-card {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.99));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.99));
   padding: 16px;
   border-radius: 14px;
   border: 1px solid var(--border);
@@ -288,3 +290,209 @@
     animation: none !important;
   }
 }
+
+.profile-page-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: 'Helvetica', sans-serif;
+}
+
+.main-profile-title {
+  font-family: 'Big Caslon', serif;
+  color: #606e52;
+  font-size: 2.5rem;
+  margin-top: 10px;
+}
+
+.profile-info-card {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  border: 1px solid #f0f0f0;
+}
+
+/* Tab Styling */
+.profile-tabs-container {
+  display: flex;
+  gap: 20px;
+  border-bottom: 2px solid #eef2e6;
+  margin-bottom: 30px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #8f8b84;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  color: #606e52;
+}
+
+.tab-btn.active {
+  color: #606e52;
+}
+
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #91a56e;
+  border-radius: 10px;
+}
+
+.tab-content-area {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Profile specific buttons */
+.profile-button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.profile-button.edit {
+  background: #91a56e;
+  color: white;
+}
+
+.profile-button.logout {
+  background: #f2d3d3;
+  color: #8a2e2e;
+  margin-left: 10px;
+}
+
+.profile-info-card {
+  background: white;
+  padding: 35px;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  margin-bottom: 40px;
+  border: 1px solid #eef2e6;
+}
+
+.profile-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+}
+
+.profile-details-column {
+  flex: 2;
+}
+
+.user-info-display h2 {
+  font-family: 'Big Caslon', serif;
+  font-size: 2.2rem;
+  color: #606e52;
+  margin: 0 0 5px 0;
+}
+
+.user-email {
+  color: #8f8b84;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.contact-info p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+  color: #474747;
+}
+
+/* Rating Summary Column */
+.profile-rating-summary-column {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rating-summary-badge {
+  background: #fdfdfb;
+  padding: 25px;
+  border-radius: 20px;
+  border: 1.5px dashed #c0cca4;
+  text-align: center;
+  min-width: 220px;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8f8b84;
+  margin-bottom: 10px;
+}
+
+.summary-stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.summary-score {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #606e52;
+}
+
+.star-icon {
+  color: #facc15;
+  font-size: 1.8rem;
+}
+
+.summary-count {
+  font-size: 0.8rem;
+  color: #91a56e;
+  font-weight: 600;
+}
+
+.no-rating-text {
+  color: #ded9ce;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-card-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .profile-rating-summary-column {
+    width: 100%;
+    justify-content: center;
+  }
+} 

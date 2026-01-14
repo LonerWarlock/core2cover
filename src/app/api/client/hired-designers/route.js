@@ -3,33 +3,41 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const userId = Number(searchParams.get("userId"));
+  const userId = searchParams.get("userId");
 
-  if (!userId) return NextResponse.json({ message: "Login required" }, { status: 401 });
+  if (!userId) {
+    return NextResponse.json({ message: "User ID required" }, { status: 400 });
+  }
 
-  const hires = await prisma.designerHireRequest.findMany({
-    where: { userId },
-    include: {
-      designer: { include: { profile: true } },
-      rating: true,
-      userRating: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const requests = await prisma.designerHireRequest.findMany({
+      where: { userId: Number(userId) },
+      include: {
+        designer: {
+          include: { profile: true }
+        },
+        rating: true,      // Rating given BY customer TO designer
+        userRating: true,  // Rating given BY designer TO customer
+      },
+      orderBy: { createdAt: 'desc' }
+    });
 
-  return NextResponse.json(
-    hires.map((h) => ({
-      id: h.id,
-      designerId: h.designerId,
-      name: h.designer.fullname,
-      category: h.designer.profile?.designerType,
-      location: h.designer.location,
-      status: h.status,
-      budget: h.budget,
-      workType: h.workType,
-      image: h.designer.profile?.profileImage,
-      rating: h.rating,
-      userRating: h.userRating,
-    }))
-  );
+    const formatted = requests.map(r => ({
+      id: r.id,
+      designerId: r.designerId,
+      name: r.designer.fullname,
+      image: r.designer.profile?.profileImage,
+      category: r.designer.profile?.designerType,
+      location: r.location,
+      workType: r.workType,
+      budget: r.budget,
+      status: r.status,
+      rating: r.rating,         
+      userRating: r.userRating 
+    }));
+
+    return NextResponse.json(formatted);
+  } catch (error) {
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }

@@ -7,6 +7,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "./Cart.css";
 import sample from "../../assets/images/sample.jpg";
+import { FaArrowLeft } from "react-icons/fa"; // Imported for the back icon
 import {
   loadCart,
   updateCartItemQuantity,
@@ -16,31 +17,30 @@ import {
 
 const Cart = () => {
   const router = useRouter();
-  const [basketItems, setBasketItems] = useState(() => {
-    if (typeof window !== "undefined") {
-      const cart = loadCart();
-      return Array.isArray(cart) ? cart : [];
-    }
-    return [];
-  });
+  
+  // Hydration safety state
+  const [isMounted, setIsMounted] = useState(false);
+  const [basketItems, setBasketItems] = useState([]);
 
   /* ===============================
-     LOAD CART
+      INITIAL LOAD (Hydration Safe)
   =============================== */
-  const refreshCart = () => {
-    // Ensure this runs only on client
-    if (typeof window !== "undefined") {
-      const cart = loadCart();
-      setBasketItems(Array.isArray(cart) ? cart : []);
-    }
-  };
-
   useEffect(() => {
-    // Effect cleanup or external system synchronization if needed
+    setIsMounted(true);
+    const cart = loadCart();
+    setBasketItems(Array.isArray(cart) ? cart : []);
   }, []);
 
   /* ===============================
-     QUANTITY HANDLERS
+      REFRESH CART
+  =============================== */
+  const refreshCart = () => {
+    const cart = loadCart();
+    setBasketItems(Array.isArray(cart) ? cart : []);
+  };
+
+  /* ===============================
+      QUANTITY HANDLERS
   =============================== */
   const handleQuantityChange = (id, value) => {
     if (value === "") {
@@ -61,12 +61,13 @@ const Cart = () => {
 
   const handleQuantityBlur = (id, value) => {
     const qty = Number(value);
-    updateCartItemQuantity(id, qty >= 1 ? qty : 1);
+    const finalQty = qty >= 1 ? qty : 1;
+    updateCartItemQuantity(id, finalQty);
     refreshCart();
   };
 
   /* ===============================
-     REMOVE ITEM
+      REMOVE ITEM
   =============================== */
   const handleRemove = (id) => {
     removeFromCart(id);
@@ -74,7 +75,7 @@ const Cart = () => {
   };
 
   /* ===============================
-     TOTAL
+      TOTAL CALCULATION
   =============================== */
   const subtotal = basketItems.reduce(
     (sum, item) =>
@@ -83,11 +84,11 @@ const Cart = () => {
   );
 
   /* ===============================
-     CHECKOUT NAVIGATION 
+      CHECKOUT NAVIGATION 
   =============================== */
   const handleCheckout = () => {
     if (!basketItems.length) {
-      alert("Your cart is empty.");
+      alert("Your basket is currently empty.");
       return;
     }
 
@@ -101,23 +102,52 @@ const Cart = () => {
     router.push("/checkout");
   };
 
+  // Prevent rendering the dynamic basket content until mounted on the client
+  if (!isMounted) {
+    return (
+      <>
+        <Navbar />
+        <main className="cart-page">
+           <div className="cart-loading">
+             <p>Loading your shopping basket...</p>
+           </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
 
       <main className="cart-page">
-        <h1 className="cart-heading">Your Shopping Cart</h1>
+        {/* TOP NAVIGATION / BACK BUTTON */}
+        <div className="cart-top-nav">
+          <button className="cart-back-btn" onClick={() => router.back()}>
+            <FaArrowLeft /> Back to Shopping
+          </button>
+        </div>
+
+        <h1 className="cart-heading">Your Shopping Basket</h1>
 
         <section className="cart-layout">
           <div className="cart-list">
             {basketItems.length === 0 ? (
-              <p className="cart-empty">Your cart is empty.</p>
+              <div className="cart-empty-container">
+                <p className="cart-empty">Your basket is empty.</p>
+                <button 
+                  className="continue-shopping-btn" 
+                  onClick={() => router.push('/productlisting')}
+                >
+                  Continue Shopping
+                </button>
+              </div>
             ) : (
               basketItems.map((item) => (
                 <article key={item.materialId} className="cart-card">
                   <div className="cart-img-box">
                     <Image
-                      // Ensure the src is a valid absolute URL, a proper local path, or the imported object
                       src={
                         item.image && item.image.startsWith("http")
                           ? item.image
@@ -130,7 +160,6 @@ const Cart = () => {
                       width={200}
                       height={200}
                       style={{ objectFit: "cover" }}
-                      // Remove the standard onError as it doesn't work with next/image the same way as <img>
                     />
                   </div>
 
@@ -144,18 +173,20 @@ const Cart = () => {
                     </p>
 
                     <div className="cart-actions">
-                      <label>Quantity</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.trips}
-                        onChange={(e) =>
-                          handleQuantityChange(item.materialId, e.target.value)
-                        }
-                        onBlur={(e) =>
-                          handleQuantityBlur(item.materialId, e.target.value)
-                        }
-                      />
+                      <div className="qty-input-group">
+                        <label>Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.trips}
+                          onChange={(e) =>
+                            handleQuantityChange(item.materialId, e.target.value)
+                          }
+                          onBlur={(e) =>
+                            handleQuantityBlur(item.materialId, e.target.value)
+                          }
+                        />
+                      </div>
 
                       <button
                         className="cart-remove-btn"
@@ -172,8 +203,12 @@ const Cart = () => {
 
           <aside className="cart-summary">
             <h2>Order Summary</h2>
+            <div className="summary-row">
+              <span>Subtotal</span>
+              <span>₹{subtotal.toLocaleString()}</span>
+            </div>
             <div className="summary-row total">
-              <span>Total</span>
+              <span>Estimated Total</span>
               <span>₹{subtotal.toLocaleString()}</span>
             </div>
 

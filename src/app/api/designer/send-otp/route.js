@@ -48,7 +48,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: emailNormalized,
-      subject: "Casa Designer Email Verification",
+      subject: "Core2Cover Designer Email Verification",
       html: `
         <h2>Verify your Designer account</h2>
         <p>Your OTP is:</p>

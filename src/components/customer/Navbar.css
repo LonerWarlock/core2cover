@@ -1,25 +1,29 @@
-/* =========================================
-   GLOBAL VARIABLES & RESET
-========================================= */
+/* ======================================================
+   ROOT VARIABLES
+====================================================== */
 :root {
   --green-dark: #606E52;
   --green-mid: #91A56E;
   --green-light: #C0CCA4;
-  --white: #FFFFFF;
-  --text-dark: #333333;
-  --text-muted: #8F8B84;
-  --brand-font: "CaviarDreams", sans-serif;
-  --brand-font-bold: "CaviarDreams", sans-serif;
-  --brand-font-weight: 400;
-  --brand-font-bold-weight: 700;
-  --font-ui: "Helvetica", "Arial", sans-serif;
 
-  --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --white: #ffffff;
+  --bg-soft: #f9fbf7;
+
+  --text-dark: #333333;
+  --text-muted: #8f8b84;
+
+  --brand-font: "CaviarDreams", sans-serif;
+  --ui-font: "Helvetica", "Arial", sans-serif;
+
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+
   --nav-height: 72px;
 }
 
-/* Custom Font handling */
+/* ======================================================
+   FONTS
+====================================================== */
 @font-face {
   font-family: "CaviarDreams";
   src: url("/fonts/CaviarDreams.ttf") format("truetype");
@@ -34,277 +38,220 @@
   font-display: swap;
 }
 
-/* =========================================
-   NAVBAR WRAPPER
-========================================= */
+/* ======================================================
+   NAVBAR
+====================================================== */
 .navbar {
-  background-color: var(--white);
   position: sticky;
   top: 0;
   z-index: 1000;
-  width: 100%;
-  box-shadow: var(--shadow-soft);
-  border-bottom: 1px solid #e8eddc;
-  font-family: var(--font-ui);
   height: var(--nav-height);
+  background: var(--white);
+  border-bottom: 1px solid #e8eddc;
+  box-shadow: var(--shadow-soft);
   display: flex;
   align-items: center;
+  font-family: var(--ui-font);
 }
 
 .nav-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   width: 92%;
   max-width: 1400px;
   margin: 0 auto;
-}
-
-.brand {
-  font-family: var(--brand-font);
-  font-weight: var(--brand-font-weight);
-  letter-spacing: -0.4px;
-  color: var(--olive);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.brand-bold {
-  font-family: var(--brand-font-bold);
-  font-weight: var(--brand-font-bold-weight);
-  font-size: large;
-}
-
-/* =========================================
-   LOGO & BRANDING
-========================================= */
+/* ======================================================
+   LOGO / BRAND
+====================================================== */
 .nav-left {
   display: flex;
   align-items: center;
-  height: 100%;
 }
 
 .nav-logo-link {
   display: flex;
   align-items: center;
-  /* Ensures logo and text are on the same baseline */
-  text-decoration: none;
   gap: 12px;
-  /* Consistent spacing between image and brand text */
+  cursor: pointer;
 }
 
 .nav-logo-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
-  /* Match this to your brand font-size for perfect baseline alignment */
-  height: 40px;
+  gap: 10px;
 }
 
-.nav-logo {
-  width: 75px;
-  height: auto;
-  object-fit: contain;
-  transition: var(--transition);
+.brand {
+  font-family: var(--brand-font);
+  font-size: 1.25rem;
+  color: var(--green-dark);
+  line-height: 1;
 }
 
+.brand-bold {
+  font-weight: 700;
+}
 
-
-/* =========================================
-   NAVIGATION LINKS
-========================================= */
+/* ======================================================
+   RIGHT SIDE ICONS
+====================================================== */
 .nav-right {
   display: flex;
   align-items: center;
 }
 
-.nav-link,
-.cart-btn {
-  text-decoration: none;
-  color: var(--text-dark);
-  font-weight: 500;
-  font-size: 0.95rem;
+.nav-icons-desktop {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 22px;
+  margin-right: 18px;
+}
+
+.nav-icon-link {
+  text-decoration: none;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
   transition: var(--transition);
 }
 
-.nav-link:hover,
-.cart-btn:hover {
+.nav-icon-link:hover {
   color: var(--green-dark);
 }
 
-/* CTA Buttons */
-.nav-links .seller-btn {
+/* ======================================================
+   HAMBURGER
+====================================================== */
+.hamburger {
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--green-dark);
+  z-index: 1100;
+}
+
+/* ======================================================
+   DRAWER MENU
+====================================================== */
+.nav-links {
+  position: fixed;
+  top: var(--nav-height);
+  right: -100%;
+  width: 300px;
+  height: calc(100vh - var(--nav-height));
+  background: var(--white);
   display: flex;
-  align-items: center;
   justify-content: center;
+  transition: right 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+}
+
+.nav-links.open {
+  right: 0;
+}
+
+/* ======================================================
+   DRAWER CTA GROUP (FIXES UGLY LOOK)
+====================================================== */
+.drawer-cta {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e8eddc;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+
+/* ======================================================
+   CTA BUTTONS
+====================================================== */
+.seller-btn {
   width: 100%;
-  padding: 16px 20px;
-  background: var(--bg-soft, #f9fbf7);
-  /* Light sage tint */
-  color: var(--green-dark);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
+  max-width: 260px;
+  padding: 14px 18px;
   border-radius: 14px;
-  border: 1.5px solid var(--green-light);
-  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  font-weight: 600;
   text-align: center;
-}
-
-.nav-links .seller-btn:hover {
+  text-decoration: none;
+  border: 1.5px solid var(--green-light);
   background: var(--green-dark);
+
   color: var(--white);
-  border-color: var(--green-dark);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(96, 110, 82, 0.2);
-}
 
-.nav-links li:last-child .seller-btn {
-  background: var(--green-dark);
-  color: var(--white);
-  border-color: var(--green-dark);
-}
-
-.nav-links li:last-child .seller-btn:hover {
-  background: var(--green-mid);
-  border-color: var(--green-mid);
-}
-
-/* Animation for the list items sliding in */
-.nav-links.open li {
-  animation: slideInLinks 0.5s ease forwards;
-  opacity: 0;
+  transition: var(--transition);
   margin-top: 10px;
 }
 
-.nav-links.open li:nth-child(1) {
-  animation-delay: 0.1s;
+.seller-btn:hover {
+  background: var(--green-mid);
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(96, 110, 82, 0.2);
 }
 
-.nav-links.open li:nth-child(2) {
-  animation-delay: 0.2s;
+.seller-btn.primary {
+  background: var(--green-dark);
+  color: var(--white);
+  border-color: var(--green-dark);
+  margin-top: 10px;
 }
 
-@keyframes slideInLinks {
-  from {
-    transform: translateX(30px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+.drawer-cta {
+  gap: 36px; /* INCREASE gap */
 }
 
-/* =========================================
-   MOBILE MENU (The Slide-out Drawer)
-========================================= */
-@media (max-width: 768px) {
-
-
-  .nav-links.open {
-    right: 0;
-  }
-
-  /* Centering the buttons like in your screenshot */
-  .nav-btn-wrapper {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin: 10px 0;
-  }
-
-  .seller-btn {
-    width: 90%;
-    /* Buttons expand on mobile */
-    max-width: 280px;
-    padding: 15px;
-    font-size: 1rem;
-    justify-content: center;
-  }
-
-  /* Hide Desktop Search if you have a separate mobile bar */
-  .nav-icons-desktop {
-    display: none;
-  }
+.seller-btn.primary:hover {
+  background: var(--green-mid);
 }
 
-/* =========================================
-   BACKDROP OVERLAY
-========================================= */
-/* To make it attractive, add a blur behind the menu */
-.menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 2999;
-}
-
-.menu-overlay.show {
-  display: block;
-}
-
-/* =========================================
-   TABLET / LAPTOP 
-========================================= */
-@media (min-width: 769px) and (max-width: 1200px) {
-  .nav-links {
-    width: 300px;
-    /* Thinner sidebar for tablets */
-  }
-
-  .brand-bold {
-    font-size: 1.2rem;
-  }
-}
-
-/* =========================================
-   SEARCH BAR (Conditional Layout)
-========================================= */
-/* Container that appears BELOW navbar on other pages */
+/* ======================================================
+   SEARCH BAR
+====================================================== */
 .search-container {
   width: 100%;
   background: #fdfdfd;
-  padding: 12px 0;
   border-bottom: 1px solid #e8eddc;
+  padding: 14px 0;
   display: flex;
   justify-content: center;
-  animation: slideDown 0.4s ease-out;
 }
 
 .search_form {
+  width: 90%;
+  max-width: 520px;
+  height: 44px;
+  background: #f1f5e8;
+  border-radius: 50px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
-  width: 90%;
-  max-width: 500px;
-  height: 44px;
-  padding: 0 20px;
-  background-color: #f1f5e8;
-  /* Slight tint of green-light */
-  border-radius: 50px;
   border: 1px solid #dbe6c6;
   transition: var(--transition);
 }
 
 .search_form:focus-within {
-  background-color: var(--white);
+  background: var(--white);
   border-color: var(--green-dark);
-  box-shadow: 0 4px 12px rgba(96, 110, 82, 0.1);
+  box-shadow: 0 4px 12px rgba(96, 110, 82, 0.15);
 }
 
 .search_input {
   flex: 1;
-  background: transparent;
   border: none;
   outline: none;
+  background: transparent;
   font-size: 0.9rem;
   color: var(--text-dark);
 }
@@ -316,66 +263,15 @@
   color: var(--green-dark);
   display: flex;
   align-items: center;
-  padding-left: 10px;
-  transition: var(--transition);
 }
 
-.search_button:hover:not(:disabled) {
-  transform: scale(1.1);
-}
-
-/* =========================================
-   MOBILE & TABLET RESPONSIVENESS
-========================================= */
-.hamburger {
-  display: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--green-dark);
-  margin-left: 20px;
-}
-
-@media (max-width: 1024px) {
-  .brand {
-    font-size: 1.2rem;
-  }
-
-  .nav-links {
-    gap: 15px;
-  }
-}
-
+/* ======================================================
+   RESPONSIVE
+====================================================== */
 @media (max-width: 860px) {
-  .hamburger {
-    display: block;
-  }
 
-  .nav-links {
-    position: fixed;
-    top: var(--nav-height);
-    right: -100%;
-    width: 280px;
-    height: calc(100vh - var(--nav-height));
-    background: var(--white);
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 40px;
-    box-shadow: -10px 0 20px rgba(0, 0, 0, 0.05);
-    transition: 0.4s ease;
-  }
-
-  .nav-links.open {
-    right: 0;
-  }
-
-  .nav-links li {
-    width: 60%;
-  }
-
-  .seller-btn {
-    display: block;
-    text-align: center;
-    margin-left: 28%;
+  .brand {
+    font-size: 1.1rem;
   }
 }
 
@@ -384,88 +280,34 @@
     display: none;
   }
 
-  /* Hide text logo on very small screens */
-  .nav-logo {
-    width: 82px;
-  }
-
   .search_form {
     width: 95%;
   }
 }
 
-/* Animations */
-@keyframes slideDown {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+/* ======================================================
+   DRAWER NAV LINKS (MOBILE ONLY)
+====================================================== */
+.drawer-link {
+  width: 100%;
+  padding: 16px 24px;
 }
 
-/* Force Hamburger to be visible on Laptop/Desktop */
-.hamburger.always-visible {
-  display: block !important;
-  font-size: 24px;
-  color: var(--green-dark);
-  cursor: pointer;
-  z-index: 1001;
-}
-
-/* Hide the main nav-links list by default on all screens */
-.nav-links {
-  position: fixed;
-  top: 0;
-  right: -100%;
-  /* Hidden by default */
-  width: 337px;
-  height: 45vh;
-
-  background-color: var(--white);
-  display: flex;
-  flex-direction: column;
-  padding: 100px 30px;
-  /* Space for the close icon at the top */
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
-  transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1000;
-  list-style: none;
-  margin: 0;
-}
-
-.nav-links.open {
-  right: 0;
-  /* Slide in */
-}
-
-/* Icons that stay visible next to hamburger on Desktop */
-.nav-icons-desktop {
-  display: flex;
-  gap: 20px;
-  margin-right: 20px;
-  font-size: 20px;
-}
-
-.nav-icon-link {
-  color: var(--text-dark);
-  transition: color 0.3s;
+.drawer-link a {
+  display: block;
   text-decoration: none;
-  font-size: smaller;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  transition: var(--transition);
 }
 
-.nav-icon-link:hover {
+.drawer-link a:hover {
   color: var(--green-dark);
 }
 
-/* Adjust search bar container visibility */
-.search-container.visible {
-  display: flex !important;
-  justify-content: center;
-  padding: 15px 0;
-  background: #fdfdfd;
-  border-bottom: 1px solid #e8eddc;
+@media (max-width: 860px) {
+  .nav-icons-desktop {
+    display: none;
+  }
 }

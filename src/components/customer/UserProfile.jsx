@@ -1,16 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import "./UserProfile.css";
 import Navbar from "./Navbar";
 import MyOrders from "./MyOrders";
+import MyHiredDesigners from "./MyHiredDesigners";
 import { getUserByEmail, updateUserProfile } from "../../api/user";
+import { getClientHiredDesigners } from "../../api/designer"; // Import this
+import { FaStar } from "react-icons/fa";
 
 const UserProfile = () => {
   const router = useRouter();
-  
-  // Initialize state safely for SSR
+  const [activeTab, setActiveTab] = useState("orders");
+  const [user, setUser] = useState({ name: "", email: "", phone: "", address: "" });
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState(user);
+  const [designers, setDesigners] = useState([]); // To calculate ratings
+
   const [userEmail] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("userEmail");
@@ -18,66 +25,52 @@ const UserProfile = () => {
     return null;
   });
 
-  /* ==============================
-     LOGOUT & NAVIGATION
-  ============================== */
-  const handleLogout = () => {
-    localStorage.clear();
-    alert("You have been logged out.");
-    router.push("/");
-  };
+  const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
 
-  const handleBack = () => {
-    router.back();
-  };
-
-  /* ==============================
-     USER STATE
-  ============================== */
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(user);
-
-  /* ==============================
-     FETCH USER FROM DB
-  ============================== */
   useEffect(() => {
-    if (userEmail === null) return; // Wait for client-side load
-
+    if (userEmail === null) return;
     if (!userEmail) {
       router.push("/login");
       return;
     }
 
-    const loadUser = async () => {
+    const loadData = async () => {
       try {
-        const res = await getUserByEmail(userEmail);
-        setUser(res.data);
-        setFormData(res.data);
-      } catch {
-        alert("Failed to load user profile");
+        // Fetch user profile and hired designers (for ratings) in parallel
+        const [userRes, designersRes] = await Promise.all([
+          getUserByEmail(userEmail),
+          getClientHiredDesigners({ userId })
+        ]);
+
+        setUser(userRes.data);
+        setFormData(userRes.data);
+        setDesigners(Array.isArray(designersRes.data) ? designersRes.data : []);
+      } catch (err) {
+        console.error("Failed to load profile data", err);
       }
     };
+    loadData();
+  }, [userEmail, userId, router]);
 
-    loadUser();
-  }, [userEmail, router]);
+  // Calculate Rating Summary for the Profile Card
+  const ratingStats = useMemo(() => {
+    const feedback = designers.filter((d) => d.userRating);
+    if (feedback.length === 0) return { avg: null, count: 0 };
+    const total = feedback.reduce((sum, d) => sum + d.userRating.stars, 0);
+    return {
+      avg: (total / feedback.length).toFixed(1),
+      count: feedback.length
+    };
+  }, [designers]);
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push("/");
+  };
 
-  /* ==============================
-     HANDLERS
-  ============================== */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
@@ -87,7 +80,6 @@ const UserProfile = () => {
         phone: formData.phone,
         address: formData.address,
       });
-
       setUser(formData);
       setIsEditing(false);
       alert("Profile updated successfully");
@@ -96,98 +88,80 @@ const UserProfile = () => {
     }
   };
 
-
   return (
     <>
       <Navbar />
-      <div className="profile">
-        <div className="back-button-container">
-          <button onClick={handleBack} className="back-button">
-            ← Back
+      <div className="profile-page-wrapper">
+        <div className="profile-header-section">
+          <button onClick={() => router.back()} className="back-button">← Back</button>
+          <h1 className="main-profile-title">My Account</h1>
+        </div>
+
+        <div className="profile-info-card">
+          <div className="profile-card-content">
+            {/* Left Side: User Details */}
+            <div className="profile-details-column">
+              {isEditing ? (
+                <div className="edit-form">
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} className="up-profile-input" placeholder="Name" />
+                  <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="up-profile-input" placeholder="Phone" />
+                  <input type="text" name="address" value={formData.address} onChange={handleChange} className="up-profile-input" placeholder="Address" />
+                  <div className="edit-actions">
+                    <button onClick={handleSave} className="up-profile-button up-save">Save</button>
+                    <button onClick={() => setIsEditing(false)} className="up-profile-button cancel">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="user-info-display">
+                    <h2>{user.name}</h2>
+                    <p className="user-email">{user.email}</p>
+                    <div className="contact-info">
+                      <p><strong>Phone:</strong> {user.phone || "—"}</p>
+                      <p><strong>Address:</strong> {user.address || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="profile-actions">
+                    <button onClick={() => setIsEditing(true)} className="profile-button edit">Edit Profile</button>
+                    <button onClick={handleLogout} className="profile-button logout">Logout</button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Right Side: Rating Summary */}
+            <div className="profile-rating-summary-column">
+              <div className="rating-summary-badge">
+                <span className="summary-label">Client Reputation</span>
+                {ratingStats.avg ? (
+                  <div className="summary-stats">
+                    <div className="summary-stars">
+                      <span className="summary-score">{ratingStats.avg}</span>
+                      <FaStar className="star-icon" />
+                    </div>
+                    <p className="summary-count">Based on {ratingStats.count} Designer Reviews</p>
+                  </div>
+                ) : (
+                  <p className="no-rating-text">No designer feedback yet</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* TAB NAVIGATION */}
+        <div className="profile-tabs-container">
+          <button className={`tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>
+            My Orders
+          </button>
+          <button className={`tab-btn ${activeTab === "designers" ? "active" : ""}`} onClick={() => setActiveTab("designers")}>
+            Hired Designers
           </button>
         </div>
 
-        <div className="profile-container">
-          <div className="profile-card">
-            {isEditing ? (
-              <>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="up-profile-input"
-                  placeholder="Enter name"
-                />
-
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  className="up-profile-input"
-                  disabled
-                />
-
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="up-profile-input"
-                  placeholder="Enter phone"
-                />
-
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  className="up-profile-input"
-                  placeholder="Enter address"
-                />
-
-                <button
-                  onClick={handleSave}
-                  className="up-profile-button up-save"
-                >
-                  Save
-                </button>
-              </>
-            ) : (
-            <>
-              <div className="user-info">
-                <p><strong>Name:</strong> {user.name}</p>
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Phone:</strong> {user.phone || "—"}</p>
-                <p><strong>Address:</strong> {user.address || "—"}</p>
-              </div>
-
-              <hr />
-
-              <div className="button-group">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="profile-button edit"
-                >
-                  Edit Profile
-                </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="profile-button logout"
-                >
-                  Logout
-                </button>
-              </div>
-            </>
-            )}
-          </div>
-        </div>
-        <hr />
-
-        {/* Orders */}
-        <div className="orders">
-          <MyOrders />
+        {/* TAB CONTENT */}
+        <div className="tab-content-area">
+          {activeTab === "orders" ? <MyOrders /> : <MyHiredDesigners />}
         </div>
       </div>
     </>

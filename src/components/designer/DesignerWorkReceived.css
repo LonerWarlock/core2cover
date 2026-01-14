@@ -563,3 +563,189 @@
   max-height: 90vh;
   overflow-y: auto;
 }
+
+/* ============================
+   REVIEWS & RATINGS (NEW)
+   ============================ */
+
+/* The mini cards inside the "Client Reputation" Modal */
+.reviews-scroll-area {
+  margin: 20px 0;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Custom Scrollbar for the review area */
+.reviews-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+.reviews-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--green-light);
+  border-radius: 10px;
+}
+
+.review-card-mini {
+  background: #fdfdfb;
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 14px;
+  transition: transform 0.2s ease;
+}
+
+.review-card-mini:hover {
+  border-color: var(--green-mid);
+  transform: translateY(-2px);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.review-header strong {
+  color: #f59e0b; /* Gold for stars */
+  font-size: 1.1rem;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.review-header span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.review-card-mini p {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  line-height: 1.5;
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.review-card-mini small {
+  display: block;
+  text-align: right;
+  font-weight: 700;
+  color: var(--green-dark);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================
+   STAR RATING INPUT (Form)
+   ============================ */
+.star-rating-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 25px 0;
+}
+
+.star-rating-row svg {
+  font-size: 2.2rem;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.star-rating-row svg:hover {
+  transform: scale(1.2);
+}
+
+.star-active {
+  color: #f59e0b;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));
+}
+
+.star-inactive {
+  color: #e2e8f0;
+}
+
+/* Textarea for the Rating Form */
+.c2c-dwrx-modal-box textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f9fafb;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: none;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease;
+}
+
+.c2c-dwrx-modal-box textarea:focus {
+  outline: none;
+  border-color: var(--green-mid);
+  background: var(--white);
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: var(--text-dark);
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.full-width {
+  width: 100%;
+  background: var(--green-dark);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* Modal Header Refinement */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 15px;
+}
+
+.modal-header h2 {
+  font-family: "Big Caslon", serif;
+  font-size: 1.6rem;
+  color: var(--green-dark);
+  margin: 0;
+}
+
+.close-x {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dark);
+}
+

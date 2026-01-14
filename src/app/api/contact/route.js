@@ -1,34 +1,42 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import nodemailer from "nodemailer";
 
 export async function POST(request) {
   try {
     const { name, email, message } = await request.json();
 
-    if (!name?.trim() || !email?.trim() || !message?.trim()) {
-      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ message: "Invalid email address" }, { status: 400 });
-    }
-
-    if (message.length > 2000) {
-      return NextResponse.json({ message: "Message is too long" }, { status: 400 });
-    }
-
+    // 1. Save to Database first
     await prisma.contactMessage.create({
-      data: {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        message: message.trim(),
+      data: { name, email, message },
+    });
+
+    // 2. Configure Transporter using EMAIL_PASS
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "team.core2cover@gmail.com",
+        pass: process.env.EMAIL_PASS, // Updated to match your .env key
       },
     });
 
-    return NextResponse.json({ message: "Message received successfully" }, { status: 201 });
-  } catch (err) {
-    console.error("CONTACT FORM ERROR:", err);
-    return NextResponse.json({ message: "Failed to send message" }, { status: 500 });
+    // 3. Define Email
+    const mailOptions = {
+      from: `"Core2Cover" <team.core2cover@gmail.com>`,
+      to: "team.core2cover@gmail.com",
+      replyTo: email, 
+      subject: `Contact Form: ${name}`,
+      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+    };
+
+    // 4. Send
+    await transporter.sendMail(mailOptions);
+
+    return NextResponse.json({ message: "Success" }, { status: 201 });
+
+  } catch (error) {
+    // Log the specific error to the terminal to see if it's still an Auth issue
+    console.error("CONTACT_API_ERROR:", error.message);
+    return NextResponse.json({ message: "Failed to process request" }, { status: 500 });
   }
 }

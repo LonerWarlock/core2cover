@@ -112,6 +112,13 @@ const DesignerSignup = () => {
     e.preventDefault();
     setError("");
 
+    if (form.mobile.length < 10) {
+    const msg = "Please enter a valid 10-digit mobile number.";
+    setError(msg);
+    triggerMsg(msg, "error");
+    return;
+  }
+
     if (!emailVerified) {
       setError("Verify email before signup");
       triggerMsg("Please verify your email first", "error");

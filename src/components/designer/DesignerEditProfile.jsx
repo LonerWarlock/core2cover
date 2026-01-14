@@ -9,17 +9,21 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   getDesignerEditProfile,
-  updateDesignerEditProfile,
+  updateDesignerProfile,
 } from "../../api/designer";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
+// 1. Import your MessageBox component
+import MessageBox from "../ui/MessageBox"; 
 
-const Brand = ({ children }) => <span className="brand">{children}</span>;
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
 const DesignerEditProfile = () => {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerId, setDesignerId] = useState(null);
+
+  // 2. Message Box State
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   const [form, setForm] = useState({
     fullname: "",
@@ -36,6 +40,11 @@ const DesignerEditProfile = () => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Helper to trigger the message box
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   /* =========================
       INITIALISE & AUTH CHECK
@@ -76,20 +85,14 @@ const DesignerEditProfile = () => {
       })
       .catch((err) => {
         console.error(err);
-        setError("Failed to load profile details.");
+        triggerMsg("Failed to load profile details.", "error");
       });
   }, [designerId]);
 
-  /* =========================
-      INPUT CHANGE
-  ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* =========================
-      IMAGE CHANGE
-  ========================= */
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -117,13 +120,19 @@ const DesignerEditProfile = () => {
         formData.append("profileImage", profileImage);
       }
 
-      await updateDesignerEditProfile(designerId, formData);
+      await updateDesignerProfile(designerId, formData);
 
-      alert("Profile updated successfully ");
-      router.push("/designerdashboard");
+      // 3. Trigger Success Message instead of alert
+      triggerMsg("Profile updated successfully", "success");
+      
+      // Delay redirect slightly so user can see the message
+      setTimeout(() => {
+        router.push("/designerdashboard");
+      }, 2000);
+
     } catch (err) {
       console.error(err);
-      setError(err.message || "Failed to update profile");
+      triggerMsg(err.response?.data?.message || "Failed to update profile", "error");
     } finally {
       setLoading(false);
     }
@@ -131,7 +140,15 @@ const DesignerEditProfile = () => {
 
   return (
     <>
-      {/* NAVBAR */}
+      {/* 4. Render MessageBox */}
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
+
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
@@ -169,7 +186,6 @@ const DesignerEditProfile = () => {
         </div>
       </header>
 
-      {/* PAGE */}
       <div className="dep-page">
         <div className="dep-container dep-reveal">
           <h1 className="dep-title">Edit Profile</h1>
@@ -177,13 +193,9 @@ const DesignerEditProfile = () => {
             Update your personal information and designer details.
           </p>
 
-          {error && <p className="dep-error">{error}</p>}
-
-          {/* IMAGE SECTION */}
           <div className="dep-image-section">
             <div className="dep-image-wrapper">
               {preview ? (
-                /* Native img is fine for previews/dynamic blobs */
                 <img src={preview} alt="Profile Preview" className="dep-profile-img" />
               ) : (
                 <div className="dep-placeholder">
@@ -204,7 +216,6 @@ const DesignerEditProfile = () => {
             </div>
           </div>
 
-          {/* FORM */}
           <form className="dep-form" onSubmit={handleSubmit}>
             <div className="dep-field">
               <label>Full Name</label>

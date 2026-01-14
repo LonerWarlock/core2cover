@@ -629,3 +629,237 @@
   background: var(--green-mid);
 }
 
+/* Header Stats */
+.dd-header-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 10px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 30px;
+  background: #e5e7eb;
+}
+
+/* Reviews Section */
+.dd-reviews-section {
+  margin-top: 40px;
+  background: white;
+  border-radius: 18px;
+  padding: 25px;
+  border: 1px solid #eef2e6;
+  text-align: left;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-all-link {
+  font-size: 0.85rem;
+  color: var(--green-mid);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.review-item {
+  padding: 15px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.reviewer-name {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.review-stars {
+  font-weight: 700;
+  color: #ca8a04;
+}
+
+.review-text {
+  font-style: italic;
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.review-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Full History Section Styling */
+.dd-full-history {
+  margin-top: 60px;
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04);
+  border: 1px solid #eef2e6;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #f6f7f2;
+  padding-bottom: 15px;
+}
+
+.history-header h3 {
+  font-family: "Big Caslon", serif;
+  font-size: 1.8rem;
+  color: var(--green-dark);
+  margin: 0;
+}
+
+.history-count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.history-item {
+  padding: 24px;
+  background: #fafcf7;
+  border-radius: 16px;
+  border: 1px solid #f0f3ea;
+  transition: var(--transition);
+}
+
+.history-item:hover {
+  border-color: var(--green-mid);
+  transform: translateX(5px);
+}
+
+.history-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.reviewer-avatar {
+  width: 45px;
+  height: 45px;
+  background: var(--green-dark);
+  color: white;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.reviewer-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewer-details .name {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 1.05rem;
+}
+
+.reviewer-details .date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Star logic */
+.review-rating {
+  display: flex;
+  gap: 3px;
+}
+
+.star-active {
+  color: #f4b400;
+  font-size: 0.9rem;
+}
+
+.star-inactive {
+  color: #e5e7eb;
+  font-size: 0.9rem;
+}
+
+.history-item-body .comment {
+  font-style: italic;
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.no-history {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .history-item-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .review-rating {
+    margin-left: 60px;
+  }
+}

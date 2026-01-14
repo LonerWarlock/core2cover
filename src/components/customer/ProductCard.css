@@ -335,3 +335,38 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.product-desc-text {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Clips text to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.5rem; /* Keeps height consistent even if bio is short */
+}
+
+.product-seller-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding-bottom: 12px;
+}
+
+.seller-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #606E52;
+  display: flex;
+  align-items: center;
+}
+
+.location-label {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

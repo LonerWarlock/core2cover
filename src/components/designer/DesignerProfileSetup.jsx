@@ -7,7 +7,9 @@ import { saveDesignerProfile } from "../../api/designer";
 
 const DesignerProfileSetup = () => {
   const router = useRouter();
-  const designerId = localStorage.getItem("designerId");
+
+  // 1. Initialize designerId as null in state
+  const [designerId, setDesignerId] = useState(null);
 
   const [form, setForm] = useState({
     experience: "",
@@ -22,26 +24,34 @@ const DesignerProfileSetup = () => {
   const [error, setError] = useState("");
 
   /* =========================
-     REDIRECT IF NO DESIGNER
+     CLIENT-SIDE DATA FETCHING
   ========================= */
   useEffect(() => {
-    // This code only runs in the browser
+    // 2. Access localStorage ONLY inside useEffect (Client-side)
     const storedId = localStorage.getItem("designerId");
+    
     if (storedId) {
       setDesignerId(storedId);
     } else {
-      // Optional: Redirect to signup if no ID is found
-      // router.push("/designersignup");
+      // If no ID is found, the user shouldn't be here
+      setError("Session expired. Please sign up again.");
+      setTimeout(() => {
+        router.push("/designersignup");
+      }, 3000);
     }
-  }, []);
+  }, [router]);
 
-  
   /* =========================
      IMAGE UPLOAD
   ========================= */
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Clean up old object URL to prevent memory leaks
+    if (form.profilePreview) {
+      URL.revokeObjectURL(form.profilePreview);
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -64,6 +74,11 @@ const DesignerProfileSetup = () => {
     e.preventDefault();
     setError("");
 
+    if (!designerId) {
+      setError("Authorisation error. Please login again.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -80,16 +95,12 @@ const DesignerProfileSetup = () => {
 
       await saveDesignerProfile(formData);
 
-      //  next step
+      // Successfully saved, move to portfolio
       router.push("/designerportfolio");
     } catch (err) {
       console.error("PROFILE SETUP ERROR:", err);
-
-      if (err.response?.status === 400 || err.response?.status === 404) {
-        setError(err.response.data.message);
-      } else {
-        setError("Server error. Please try again.");
-      }
+      const msg = err.response?.data?.message || "Server error. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -103,12 +114,12 @@ const DesignerProfileSetup = () => {
           Tell us more about your design expertise to help customers find you.
         </p>
 
-        {error && <p className="form-error">{error}</p>}
+        {error && <p className="form-error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
 
         <form className="designer-form" onSubmit={handleSubmit}>
           {/* Profile Image */}
           <div className="field full">
-            <label>Profile Image</label>
+            <label className="input-label">Profile Image</label>
 
             <div className="profile-upload-box">
               {form.profilePreview ? (
@@ -138,11 +149,12 @@ const DesignerProfileSetup = () => {
             value={form.experience}
             onChange={handleChange}
             required
+            min="0"
           />
 
           <label className="input-label">Portfolio Link (Optional)</label>
           <input
-            type="text"
+            type="url"
             name="portfolio"
             className="input-field"
             placeholder="Ex. https://portfolio.com"
@@ -159,13 +171,12 @@ const DesignerProfileSetup = () => {
             required
           >
             <option value="">Select type</option>
+            <option value="Architect">Architect</option>
             <option value="Interior Designer">Interior Designer</option>
             <option value="Product Designer">Product Designer</option>
             <option value="Furniture Designer">Furniture Designer</option>
             <option value="Lighting Designer">Lighting Designer</option>
-            <option value="3D Visualizer / CAD Designer">
-              3D Visualizer / CAD Designer
-            </option>
+            <option value="3D Visualizer">3D Visualizer</option>
           </select>
 
           <label className="input-label">Short Bio</label>
@@ -175,9 +186,10 @@ const DesignerProfileSetup = () => {
             value={form.bio}
             onChange={handleChange}
             required
+            placeholder="Briefly describe your style and approach..."
           />
 
-          <button className="setup-btn" type="submit" disabled={loading}>
+          <button className="setup-btn" type="submit" disabled={loading || !designerId}>
             {loading ? "Saving..." : "Next"}
           </button>
         </form>

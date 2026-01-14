@@ -5,7 +5,8 @@ import Navbar from "./Navbar";
 import ProductCard from "./ProductCard";
 import Footer from "./Footer";
 import "./ProductListing.css";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation"; // Added useRouter
+import { FaArrowLeft } from "react-icons/fa"; // Added for the icon
 
 const ProductListing = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -13,26 +14,26 @@ const ProductListing = () => {
   const [loading, setLoading] = useState(true);
 
   const searchParams = useSearchParams();
+  const router = useRouter(); // Initialize router
 
   /* =========================================
-     PAGE TITLE & DESCRIPTION
+      PAGE TITLE & DESCRIPTION
   ========================================= */
   const currentPageTitle = searchParams.get("page") || "Readymade Products";
   const currentPageDesc = searchParams.get("desc") || "Find the perfect product that enhances your quality of living.";
 
   /* =========================================
-     DETERMINE PRODUCT TYPE
-     finished | material
+      DETERMINE PRODUCT TYPE
+      finished | material
   ========================================= */
   const pageProductType = currentPageTitle.toLowerCase().includes("raw")
     ? "material"
     : "finished";
 
   /* =========================================
-     FETCH PRODUCTS FROM BACKEND
+      FETCH PRODUCTS FROM BACKEND
   ========================================= */
   useEffect(() => {
-    // Changed from localhost:3001 to relative /api path
     fetch(`/api/products?type=${pageProductType}`)
       .then((res) => res.json())
       .then((data) => {
@@ -48,7 +49,7 @@ const ProductListing = () => {
   }, [pageProductType]);
 
   /* =========================================
-     CATEGORY LIST
+      CATEGORY LIST
   ========================================= */
   const categories = useMemo(() => {
     const uniqueCategories = products
@@ -58,7 +59,7 @@ const ProductListing = () => {
   }, [products]);
 
   /* =========================================
-     FILTERED PRODUCTS
+      FILTERED PRODUCTS
   ========================================= */
   const filteredProducts = useMemo(() => {
     if (selectedCategory === "All") return products;
@@ -72,6 +73,11 @@ const ProductListing = () => {
       <Navbar />
 
       <section className="products-section">
+        {/* Added Back Button */}
+        <button className="back-btn" onClick={() => router.back()}>
+          <FaArrowLeft /> Back
+        </button>
+
         <h2 className="products-title">{currentPageTitle}</h2>
         <p className="products-subtitle">{currentPageDesc}</p>
 

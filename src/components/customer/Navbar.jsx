@@ -11,12 +11,11 @@ import {
   FaUser,
   FaBars,
   FaTimes,
-  FaUserGraduate,
 } from "react-icons/fa";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 
-const Brand = ({ children }) => <span className="brand">{children}</span>;
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
+
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,25 +24,29 @@ const Navbar = () => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
+  // CONTEXT CHECK: Are we in the designer section?
+  const isDesignerSection = pathname.includes("/designers") || pathname.includes("/designer_info");
   const isHomePage = pathname === "/";
-  const currentPageTitle = "Readymade Products";
+  const currentPageTitle = isDesignerSection ? "Professional Designers" : "Readymade Products";
 
   useEffect(() => {
     const q = searchParams.get("search");
-    if (q) {
-      setSearchQuery(q);
-    }
-  }, [searchParams]); // Remove searchQuery from the dependency array!
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
 
-  const handleInputChange = (e) => {
-    setSearchQuery(e.target.value); // This allows the user to type freely
-  };
+  const handleInputChange = (e) => setSearchQuery(e.target.value);
 
   const handleSearch = (e) => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (!query) return;
-    router.push(`/searchresults?search=${encodeURIComponent(query)}`);
+
+    // ROUTE BASED ON CONTEXT
+    if (isDesignerSection) {
+      router.push(`/designers?search=${encodeURIComponent(query)}`);
+    } else {
+      router.push(`/searchresults?search=${encodeURIComponent(query)}`);
+    }
     setMenuOpen(false);
   };
 
@@ -61,54 +64,70 @@ const Navbar = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link href="/" className="nav-link nav-logo-link">
+            <div
+              className="nav-logo-link"
+              onClick={() => router.push("/")}
+              style={{ cursor: 'pointer' }}
+            >
               <span className="nav-logo-wrap">
-                <Image
-                  src={CoreToCoverLogo}
-                  alt="CoreToCover"
-                  className="nav-logo"
-                  width={50}
-                  height={50}
-                  priority
-                />
-                <span className="brand"><BrandBold>Core2Cover</BrandBold></span>
+                <Image src={CoreToCoverLogo} alt="Logo" width={50} height={50} priority />
+                <BrandBold>Core2Cover</BrandBold>
               </span>
-            </Link>
+            </div>
           </div>
 
           <div className="nav-right">
-            {/* Always visible icons on Desktop */}
             <div className="nav-icons-desktop">
-
               <Link href="/about" className="nav-icon-link">About Us</Link>
+              <Link href="/designers" className="nav-icon-link">Designers</Link>
               <Link href="/cart" className="nav-icon-link"><FaShoppingCart /></Link>
               <Link href="/userprofile" className="nav-icon-link" onClick={handleProfileClick}><FaUser /></Link>
             </div>
 
-            {/* Hamburger visible on Laptop/Desktop too */}
             <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <FaTimes /> : <FaBars />}
             </div>
 
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
 
-              {/* These are now inside the hamburger for all screen sizes */}
-              <li>
-                <Link href="/sellersignup" className="seller-btn" onClick={() => setMenuOpen(false)}>
-                  Become a Seller
+              {/* MOBILE NAV LINKS */}
+              <li className="drawer-link">
+                <Link href="/about" onClick={() => setMenuOpen(false)}>
+                  About Us
                 </Link>
               </li>
-              <li>
-                <Link href="/designersignup" className="seller-btn" onClick={() => setMenuOpen(false)}>
+
+              <li className="drawer-link">
+                <Link href="/designers" onClick={() => setMenuOpen(false)}>
+                  Designers
+                </Link>
+              </li>
+
+              {/* CTA GROUP */}
+              <li className="drawer-cta">
+                <Link
+                  href="/sellersignup"
+                  className="seller-btn"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Become a Seller
+                </Link>
+
+                <Link
+                  href="/designersignup"
+                  className="seller-btn primary"
+                  onClick={() => setMenuOpen(false)}
+                >
                   I am a Designer
                 </Link>
               </li>
+
             </ul>
+
           </div>
         </div>
       </header>
 
-      {/* Searchbar only appears if NOT on Home */}
       {!isHomePage && (
         <div className="search-container visible">
           <form onSubmit={handleSearch} className="search_form active-bar">
@@ -116,8 +135,8 @@ const Navbar = () => {
               className="search_input"
               type="text"
               placeholder={`Search ${currentPageTitle}...`}
-              value={searchQuery} // Controlled component
-              onChange={handleInputChange} // Ensure this function is called
+              value={searchQuery}
+              onChange={handleInputChange}
             />
             <button type="submit" className="search_button" disabled={!searchQuery.trim()}>
               <FaSearch />

@@ -17,6 +17,7 @@ import Paytm from "../../assets/images/Paytm.png";
 import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
+import MessageBox from "../ui/MessageBox"; // Assuming you have this component
 
 const formatINR = (n = 0) =>
   `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -32,22 +33,34 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [credit, setCredit] = useState(0);
   const [useCreditForFullAmount, setUseCreditForFullAmount] = useState(false);
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   useEffect(() => {
-    // Client-side initialization
+    // 1. Get user identity
     const userEmail = localStorage.getItem("userEmail") || "";
     setEmail(userEmail);
 
+    // 2. Fetch Items and Normalise Data Types
     const single = getSingleCheckoutItem();
     const rawItems = single ? [single] : getCart();
 
     const normalized = (Array.isArray(rawItems) ? rawItems : []).map((it) => ({
       ...it,
+      // CRITICAL: Ensure all numeric fields are actual Numbers
       quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
+      amountPerTrip: Number(it.amountPerTrip || it.price || 0),
+      shippingCharge: Number(it.shippingCharge || 0),
+      installationCharge: Number(it.installationCharge || 0),
+      // Keep strings as lowercase for easier comparison
     }));
 
     setItems(normalized);
 
+    // 3. Fetch User Profile
     if (userEmail) {
       api
         .get(`/user/${encodeURIComponent(userEmail)}`)
@@ -55,9 +68,10 @@ export default function Checkout() {
           setName(res.data.name || "");
           setAddress(res.data.address || "");
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
+    // 4. Fetch Credits
     getUserCredit()
       .then((res) => {
         const c = Number(res.data.credit || 0);
@@ -69,10 +83,7 @@ export default function Checkout() {
   const increment = (index) => {
     setItems((prev) => {
       const copy = [...prev];
-      copy[index] = {
-        ...copy[index],
-        quantity: (Number(copy[index].quantity) || 0) + 1,
-      };
+      copy[index] = { ...copy[index], quantity: copy[index].quantity + 1 };
       return copy;
     });
   };
@@ -80,28 +91,41 @@ export default function Checkout() {
   const decrement = (index) => {
     setItems((prev) => {
       const copy = [...prev];
-      const current = Number(copy[index].quantity) || 1;
+      const current = copy[index].quantity;
       copy[index] = { ...copy[index], quantity: current > 1 ? current - 1 : 1 };
       return copy;
     });
   };
 
+  /* =========================================
+      CALCULATION LOGIC (FIXED)
+  ========================================= */
   const computeSummary = useMemo(() => {
     let subtotal = 0;
     let deliveryCharge = 0;
     let installationTotal = 0;
 
     items.forEach((it) => {
+      // Log each item to see why it might be zero (Open F12 Console)
+      console.log("Processing item for summary:", it);
+
       const qty = Number(it.quantity || 1);
-      const unitPrice = Number(it.amountPerTrip || it.pricePerTrip || it.price || 0);
+      const unitPrice = Number(it.amountPerTrip || it.price || 0);
+      const sCharge = Number(it.shippingCharge || 0);
+      const iCharge = Number(it.installationCharge || 0);
+
       subtotal += unitPrice * qty;
 
-      if (it.shippingChargeType !== "free" && Number(it.shippingCharge) > 0) {
-        deliveryCharge += Number(it.shippingCharge);
+      // Handle Shipping - Case Insensitive
+      const isFree = String(it.shippingChargeType).toLowerCase() === "free";
+      if (!isFree && sCharge > 0) {
+        deliveryCharge += sCharge;
       }
 
-      if (it.installationAvailable === "yes" && Number(it.installationCharge) > 0) {
-        installationTotal += Number(it.installationCharge) * qty;
+      // Handle Installation - Case Insensitive
+      const hasInstallation = String(it.installationAvailable).toLowerCase() === "yes";
+      if (hasInstallation && iCharge > 0) {
+        installationTotal += (iCharge * qty);
       }
     });
 
@@ -113,35 +137,35 @@ export default function Checkout() {
 
   const handlePlaceOrder = async () => {
     if (!email || !name || !address) {
-      alert("Please provide name, email and address.");
+      triggerMsg("Please provide your name, email, and full address.", "error");
       return;
     }
     if (!items.length) {
-      alert("No items to place order.");
+      triggerMsg("Your cart is empty.", "error");
       return;
     }
 
     const summary = computeSummary;
-    const creditUsed = useCreditForFullAmount ? Number(summary.grandTotal) : 0;
-    
+    const creditUsed = useCreditForFullAmount ? summary.grandTotal : 0;
+
     if (useCreditForFullAmount && credit < summary.grandTotal) {
-      alert("Insufficient store credit.");
+      triggerMsg("Insufficient store credit to complete this purchase.", "error");
       return;
     }
 
     const ordersPayload = items.map((it) => ({
       supplierId: Number(it.supplierId),
       materialId: Number(it.materialId || it.productId || 0),
-      materialName: it.name || it.materialName || it.productName || "",
+      materialName: it.name || it.materialName || "",
       supplierName: it.supplier || it.supplierName || "",
-      trips: Number(it.quantity || 1),
-      amountPerTrip: Number(it.amountPerTrip || it.pricePerTrip || it.price || 0),
+      trips: it.quantity,
+      amountPerTrip: it.amountPerTrip,
       deliveryTimeMin: it.deliveryTimeMin ?? null,
       deliveryTimeMax: it.deliveryTimeMax ?? null,
-      shippingChargeType: it.shippingChargeType ?? "free",
-      shippingCharge: it.shippingCharge ? Number(it.shippingCharge) : 0,
-      installationAvailable: it.installationAvailable ?? "no",
-      installationCharge: it.installationCharge ? Number(it.installationCharge) : 0,
+      shippingChargeType: it.shippingChargeType,
+      shippingCharge: it.shippingCharge,
+      installationAvailable: it.installationAvailable,
+      installationCharge: it.installationCharge,
       imageUrl: it.image || null,
     }));
 
@@ -162,14 +186,11 @@ export default function Checkout() {
       if (res?.data?.orderId) {
         clearSingleCheckoutItem();
         clearCart();
-        alert("Order placed successfully!");
-        router.push("/userprofile");
-      } else {
-        alert("Order placed but unexpected server response.");
+        triggerMsg("Order placed successfully!", "success");
+        setTimeout(() => router.push("/userprofile"), 2000);
       }
     } catch (err) {
-      console.error("Place order error:", err);
-      alert(err?.response?.data?.message || "Failed to place order.");
+      triggerMsg(err?.response?.data?.message || "Failed to place order.", "error");
     } finally {
       setLoading(false);
     }
@@ -182,6 +203,10 @@ export default function Checkout() {
   return (
     <>
       <Navbar />
+      {msg.show && (
+        <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />
+      )}
+
       <main className="checkout-page container">
         <h1 className="checkout-title">Checkout</h1>
 
@@ -207,24 +232,25 @@ export default function Checkout() {
               <h2>Shipping & Contact</h2>
               <label className="form-row">
                 <span>Full name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} />
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
               </label>
               <label className="form-row">
                 <span>Email</span>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input value={email} disabled className="disabled-input" />
               </label>
               <label className="form-row">
-                <span>Address</span>
+                <span>Shipping Address</span>
                 <textarea
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   rows={3}
+                  placeholder="Street, City, Pincode"
                 />
               </label>
             </div>
 
             <div className="checkout-card">
-              <h2>Payment</h2>
+              <h2>Payment Method</h2>
               <div className="payment-options">
                 <button
                   type="button"
@@ -272,18 +298,12 @@ export default function Checkout() {
             </div>
 
             <div className="checkout-card">
-              <h2>Items</h2>
+              <h2>Order Items</h2>
               {items.map((it, idx) => (
                 <div key={idx} className="checkout-item">
                   <Image
                     className="checkout-item-img"
-                    src={
-                      it.image && it.image.startsWith("http")
-                        ? it.image
-                        : it.image
-                        ? `/${it.image}`
-                        : "/placeholder.png"
-                    }
+                    src={it.image ? (it.image.startsWith("http") ? it.image : `/${it.image}`) : "/placeholder.png"}
                     alt={it.name}
                     width={80}
                     height={80}
@@ -292,10 +312,14 @@ export default function Checkout() {
                   <div className="checkout-item-main">
                     <div className="checkout-item-top">
                       <div className="checkout-item-title">{it.name}</div>
-                      <div className="checkout-item-price">
-                        {formatINR(Number(it.amountPerTrip || 0))}
-                      </div>
+                      <div className="checkout-item-price">{formatINR(it.amountPerTrip)}</div>
                     </div>
+
+                    <div className="checkout-item-details">
+                      {it.shippingCharge > 0 && <small>Delivery: {formatINR(it.shippingCharge)}</small>}
+                      {it.installationCharge > 0 && <small> • Installation: {formatINR(it.installationCharge)}</small>}
+                    </div>
+
                     <div className="checkout-quantity">
                       <button type="button" onClick={() => decrement(idx)}>−</button>
                       <input type="number" value={it.quantity} readOnly />
@@ -323,12 +347,12 @@ export default function Checkout() {
                 <span>{formatINR(computeSummary.installationTotal)}</span>
               </div>
               <div className="summary-row">
-                <span>Platform Fee (CASA)</span>
+                <span>Platform Fee (2%)</span>
                 <span>{formatINR(computeSummary.casaCharge)}</span>
               </div>
               <hr />
               <div className="summary-row total">
-                <span>Total</span>
+                <span>Total Amount</span>
                 <span>{formatINR(computeSummary.grandTotal)}</span>
               </div>
               <button
@@ -336,7 +360,7 @@ export default function Checkout() {
                 onClick={handlePlaceOrder}
                 disabled={loading || items.length === 0}
               >
-                {loading ? "Placing order..." : "Place order"}
+                {loading ? "Processing..." : "Confirm & Place Order"}
               </button>
             </div>
           </aside>

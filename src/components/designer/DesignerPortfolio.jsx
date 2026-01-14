@@ -1,4 +1,4 @@
-"use client"; //
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -7,7 +7,9 @@ import { saveDesignerPortfolio } from "../../api/designer";
 
 const DesignerPortfolio = () => {
   const router = useRouter();
-  const designerId = localStorage.getItem("designerId");
+  
+  // 1. Initialize designerId in state to avoid server-side crash
+  const [designerId, setDesignerId] = useState(null);
 
   const [works, setWorks] = useState([
     { image: null, preview: null, description: "" },
@@ -16,6 +18,19 @@ const DesignerPortfolio = () => {
   const [isFormEmpty, setIsFormEmpty] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  /* =========================
+     GET DESIGNER ID (Browser Only)
+  ========================= */
+  useEffect(() => {
+    const storedId = localStorage.getItem("designerId");
+    if (storedId) {
+      setDesignerId(storedId);
+    } else {
+      setError("Designer session not found. Redirecting...");
+      setTimeout(() => router.push("/designersignup"), 3000);
+    }
+  }, [router]);
 
   /* =========================
      CHECK EMPTY STATE
@@ -76,12 +91,13 @@ const DesignerPortfolio = () => {
     setError("");
 
     if (!designerId) {
-      setError("Designer not found. Please sign up again.");
+      setError("Designer identity missing. Please login again.");
       return;
     }
 
+    // If they click Save but haven't added anything, just treat it as a skip
     if (isFormEmpty) {
-      navigate("/designerdashboard");
+      router.push("/designerdashboard");
       return;
     }
 
@@ -99,14 +115,11 @@ const DesignerPortfolio = () => {
       });
 
       await saveDesignerPortfolio(formData);
-      navigate("/designerdashboard");
+      router.push("/designerdashboard");
     } catch (err) {
       console.error("PORTFOLIO ERROR:", err);
-      if (err.response?.status === 400 || err.response?.status === 404) {
-        setError(err.response.data.message);
-      } else {
-        setError("Server error. Please try again.");
-      }
+      const msg = err.response?.data?.message || "Server error. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -121,7 +134,7 @@ const DesignerPortfolio = () => {
         if (w.preview) URL.revokeObjectURL(w.preview);
       });
     };
-  }, [works]);
+  }, []); // Run on unmount
 
   return (
     <div className="dp-page">
@@ -177,9 +190,7 @@ const DesignerPortfolio = () => {
           <div className="dp-actions">
             <button
               type="submit"
-              className={`dp-submit ${
-                isFormEmpty ? "dp-disabled" : ""
-              }`}
+              className={`dp-submit ${isFormEmpty ? "dp-disabled" : ""}`}
               disabled={loading}
             >
               {loading ? "Saving..." : "Save & Continue"}

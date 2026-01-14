@@ -11,12 +11,16 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    const userEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") : null;
-    const sellerId = typeof window !== "undefined" ? localStorage.getItem("sellerId") : null;
-    
-    if (userEmail) config.headers["x-user-email"] = userEmail;
-    // Many backends also expect the seller ID in headers for dashboard stats
-    if (sellerId) config.headers["x-seller-id"] = sellerId;
+    // Check if we are in the browser
+    if (typeof window !== "undefined") {
+      const userEmail = localStorage.getItem("userEmail");
+      const sellerId = localStorage.getItem("sellerId");
+      const designerId = localStorage.getItem("designerId"); // Added for Designer Dashboard
+
+      if (userEmail) config.headers["x-user-email"] = userEmail;
+      if (sellerId) config.headers["x-seller-id"] = sellerId;
+      if (designerId) config.headers["x-designer-id"] = designerId; // Useful for backend validation
+    }
     
     return config;
   },
@@ -26,7 +30,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("API Error:", error.response?.data?.message || error.message);
+    // Standardised error logging
+    console.error("API Error Interface:", error.response?.data?.message || error.message);
     return Promise.reject(error);
   }
 );

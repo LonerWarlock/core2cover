@@ -1,50 +1,93 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; // Added useRouter
 import Navbar from "./Navbar";
 import DesignerCard from "./DesignerCard";
 import Footer from "./Footer";
 import "./ProductListing.css";
+import { FaArrowLeft } from "react-icons/fa"; // Imported for the icon
 
-const Designers = () => {
+const DesignersContent = () => {
   const [designers, setDesigners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const router = useRouter(); // Initialize router
+  const query = searchParams.get("search");
 
   useEffect(() => {
-    // Use relative path for Next.js API
-    fetch("/api/designers")
-      .then(res => res.json())
-      .then(data => setDesigners(Array.isArray(data) ? data : []))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+    const fetchDesigners = async () => {
+      setLoading(true);
+      try {
+        const url = query 
+          ? `/api/designers?search=${encodeURIComponent(query)}` 
+          : "/api/designers";
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        setDesigners(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("FETCH DESIGNERS ERROR:", err);
+        setDesigners([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // const categories = useMemo(() => ["All", ...new Set(designers.map(d => d.category).filter(Boolean))], [designers]);
-  // ... filtering logic remains ...
+    fetchDesigners();
+  }, [query]);
 
   return (
-    <>
-      <Navbar />
-      <section className="products-section">
-        <h2 className="products-title">Designers</h2>
-        {/* ... Filters ... */}
-        <div className="product-grid">
-           {!loading && designers.map((d) => (
-             <DesignerCard
-               key={d.id}
-               id={d.id}
-               name={d.name}
-               image={d.imageUrl} // Ensure this is a valid path or handle inside card
-               category={d.category}
-               description={d.description}
-               designer={d.name}
-               origin={d.designerLocation}
-             />
-           ))}
-        </div>
-      </section>
-      <Footer />
-    </>
+    <section className="products-section">
+      {/* Back Button Implementation */}
+      <div className="listing-top-nav">
+        <button className="back-btn" onClick={() => router.back()}>
+          <FaArrowLeft /> Back
+        </button>
+      </div>
+
+      <h2 className="products-title">
+        {query ? `Designer results for "${query}"` : "Professional Designers"}
+      </h2>
+      
+      <div className="product-grid">
+        {loading ? (
+          <div style={{ padding: "20px", gridColumn: "1 / -1", color: "#8F8B84" }}>
+            Finding designers...
+          </div>
+        ) : designers.length > 0 ? (
+          designers.map((d) => (
+            <DesignerCard
+              key={d.id}
+              id={d.id}
+              name={d.name}
+              image={d.image}
+              category={d.category}
+              bio={d.bio}
+              experience={d.experience}
+              origin={d.location}
+              avgRating={d.avgRating}
+              totalRatings={d.totalRatings}
+            />
+          ))
+        ) : (
+          <div style={{ padding: "20px", gridColumn: "1 / -1", color: "#8F8B84" }}>
+             <p className="no-results">No designers found matching your search.</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 };
+
+const Designers = () => (
+  <>
+    <Navbar />
+    <Suspense fallback={<div style={{ padding: "100px", textAlign: "center" }}>Loading designers...</div>}>
+      <DesignersContent />
+    </Suspense>
+    <Footer />
+  </>
+);
+
 export default Designers;

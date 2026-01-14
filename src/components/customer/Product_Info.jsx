@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-//import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
-//import { PiVideoFill } from "react-icons/pi";
-import { useRouter, useSearchParams } from "next/navigation"; // CHANGED
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "./Product_Info.css";
@@ -11,6 +9,7 @@ import sample from "../../assets/images/sample.jpg";
 import { addToCart } from "../../utils/cart";
 import api from "../../api/axios";
 import Image from "next/image";
+import { FaArrowLeft } from "react-icons/fa"; // Imported for the back button icon
 
 const ProductInfo = () => {
   const router = useRouter();
@@ -20,16 +19,25 @@ const ProductInfo = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null); // Added state for thumbnail selection
 
-  /* FETCH PRODUCT (Always fetch to ensure data integrity) */
+  /* FETCH PRODUCT */
   useEffect(() => {
     if (!productId) return;
-    // Defer state updates to avoid synchronous setState in effect
-    queueMicrotask(() => setLoading(true));
+    setLoading(true);
 
     api
       .get(`/product/${productId}`)
-      .then((res) => setProduct(res.data || null))
+      .then((res) => {
+        setProduct(res.data || null);
+        // Set initial media if available
+        if (res.data?.images?.length > 0) {
+          setSelectedMedia({
+            type: "image",
+            src: res.data.images[0].startsWith("http") ? res.data.images[0] : `/${res.data.images[0]}`
+          });
+        }
+      })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [productId]);
@@ -48,7 +56,6 @@ const ProductInfo = () => {
 
   const resolvedSeller =
     typeof seller === "string" ? seller : seller?.name || "Not specified";
-  //const resolvedOrigin = origin || (seller?.business ? `${seller.business.city}, ${seller.business.state}` : "Not specified");
 
   /* DESCRIPTION LOGIC */
   const descriptionWords = useMemo(
@@ -59,16 +66,16 @@ const ProductInfo = () => {
   const displayedDescription = descExpanded
     ? description
     : isLongDescription
-    ? descriptionWords.slice(0, 20).join(" ") + "..."
-    : description;
+      ? descriptionWords.slice(0, 20).join(" ") + "..."
+      : description;
 
-  /* MEDIA LIST (Remove localhost) */
+  /* MEDIA LIST */
   const mediaList = useMemo(() => {
     const list = [];
     images.forEach((img) =>
       list.push({
         type: "image",
-        src: img.startsWith("http") ? img : `/${img}`, // CHANGED: Relative path
+        src: img.startsWith("http") ? img : `/${img}`,
       })
     );
     if (video) {
@@ -80,16 +87,8 @@ const ProductInfo = () => {
     return list;
   }, [images, video]);
 
-  const activeMedia = useMemo(
-    () => (mediaList.length ? mediaList[0] : null),
-    [mediaList]
-  );
-  const setActiveMedia = () => {
-    // If you need to allow manual selection, keep this as a no-op or remove if not used elsewhere
-  };
-
-  /* ... Fullscreen / Video Logic remains same ... */
-  // (Assuming standard React refs and state)
+  // Use selectedMedia if user clicked a thumb, otherwise use first in list
+  const activeMedia = selectedMedia || (mediaList.length ? mediaList[0] : null);
 
   /* REVIEWS */
   const [, setReviews] = useState([]);
@@ -105,42 +104,36 @@ const ProductInfo = () => {
         setRatingCount(res.data.count || 0);
         setReviews(res.data.reviews || []);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [id]);
 
   /* ACTIONS */
   const handleBuyNow = () => {
-    if (typeof window !== "undefined" && product) {
-      // Use optional chaining (?.) and fallbacks to prevent "null" crashes
-      localStorage.setItem(
-        "singleCheckoutItem",
-        JSON.stringify({
-          materialId: id,
-          supplierId: sellerId,
-          name: title || product.name, // Use 'name' if 'title' is undefined
-          supplier: resolvedSeller,
-          amountPerTrip: price,
-          trips: 1,
-          image: images[0],
+    if (!product) return;
 
-          // ACCESS NESTED DELIVERY DATA SAFELY
-          shippingChargeType:
-            product.seller?.delivery?.shippingChargeType || "Fixed",
-          shippingCharge: product.seller?.delivery?.shippingCharge || 0,
-          installationAvailable:
-            product.seller?.delivery?.installationAvailable || "No",
-          installationCharge: Number(
-            product.seller?.delivery?.installationCharge || 0
-          ),
-        })
-      );
-      router.push("/checkout");
-    }
+    const checkoutItem = {
+      materialId: product.id,
+      supplierId: product.sellerId,
+      name: product.title, // API returns product.name as 'title'
+      supplier: product.seller,
+      amountPerTrip: Number(product.price),
+      image: product.images?.[0] || "",
+
+      // FIX: Map directly from the product object (already flattened by API)
+      shippingChargeType: product.shippingChargeType || "free",
+      shippingCharge: Number(product.shippingCharge || 0),
+      installationAvailable: product.installationAvailable || "no",
+      installationCharge: Number(product.installationCharge || 0),
+
+      quantity: 1,
+    };
+
+    localStorage.setItem("singleCheckoutItem", JSON.stringify(checkoutItem));
+    router.push("/checkout");
   };
 
   const handleAddToCart = () => {
     if (!product) return;
-
     addToCart({
       materialId: id,
       supplierId: sellerId,
@@ -149,13 +142,9 @@ const ProductInfo = () => {
       amountPerTrip: price,
       trips: 1,
       image: images[0],
-
-      // ACCESS NESTED DELIVERY DATA SAFELY
-      shippingChargeType:
-        product.seller?.delivery?.shippingChargeType || "Fixed",
+      shippingChargeType: product.seller?.delivery?.shippingChargeType || "Fixed",
       shippingCharge: product.seller?.delivery?.shippingCharge || 0,
-      installationAvailable:
-        product.seller?.delivery?.installationAvailable || "No",
+      installationAvailable: product.seller?.delivery?.installationAvailable || "No",
       installationCharge: product.seller?.delivery?.installationCharge || 0,
     });
     alert("Added to cart");
@@ -168,6 +157,7 @@ const ProductInfo = () => {
         <p style={{ padding: 80 }}>Loading...</p>
       </>
     );
+
   if (!product)
     return (
       <>
@@ -180,40 +170,56 @@ const ProductInfo = () => {
     <>
       <Navbar />
       <div className="pd-container">
-        {/* ... UI Layout remains same, ensure <img> src uses activeMedia.src ... */}
+
+        {/* TOP BACK BUTTON */}
+        <div className="pd-top-nav" style={{ gridColumn: "1 / -1", marginBottom: "20px" }}>
+          <button className="back-btn" onClick={() => router.back()}>
+            <FaArrowLeft /> Back
+          </button>
+        </div>
+
         <div className="pd-left">
           {/* Main Image Box */}
           <div
             className="pd-image-box"
-            style={{ position: "relative", width: "100%", height: "400px" }}
+            style={{ position: "relative", width: "100%", height: "400px", background: "#f9f9f9", borderRadius: "12px", overflow: "hidden" }}
           >
             {activeMedia?.type === "video" ? (
-              <video src={activeMedia.src} controls className="pd-video" />
+              <video src={activeMedia.src} controls className="pd-video" style={{ width: "100%", height: "100%" }} />
             ) : (
               <Image
                 src={activeMedia?.src || sample.src}
                 className="pd-image"
                 alt="Product"
                 fill
-                style={{ objectFit: "cover" }}
+                style={{ objectFit: "contain" }}
               />
             )}
           </div>
 
           {/* Thumbnail Images */}
-          <div className="pd-thumbnails">
+          <div className="pd-thumbnails" style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
             {mediaList.map((m, i) => (
               <div
                 key={i}
-                className="pd-thumb-container"
-                style={{ position: "relative", width: "80px", height: "80px" }}
+                className={`pd-thumb-container ${activeMedia?.src === m.src ? "active-thumb" : ""}`}
+                onClick={() => setSelectedMedia(m)}
+                style={{
+                  position: "relative",
+                  width: "80px",
+                  height: "80px",
+                  cursor: "pointer",
+                  border: activeMedia?.src === m.src ? "2px solid var(--green-dark)" : "1px solid #ddd",
+                  borderRadius: "8px",
+                  overflow: "hidden"
+                }}
               >
                 <Image
                   src={m.src}
-                  onClick={() => setActiveMedia(m)}
                   className="pd-thumb"
                   alt={`Product thumbnail ${i + 1}`}
                   fill
+                  style={{ objectFit: "cover" }}
                 />
               </div>
             ))}
@@ -221,49 +227,54 @@ const ProductInfo = () => {
         </div>
 
         <div className="pd-center">
-          <h1>{title}</h1>
+          <h1 style={{ fontFamily: "var(--font-accent)", color: "var(--green-dark)" }}>{title}</h1>
 
-          {/* RATING DISPLAY START */}
-          <div
-            className="pd-rating-container"
-            style={{ marginBottom: "10px", color: "#f39c12" }}
-          >
-            <span className="pd-rating-stars">
+          {/* RATING DISPLAY */}
+          <div className="pd-rating-container" style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>
+            <span style={{ color: "#f39c12", fontSize: "1.2rem" }}>
               {"★".repeat(Math.round(avgRating))}
               {"☆".repeat(5 - Math.round(avgRating))}
             </span>
-            <span
-              className="pd-rating-text"
-              style={{ marginLeft: "8px", color: "#555", fontSize: "0.9rem" }}
-            >
-              ({avgRating.toFixed(1)}) | {ratingCount}{" "}
-              {ratingCount === 1 ? "Review" : "Reviews"}
+            <span style={{ marginLeft: "10px", color: "#6b7280", fontSize: "0.95rem" }}>
+              ({avgRating.toFixed(1)}) • {ratingCount} {ratingCount === 1 ? "Review" : "Reviews"}
             </span>
           </div>
-          {/* RATING DISPLAY END */}
 
-          <p>{displayedDescription}</p>
-          {isLongDescription && (
-            <button onClick={() => setDescExpanded(!descExpanded)}>
-              {descExpanded ? "Less" : "More"}
-            </button>
-          )}
-          <hr />
-          <p>Seller: {resolvedSeller}</p>
+          <div className="pd-description-box">
+            <p style={{ lineHeight: "1.6", color: "#474747" }}>{displayedDescription}</p>
+            {isLongDescription && (
+              <button
+                onClick={() => setDescExpanded(!descExpanded)}
+                style={{ background: "none", border: "none", color: "var(--green-mid)", fontWeight: "bold", cursor: "pointer", padding: 0 }}
+              >
+                {descExpanded ? "Show Less" : "Read More"}
+              </button>
+            )}
+          </div>
+
+          <hr style={{ margin: "25px 0", opacity: "0.1" }} />
+          <p style={{ fontSize: "0.9rem", color: "#8f8b84" }}>
+            Sold by: <span style={{ color: "var(--green-dark)", fontWeight: "600" }}>{resolvedSeller}</span>
+          </p>
         </div>
 
         <div className="pd-right">
           <div className="pd-buybox">
             <p className="pd-price">₹{price.toLocaleString()}</p>
+            <p style={{ fontSize: "0.8rem", color: "#8f8b84", marginBottom: "20px" }}>Inclusive of all taxes</p>
+
             <button className="pd-btn pd-btn-buy" onClick={handleBuyNow}>
               Buy Now
             </button>
             <button className="pd-btn pd-btn-cart" onClick={handleAddToCart}>
               Add to Cart
             </button>
+
+            {/* IN-BOX BACK BUTTON AS WELL */}
             <button
               className="pd-btn pd-btn-back"
               onClick={() => router.back()}
+              style={{ marginTop: "10px", background: "#f3f4f6", color: "#4b5563" }}
             >
               Go Back
             </button>
@@ -274,4 +285,5 @@ const ProductInfo = () => {
     </>
   );
 };
+
 export default ProductInfo;

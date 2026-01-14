@@ -18,7 +18,7 @@
 ========================================= */
 .products-section {
   text-align: center;
-  padding: 80px 5% 60px;
+  padding: 0px 5% 60px;
   background-color: #fcfcf9;
   /* Premium off-white */
   min-height: 100vh;
@@ -107,4 +107,65 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--green-dark, #606e52); /* Using your branding variables */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  padding: 0;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.back-btn:hover {
+  transform: translateX(-5px);
+  color: var(--green-mid, #91a56e);
+}
+
+.back-btn svg {
+  font-size: 0.9rem;
+}
+
+.listing-top-nav {
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--green-dark, #606E52);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+}
+
+.back-btn:hover {
+  transform: translateX(-5px);
+  color: var(--green-mid, #91A56E);
+}
+
+.back-btn svg {
+  font-size: 0.9rem;
+}
+
+/* Ensure grid items look premium */
+.no-results {
+  font-style: italic;
+  font-size: 1.1rem;
+  color: #8F8B84;
 }

@@ -4,11 +4,13 @@ import React, { useEffect, useState } from "react";
 import "./DesignerDashboard.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaPalette, FaEdit, FaUserTie, FaHandshake, FaBars, FaTimes, FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { 
+  FaPalette, FaEdit, FaUserTie, FaHandshake, 
+  FaBars, FaTimes, FaToggleOn, FaToggleOff, FaStar 
+} from "react-icons/fa";
 import { getDesignerBasic, updateDesignerAvailability } from "../../api/designer";
 import Image from "next/image";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
-// 1. Import MessageBox
 import MessageBox from "../ui/MessageBox"; 
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
@@ -21,10 +23,10 @@ const DesignerDashboard = () => {
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [designerId, setDesignerId] = useState(null);
 
-  // 2. Message Box State
+  // Ratings & UI States
+  const [ratingData, setRatingData] = useState({ avg: 0, total: 0, reviews: [] });
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  // 3. Helper to trigger the message box
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
@@ -42,8 +44,13 @@ const DesignerDashboard = () => {
       .then((data) => {
         setDesignerName(data.fullname?.trim() || "Designer");
         setAvailable(data.availability === "Available");
+        setRatingData({
+          avg: data.avgRating || 0,
+          total: data.totalRatings || 0,
+          reviews: data.ratings || []
+        });
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error("Error fetching dashboard data:", err));
   }, [designerId]);
 
   const toggleAvailability = async () => {
@@ -58,12 +65,9 @@ const DesignerDashboard = () => {
       setLoadingAvailability(true);
       await updateDesignerAvailability(designerId, newStatus);
       setAvailable(newStatus === "Available");
-      
-      // Replace alert with triggerMsg
       triggerMsg(`You are now ${newStatus}`, "success");
     } catch (err) {
       console.error("Failed to update availability:", err);
-      // Replace alert with triggerMsg
       triggerMsg(err.response?.data?.message || "Failed to update availability", "error");
     } finally {
       setLoadingAvailability(false);
@@ -72,7 +76,6 @@ const DesignerDashboard = () => {
 
   return (
     <>
-      {/* 4. Render MessageBox */}
       {msg.show && (
         <MessageBox 
           message={msg.text} 
@@ -121,6 +124,18 @@ const DesignerDashboard = () => {
             <h1 className="dd-title">Welcome, {designerName}</h1>
             <p className="dd-sub">Manage your portfolio and leads from your private dashboard.</p>
           </div>
+          
+          <div className="dd-header-stats">
+            <div className="stat-item">
+              <span className="stat-value">{ratingData.avg} <FaStar style={{color: '#ca8a04', fontSize: '1.2rem'}} /></span>
+              <span className="stat-label">Average Rating</span>
+            </div>
+            <div className="stat-divider"></div>
+            <div className="stat-item">
+              <span className="stat-value">{ratingData.total}</span>
+              <span className="stat-label">Total Reviews</span>
+            </div>
+          </div>
         </div>
 
         <div className="dd-grid">
@@ -165,6 +180,58 @@ const DesignerDashboard = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* FULL FEEDBACK HISTORY SECTION */}
+        <div className="dd-full-history dd-reveal dd-delay-5">
+          <div className="history-header">
+            <h3>Client Feedback History</h3>
+            <div className="history-count">Showing {ratingData.reviews.length} reviews</div>
+          </div>
+
+          {ratingData.reviews.length > 0 ? (
+            <div className="history-list">
+              {ratingData.reviews.map((rev, index) => {
+                // Ensure we get a display name from the available data
+                const displayName = rev.reviewerName || "Client";
+                
+                return (
+                  <div key={index} className="history-item">
+                    <div className="history-item-top">
+                      <div className="reviewer-info">
+                        <div className="reviewer-avatar">
+                          {displayName[0].toUpperCase()}
+                        </div>
+                        <div className="reviewer-details">
+                          <span className="name">{displayName}</span>
+                          <span className="date">
+                            {new Date(rev.createdAt).toLocaleDateString('en-GB', { 
+                              day: 'numeric', month: 'long', year: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="review-rating">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar 
+                            key={i} 
+                            className={i < rev.stars ? "star-active" : "star-inactive"} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="history-item-body">
+                      <p className="comment">"{rev.review || "The client didn't leave a written comment."}"</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="no-history">
+              <p>No feedback received yet. Complete hire requests to start building your reputation.</p>
+            </div>
+          )}
         </div>
       </div>
     </>
