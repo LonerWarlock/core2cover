@@ -1,140 +1,110 @@
 /* =========================================
-   GLOBAL FONTS & COLORS (Theme Setup)
+   GLOBAL THEME VARIABLES (Local Scope)
 ========================================= */
 :root {
-  --font-ui: "Helvetica", Arial, sans-serif;
-  --font-heading: "Playfair Display", serif; /* Big Caslon Substitute */
-  
-  /* THEME COLORS */
   --green-dark: #606E52;
   --green-mid: #91A56E;
-  --green-light: #C0CCA4;
-  --text-dark: #474747;
-  --text-muted: #8F8B84;
+  --green-light: #f3f5ed;
+  --text-dark: #2d2d2d;
+  --text-muted: #6b7280;
   --white: #FFFFFF;
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --font-heading: "Playfair Display", serif;
+  --font-ui: "Inter", "Helvetica", Arial, sans-serif;
 }
 
-/* ============ SECTION HEADER ============ */
+/* =========================================
+   PAGE CONTAINER
+========================================= */
 .products-section {
   text-align: center;
-  padding: 60px 20px;
-  background-color: var(--white);
+  padding: 80px 5% 60px;
+  background-color: #fcfcf9;
+  /* Premium off-white */
+  min-height: 100vh;
   font-family: var(--font-ui);
 }
 
 .products-title {
   font-family: var(--font-heading);
-  font-size: 2.4rem;
-  font-weight: 500; /* Big Caslon look */
+  font-size: 3rem;
+  font-weight: 500;
   color: var(--green-dark);
-  margin-bottom: 10px;
-  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
 .products-subtitle {
   color: var(--text-muted);
-  font-size: 1.1rem;
-  font-family: var(--font-ui);
-  margin-bottom: 28px;
+  font-size: 1.15rem;
+  max-width: 600px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
 }
 
-/* ============ FILTER BUTTONS ============ */
+/* =========================================
+   CATEGORY FILTER (Pill Style)
+========================================= */
 .category-filter {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 40px;
+  gap: 12px;
+  margin-bottom: 50px;
 }
 
 .category-filter button {
-  background: var(--green-light);
+  background: var(--white);
   color: var(--green-dark);
   font-weight: 600;
-  font-family: var(--font-ui);
-  border: none;
-  outline: none;
+  border: 1.5px solid #e5e7eb;
   padding: 10px 24px;
-  border-radius: 22px;
+  border-radius: 50px;
   cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.category-filter button:hover {
-  background: var(--green-mid);
-  color: var(--white);
-}
-
+.category-filter button:hover,
 .category-filter button.active {
   background: var(--green-dark);
   color: var(--white);
+  border-color: var(--green-dark);
+  box-shadow: 0 8px 20px rgba(96, 110, 82, 0.25);
+  transform: translateY(-2px);
 }
 
-/* ============ MATERIAL GRID ============ */
+/* =========================================
+   RESPONSIVE GRID SYSTEM (Production Ready)
+========================================= */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 80px;
-  padding: 60px 4vw 40px;
-  justify-items: center;
-  box-sizing: border-box;
-}
-
-/* Card container
-.product-grid .material-card {
-  max-width: 300px;
+  /* Logic: minmax(230px, 1fr) 
+     - 768px (iPad Portrait)  -> ~3 cards per row
+     - 1024px (iPad Landsc.) -> ~4 cards per row
+     - 1280px (Laptop)       -> ~5 cards per row
+  */
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
   width: 100%;
-  background: var(--white);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-bottom: 40px;
 }
 
-.product-grid .material-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.12);
-} */
-
-/* ============ RESPONSIVE DESIGN ============ */
-@media (max-width: 1024px) {
-  .product-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 80px;
-  }
-}
-
-@media (max-width: 768px) {
+/* MOBILE OPTIMISATION (< 600px) */
+@media (max-width: 600px) {
   .products-section {
-    padding: 40px 10px;
+    padding: 60px 20px;
   }
 
   .products-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 
   .product-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .filter-buttons {
-    gap: 10px;
-  }
-
-  .filter-btn {
-    padding: 8px 18px;
-    font-size: 0.9rem;
-  }
-
-  .product-grid {
+    /* Single column stack for mobile */
     grid-template-columns: 1fr;
     gap: 16px;
-    padding: 24px 3vw;
   }
 }
