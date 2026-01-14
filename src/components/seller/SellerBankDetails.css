@@ -1,72 +1,204 @@
-/* ===============================
-   SELLER BANK DETAILS – CASA
-=============================== */
+/* =========================================
+   GLOBAL VARIABLES & THEME
+========================================= */
+:root {
+  --green-dark: #606E52;
+  --green-mid: #91A56E;
+  --green-light: #C0CCA4;
+  --white: #FFFFFF;
+  --bg-main: #F9FBF7;
+  --text-dark: #333333;
+  --text-muted: #8F8B84;
+  --border-soft: #DBE6C6;
+  --shadow-premium: 0 10px 40px rgba(96, 110, 82, 0.1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================================
+   LAYOUT STRUCTURE
+========================================= */
+/* .ms-root is the wrapper used in the Sidebar version */
+.ms-root {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-main);
+}
+
+/* .bs-layout-root is the standalone wrapper used in Signup */
+.bs-layout-root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  /* padding: 40px 20px; */
+  background-color: var(--bg-main);
+  width: 100%;
+}
+
+.bs-profile-shell {
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  animation: slideUpFade 0.7s ease-out;
+  margin-top: 0px;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   TYPOGRAPHY
+========================================= */
+.bs-heading {
+  font-family: "Big Caslon", "Cormorant Garamond", serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--green-dark);
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+.bs-subheading {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 40px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   FORM CARD
+========================================= */
+.bs-card {
+  background: var(--white);
+  padding: 45px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-premium);
+  border: 1px solid rgba(219, 230, 198, 0.5);
+}
 
 .bs-bank-form {
-  max-width: 520px;
-  margin-top: 14px;
-  display: grid;
-  gap: 14px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Labels */
-.bs-bank-form label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--bs-muted);
+  gap: 28px;
 }
 
-/* Inputs */
-.bs-bank-form input {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(96, 110, 82, 0.25);
-  background: #ffffff;
-  color: var(--bs-ink);
-  font-size: 0.95rem;
-  font-weight: 600;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+/* =========================================
+   INPUT STYLING
+========================================= */
+.bs-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.bs-bank-form input:focus {
+.bs-input-group label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--green-dark);
+  margin-left: 2px;
+}
+
+.bs-input-group input {
+  padding: 16px 18px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: #FCFDFB;
+  color: var(--text-dark);
+  transition: var(--transition);
   outline: none;
-  border-color: var(--bs-green-mid);
-  box-shadow: 0 0 0 3px rgba(145, 165, 110, 0.25);
 }
 
-/* Save button */
-.bs-bank-form .bs-btn {
-  margin-top: 10px;
-  align-self: flex-start;
+.bs-input-group input:focus {
+  border-color: var(--green-mid);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(145, 165, 110, 0.15);
+  transform: translateY(-1px);
 }
 
-/* ===============================
-   INFO NOTE (OPTIONAL)
-=============================== */
-.bs-bank-note {
-  font-size: 0.85rem;
-  color: var(--bs-muted);
-  margin-top: 6px;
+.bs-input-group input::placeholder {
+  color: #B8C4A0;
+  font-size: 14px;
 }
 
-/* ===============================
-   RESPONSIVE
-=============================== */
+/* =========================================
+   BUTTON STYLING
+========================================= */
+.bs-btn--primary {
+  margin-top: 15px;
+  padding: 18px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 6px 20px rgba(96, 110, 82, 0.2);
+}
+
+.bs-btn--primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(96, 110, 82, 0.3);
+  filter: brightness(1.05);
+}
+
+.bs-btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.bs-btn--primary:disabled {
+  background: #D1D9C5;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.8;
+}
+
+/* =========================================
+   RESPONSIVE OVERRIDES
+========================================= */
 @media (max-width: 768px) {
-  .bs-bank-form {
+  /* Layout changes for Dashboard view on tablet/mobile */
+  .ms-root .bs-layout-root {
+    padding-top: 20px;
+  }
+}
+
+@media (max-width: 500px) {
+  .bs-layout-root {
+    padding: 20px 10px;
+    background-color: var(--white); /* Seamless look for mobile */
+  }
+
+  .bs-card {
+    padding: 30px 20px;
+    box-shadow: none;
+    border: none;
+  }
+
+  .bs-heading {
+    font-size: 26px;
+  }
+
+  .bs-profile-shell {
     max-width: 100%;
   }
 
-  .bs-bank-form input {
-    font-size: 0.9rem;
+  .bs-btn--primary {
+    padding: 20px; /* Thicker tap target for mobile */
   }
+}
 
-  .bs-bank-form .bs-btn {
-    width: 100%;
-  }
+/* Support for standard "ms-root" centering if inside dashboard */
+.ms-root .bs-layout-root {
+    flex: 1;
 }

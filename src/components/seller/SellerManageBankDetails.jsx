@@ -12,11 +12,10 @@ const SellerSignupBankDetails = () => {
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
   const [saving, setSaving] = useState(false);
 
+  // Simplified state for UPI only
   const [form, setForm] = useState({
-    accountHolder: "",
-    bankName: "",
-    accountNumber: "",
-    ifsc: "",
+    upiId: "",
+    accountHolder: "", // Still useful to know who owns the UPI
   });
 
   useEffect(() => {
@@ -41,15 +40,8 @@ const SellerSignupBankDetails = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { accountHolder, bankName, accountNumber, ifsc } = form;
-
-    if (!accountHolder || !bankName || !accountNumber || !ifsc) {
+    if (!form.upiId || !form.accountHolder) {
       triggerMsg("Please fill all fields", "error");
-      return;
-    }
-
-    if (!sellerId) {
-      triggerMsg("Seller session expired", "error");
       return;
     }
 
@@ -58,15 +50,16 @@ const SellerSignupBankDetails = () => {
       await saveSellerBankDetails({
         sellerId: Number(sellerId),
         ...form,
+        // Send nulls for legacy bank fields if your backend requires them
+        bankName: "UPI",
+        accountNumber: "UPI",
+        ifsc: "UPI",
       });
 
       triggerMsg("Signup complete! Redirecting to dashboard...", "success");
-      
-      setTimeout(() => {
-        router.push("/sellerdashboard");
-      }, 2000);
+      setTimeout(() => router.push("/sellerdashboard"), 2000);
     } catch (err) {
-      triggerMsg(err.response?.data?.message || "Failed to save bank details", "error");
+      triggerMsg(err.response?.data?.message || "Failed to save UPI details", "error");
     } finally {
       setSaving(false);
     }
@@ -83,46 +76,25 @@ const SellerSignupBankDetails = () => {
       )}
 
       <div className="bs-profile-shell">
-        <h1 className="bs-heading">Add Bank Details</h1>
-        <p className="bs-subheading">Enter your details to receive payments for your sales.</p>
+        <h1 className="bs-heading">Add Payment Details</h1>
+        <p className="bs-subheading">Enter your UPI ID to receive payments for your sales.</p>
 
         <form className="bs-card bs-bank-form" onSubmit={handleSubmit}>
           <div className="bs-input-group">
             <label>Account Holder Name</label>
             <input 
               name="accountHolder" 
-              placeholder="As per bank records" 
+              placeholder="Name as per Bank/UPI" 
               onChange={handleChange} 
               required 
             />
           </div>
 
           <div className="bs-input-group">
-            <label>Bank Name</label>
+            <label>UPI ID</label>
             <input 
-              name="bankName" 
-              placeholder="e.g., HDFC Bank" 
-              onChange={handleChange} 
-              required 
-            />
-          </div>
-
-          <div className="bs-input-group">
-            <label>Account Number</label>
-            <input 
-              name="accountNumber" 
-              type="password" /* Hidden for security */
-              placeholder="Enter account number" 
-              onChange={handleChange} 
-              required 
-            />
-          </div>
-
-          <div className="bs-input-group">
-            <label>IFSC Code</label>
-            <input 
-              name="ifsc" 
-              placeholder="e.g., HDFC0001234" 
+              name="upiId" 
+              placeholder="username@bank or mobile@upi" 
               onChange={handleChange} 
               required 
             />

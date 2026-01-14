@@ -1,14 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-// Replace react-router-dom with next/navigation
 import { useRouter } from "next/navigation"; 
 import Sidebar from "./Sidebar";
 import "./SellerBankDetails.css";
-import {
-  getSellerBankDetails,
-  saveSellerBankDetails,
-} from "../../api/seller";
+import { getSellerBankDetails, saveSellerBankDetails } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
 
 const SellerBankDetails = () => {
@@ -19,19 +15,14 @@ const SellerBankDetails = () => {
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   const [form, setForm] = useState({
+    upiId: "",
     accountHolder: "",
-    bankName: "",
-    accountNumber: "",
-    ifsc: "",
   });
 
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
 
-  /* =========================
-     INITIALISE & FETCH
-  ========================= */
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedId = localStorage.getItem("sellerId");
@@ -45,26 +36,24 @@ const SellerBankDetails = () => {
 
   useEffect(() => {
     if (!sellerId) return;
-
-    const loadBankDetails = async () => {
+    const loadDetails = async () => {
       try {
         const res = await getSellerBankDetails(sellerId);
         if (res.data) {
-          setForm(res.data);
+          setForm({
+            upiId: res.data.upiId || "",
+            accountHolder: res.data.accountHolder || "",
+          });
         }
       } catch (err) {
-        console.log("No existing bank details found.");
+        console.log("No details found.");
       } finally {
         setLoading(false);
       }
     };
-
-    loadBankDetails();
+    loadDetails();
   }, [sellerId]);
 
-  /* =========================
-     HANDLERS
-  ========================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -72,31 +61,18 @@ const SellerBankDetails = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-
-    const { accountHolder, bankName, accountNumber, ifsc } = form;
-
-    if (!accountHolder || !bankName || !accountNumber || !ifsc) {
-      triggerMsg("Please fill all fields", "error");
-      return;
-    }
-
     setSaving(true);
-
     try {
       await saveSellerBankDetails({
         sellerId: Number(sellerId),
-        accountHolder,
-        bankName,
-        accountNumber,
-        ifsc,
+        ...form,
+        bankName: "UPI",
+        accountNumber: "UPI",
+        ifsc: "UPI",
       });
-
-      triggerMsg("Bank details saved successfully ✅", "success");
+      triggerMsg("UPI details updated successfully ✅", "success");
     } catch (err) {
-      triggerMsg(
-        err?.response?.data?.message || "Failed to save bank details",
-        "error"
-      );
+      triggerMsg(err?.response?.data?.message || "Failed to update details", "error");
     } finally {
       setSaving(false);
     }
@@ -115,54 +91,34 @@ const SellerBankDetails = () => {
       <Sidebar />
       <div className="bs-layout-root">
         <div className="bs-profile-shell">
-          <h1 className="bs-heading">Bank Details</h1>
-
+          <h1 className="bs-heading">Payment Settings</h1>
           {loading ? (
             <p>Loading…</p>
           ) : (
             <form className="bs-card bs-bank-form" onSubmit={handleSave}>
-              <label>
-                Account Holder Name
+              <div className="bs-input-group">
+                <label>Account Holder Name</label>
                 <input
                   name="accountHolder"
                   value={form.accountHolder}
                   onChange={handleChange}
                   required
                 />
-              </label>
+              </div>
 
-              <label>
-                Bank Name
+              <div className="bs-input-group">
+                <label>UPI ID</label>
                 <input
-                  name="bankName"
-                  value={form.bankName}
+                  name="upiId"
+                  value={form.upiId}
                   onChange={handleChange}
+                  placeholder="example@okaxis"
                   required
                 />
-              </label>
-
-              <label>
-                Account Number
-                <input
-                  name="accountNumber"
-                  value={form.accountNumber}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-
-              <label>
-                IFSC Code
-                <input
-                  name="ifsc"
-                  value={form.ifsc}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+              </div>
 
               <button className="bs-btn bs-btn--primary" disabled={saving}>
-                {saving ? "Saving..." : "Save Details"}
+                {saving ? "Updating..." : "Update UPI Details"}
               </button>
             </form>
           )}
