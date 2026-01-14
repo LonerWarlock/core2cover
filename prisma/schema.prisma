@@ -134,17 +134,15 @@ model SellerDeliveryDetails {
 /// SELLER BANK DETAILS
 /// =========================
 model SellerBankDetails {
-  id Int @id @default(autoincrement())
-
+  id            Int      @id @default(autoincrement())
   accountHolder String
   bankName      String
   accountNumber String
   ifsc          String
-
-  sellerId Int    @unique
-  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  upiId         String?  // Add this line
+  sellerId      Int      @unique
+  seller        Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
 }
 
 /// =========================
@@ -222,7 +220,7 @@ model OrderItem {
   refundStatus      RefundStatus @default(NONE)
   refundProcessedAt DateTime?
 
-  // ✅ DELIVERY SNAPSHOT
+  //  DELIVERY SNAPSHOT
   deliveryTimeMin       Int?
   deliveryTimeMax       Int?
   shippingChargeType    String?

@@ -3,26 +3,42 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
   try {
-    const productId = Number(params.id);
+    // 1. Unwrapping the params promise (Required in Next.js 15+)
+    const resolvedParams = await params;
+    const productId = Number(resolvedParams.id);
+
+    if (isNaN(productId)) {
+      return NextResponse.json({ message: "Invalid Product ID" }, { status: 400 });
+    }
+
     const ratings = await prisma.rating.findMany({
       where: { productId },
-      include: { user: { select: { name: true } } },
-      orderBy: { createdAt: "desc" },
+      include: { 
+        user: { select: { name: true } } 
+      },
+      orderBy: { createdAt: 'desc' }
     });
 
-    const avg = ratings.reduce((s, r) => s + r.stars, 0) / (ratings.length || 1);
+    // Formatting for the frontend
+    const formattedReviews = ratings.map(r => ({
+      id: r.id,
+      stars: r.stars,
+      user: r.user?.name || "Anonymous",
+      comment: r.comment
+    }));
+
+    // Calculate summary stats
+    const totalStars = ratings.reduce((sum, r) => sum + r.stars, 0);
+    const avgRating = ratings.length ? (totalStars / ratings.length) : 0;
 
     return NextResponse.json({
-      avgRating: Number(avg.toFixed(1)),
+      avgRating: Number(avgRating.toFixed(1)),
       count: ratings.length,
-      reviews: ratings.map((r) => ({
-        id: r.id,
-        stars: r.stars,
-        comment: r.comment,
-        user: r.user.name,
-      })),
+      reviews: formattedReviews
     });
-  } catch {
-    return NextResponse.json({ avgRating: 0, count: 0, reviews: [] });
+
+  } catch (err) {
+    console.error("GET RATINGS ERROR:", err);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

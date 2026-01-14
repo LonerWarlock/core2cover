@@ -242,7 +242,7 @@ const SellerOrders = () => {
                       <button onClick={() => updateStatus(order._orderItemId ?? order.id, "out_for_delivery")} className="confirm-btn">Out For Delivery</button>
                     )}
                     {order._status === "out_for_delivery" && (
-                      <button onClick={() => updateStatus(order._orderItemId ?? order.id, "fulfilled")} className="fulfill-btn">✅ Mark Delivered</button>
+                      <button onClick={() => updateStatus(order._orderItemId ?? order.id, "fulfilled")} className="fulfill-btn"> Mark Delivered</button>
                     )}
                     {order._status === "fulfilled" && <span className="badge fulfilled">Delivered</span>}
                     {order._status === "rejected" && <span className="badge rejected">Rejected</span>}

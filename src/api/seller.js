@@ -1,14 +1,14 @@
 import api from "./axios";
 
 /* =========================================
-   INVENTORY & PRODUCTS
+    INVENTORY & PRODUCTS
 ========================================= */
 
-// Add a new product with images/video
+// Add a new product (POST /api/seller/product)
 export const addSellerProduct = async (formData) => {
   try {
     const response = await api.post("/seller/product", formData, {
-      headers: { "Content-Type": "multipart/form-to-data" },
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   } catch (error) {
@@ -17,59 +17,59 @@ export const addSellerProduct = async (formData) => {
   }
 };
 
-// Update an existing product
+// Update an existing product (PUT /api/seller/products/[id])
+// Match this to: src/app/api/seller/products/[id]/route.js
 export const updateSellerProduct = (productId, formData) => {
-  return api.put(`/seller/product/${productId}`, formData, {
+  return api.put(`/product/${productId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
-// Delete a product
+// Delete a product (DELETE /api/seller/products/[id])
 export const deleteSellerProduct = (productId) => {
-  return api.delete(`/seller/product/${productId}`);
+  return api.delete(`/product/${productId}`);
 };
 
-// Fetch all products for a specific seller
+
 export const getSellerProducts = (sellerId) => {
   return api.get(`/seller/${sellerId}/products`);
 };
 
-// Fetch ratings and reviews for a product
+// Matches: src/app/api/product/[id]/ratings/route.js
 export const getProductRatings = (productId) => {
   return api.get(`/product/${productId}/ratings`);
 };
-
 /* =========================================
-   ORDERS & DASHBOARD
+    ORDERS & DASHBOARD
 ========================================= */
 
 // Fetch dashboard statistics
-export const getSellerDashboard = async (sellerId) => {
-  return await api.get(`/seller/${sellerId}/dashboard-stats`);
+export const getSellerDashboard = (id) => {
+  return api.get(`/seller/${id}/dashboard-stats`);
 };
 
 // Fetch all orders for a seller
-export const getSellerOrders = async (sellerId) => {
-  return await api.get(`/seller/${sellerId}/orders`);
+export const getSellerOrders = (id) => {
+  return api.get(`/seller/${id}/orders`);
 };
 
 // Update status of a specific order item
-export const updateSellerOrderStatus = async (orderItemId, status) => {
-  return await api.patch(`/seller/order-item/${orderItemId}/status`, { status });
+export const updateSellerOrderStatus = (orderItemId, status) => {
+  return api.patch(`/seller/order-item/${orderItemId}/status`, { status });
 };
 
 /* =========================================
-   PROFILE & BUSINESS DETAILS
+    PROFILE & BUSINESS DETAILS
 ========================================= */
 
 // Fetch seller profile
 export const getSellerProfile = (id) => {
-  return api.get(`/seller/profile/${id}`);
+  return api.get(`/seller/${id}/profile`);
 };
 
 // Update seller profile
 export const updateSellerProfile = (id, data) => {
-  return api.put(`/seller/profile/${id}`, data);
+  return api.put(`/seller/${id}/profile`, data);
 };
 
 // Onboarding: Create business details
@@ -84,22 +84,22 @@ export const createSellerBusinessDetails = async (businessData) => {
 };
 
 // Fetch business details
-export const getSellerBusinessDetails = (sellerId) => {
-    return api.get(`/seller/${sellerId}/business-details`);
+export const getSellerBusinessDetails = (id) => {
+  return api.get(`/seller/${id}/business-details`);
 };
 
 // Update business details
-export const updateSellerBusinessDetails = (sellerId, data) => {
-    return api.put(`/seller/${sellerId}/business-details`, data);
+export const updateSellerBusinessDetails = (id, data) => {
+  return api.put(`/seller/${id}/business-details`, data);
 };
 
 // Fetch onboarding progress status
-export const getOnboardingStatus = (sellerId) => {
-  return api.get(`/seller/${sellerId}/onboarding-status`);
+export const getOnboardingStatus = (id) => {
+  return api.get(`/seller/${id}/onboarding-status`);
 };
 
 /* =========================================
-   BANK & PAYOUT DETAILS
+    BANK & PAYOUT DETAILS
 ========================================= */
 
 // Save bank details
@@ -109,18 +109,18 @@ export const saveSellerBankDetails = async (bankData) => {
 };
 
 // Fetch bank details
-export const getSellerBankDetails = async (sellerId) => {
-  const response = await api.get(`/seller/${sellerId}/bank-details`);
-  return response.data;
+export const getSellerBankDetails = (id) => {
+  return api.get(`/seller/bank-details?sellerId=${id}`);
 };
 
 /* =========================================
-   DELIVERY & LOGISTICS
+    DELIVERY & LOGISTICS
 ========================================= */
 
 // Save or Update delivery preferences
 export const saveSellerDeliveryDetails = async (deliveryData) => {
   try {
+    // Ensure we are sending JSON
     const response = await api.post("/seller/delivery-details", deliveryData);
     return response.data;
   } catch (error) {
@@ -130,24 +130,21 @@ export const saveSellerDeliveryDetails = async (deliveryData) => {
 };
 
 // Fetch delivery details
-export const getSellerDeliveryDetails = (sellerId) => {
-  return api.get(`/seller/${sellerId}/delivery-details`);
+export const getSellerDeliveryDetails = (id) => {
+  return api.get(`/seller/delivery-details?sellerId=${id}`);
 };
 
-export const getSellerReturns = (sellerId) => {
-  return api.get(`/seller/${sellerId}/returns`);
+// Fetch returns
+export const getSellerReturns = (id) => {
+  return api.get(`/seller/${id}/returns`);
 };
 
-/**
- * Updates status to APPROVED by seller
- */
+// Updates status to APPROVED by seller
 export const approveReturn = (returnId) => {
-  return api.patch(`/return/${returnId}/approve`);
+  return api.patch(`/returns/${returnId}/approve`);
 };
 
-/**
- * Updates status to REJECTED with a reason
- */
+// Updates status to REJECTED with a reason
 export const rejectReturn = (returnId, reason) => {
-  return api.patch(`/return/${returnId}/reject`, { reason });
+  return api.patch(`/returns/${returnId}/reject`, { reason });
 };

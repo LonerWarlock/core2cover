@@ -6,7 +6,7 @@ export async function GET(request, { params }) {
     const resolvedParams = await params;
     const id = Number(resolvedParams.id);
     
-    if (isNaN(id)) return NextResponse.json(null, { status: 400 });
+    if (isNaN(id)) return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
 
     const product = await prisma.product.findUnique({
       where: { id },
@@ -31,7 +31,6 @@ export async function GET(request, { params }) {
       id: product.id,
       sellerId: product.sellerId,
       title: product.name,
-      // FIX 2: Use optional chaining to prevent crashes if seller data is missing
       seller: product.seller?.name || "Unknown Seller",
       origin: product.seller?.business
         ? `${product.seller.business.city}, ${product.seller.business.state}`
@@ -43,7 +42,6 @@ export async function GET(request, { params }) {
       availability: product.availability,
       avgRating: count ? total / count : 0,
       ratingCount: count,
-      // SAFELY access nested delivery details
       deliveryTimeMin: product.seller?.delivery?.deliveryTimeMin ?? null,
       deliveryTimeMax: product.seller?.delivery?.deliveryTimeMax ?? null,
       installationAvailable: product.seller?.delivery?.installationAvailable ?? "no",
@@ -53,6 +51,53 @@ export async function GET(request, { params }) {
     });
   } catch (err) {
     console.error("GET PRODUCT ERROR:", err);
-    return NextResponse.json(null, { status: 500 });
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
+}
+
+export async function PUT(request, { params }) {
+  try {
+    const { id } = await params; // This is the PRODUCT ID
+    const formData = await request.formData();
+
+    const existingImagesRaw = formData.get("existingImages");
+    let keptImages = existingImagesRaw ? JSON.parse(existingImagesRaw) : [];
+
+    // Media Uploads
+    const newFiles = formData.getAll("images");
+    let newImageUrls = [];
+    if (newFiles.length > 0) {
+      const results = await Promise.all(
+        newFiles.map(file => uploadToCloudinary(file, "coretocover/products/images"))
+      );
+      newImageUrls = results.map(r => r.secure_url);
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: Number(id) },
+      data: {
+        name: formData.get("name"),
+        price: Number(formData.get("price")),
+        category: formData.get("category"),
+        description: formData.get("description"),
+        availability: formData.get("availability"),
+        images: [...keptImages, ...newImageUrls],
+      },
+    });
+
+    return NextResponse.json({ message: "Product updated", product: updatedProduct });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ message: "Update failed" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const { id } = await params;
+    await prisma.product.delete({ where: { id: Number(id) } });
+    return NextResponse.json({ message: "Product deleted" });
+  } catch (err) {
+    return NextResponse.json({ message: "Delete failed" }, { status: 500 });
   }
 }

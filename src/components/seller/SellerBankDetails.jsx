@@ -70,7 +70,7 @@ const SellerBankDetails = () => {
         accountNumber: "UPI",
         ifsc: "UPI",
       });
-      triggerMsg("UPI details updated successfully ✅", "success");
+      triggerMsg("UPI details updated successfully ", "success");
     } catch (err) {
       triggerMsg(err?.response?.data?.message || "Failed to update details", "error");
     } finally {

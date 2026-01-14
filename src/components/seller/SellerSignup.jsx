@@ -74,7 +74,7 @@ const SellerSignup = () => {
     try {
       await verifySellerOtp(form.email.trim().toLowerCase(), otp.trim());
       setEmailVerified(true);
-      alert("Email verified ✅");
+      alert("Email verified ");
     } catch (err) {
       alert(err?.response?.data?.message || "Invalid OTP");
     } finally {

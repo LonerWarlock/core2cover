@@ -60,7 +60,7 @@ export const hireDesigner = (designerId, data) => {
   return api.post(`/designer/${designerId}/hire`, data);
 };
 
-// ✅ FIX: Add getClientHiredDesigners
+//  FIX: Add getClientHiredDesigners
 export const getClientHiredDesigners = ({ userId }) => {
   // Pass userId as a query param or in body depending on your API
   return api.get(`/client/hired-designers?userId=${userId}`);
@@ -86,7 +86,7 @@ export const rateUser = async (ratingData) => {
   return response.data;
 };
 
-// ✅ FIX: Add rateDesigner
+//  FIX: Add rateDesigner
 export const rateDesigner = (designerId, data) => {
   return api.post(`/designer/${designerId}/rate`, data);
 };

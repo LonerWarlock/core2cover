@@ -64,7 +64,7 @@ const EditBusinessDetails = () => {
 
         try {
             await updateSellerBusinessDetails(sellerId, business);
-            triggerMsg("Business details updated successfully ✅", "success");
+            triggerMsg("Business details updated successfully ", "success");
         } catch (err) {
             triggerMsg("Failed to update business details", "error");
         } finally {

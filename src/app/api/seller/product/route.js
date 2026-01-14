@@ -6,6 +6,7 @@ export async function POST(request) {
   try {
     const formData = await request.formData();
 
+    // 1. Extract Fields
     const sellerId = formData.get("sellerId");
     const name = formData.get("name");
     const price = formData.get("price");
@@ -14,51 +15,62 @@ export async function POST(request) {
     const description = formData.get("description");
     const availability = formData.get("availability") || "available";
 
-    // Extract files (All inputs named 'images' will be collected)
+    // 2. Extract Media
     const imageFiles = formData.getAll("images"); 
-    const videoFile = formData.get("video"); // Single file or null
+    const videoFile = formData.get("video");
 
-    if (!sellerId || !name || !price || !productType || !category) {
+    // 3. Validation
+    if (!sellerId || !name || !price) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    if (!imageFiles || imageFiles.length === 0) {
-      return NextResponse.json({ message: "At least one image is required" }, { status: 400 });
+    // 4. Check if Seller Exists in DB
+    const seller = await prisma.seller.findUnique({
+      where: { id: Number(sellerId) }
+    });
+
+    if (!seller) {
+      return NextResponse.json({ message: "Seller not found" }, { status: 404 });
     }
 
-    // 1. Upload Images to Cloudinary
-    const imageUploadPromises = imageFiles.map((file) => 
-      uploadToCloudinary(file, "coretocover/products/images")
-    );
-    const uploadedImages = await Promise.all(imageUploadPromises);
-    const imageUrls = uploadedImages.map((img) => img.secure_url);
+    // 5. Upload Media to Cloudinary
+    let imageUrls = [];
+    if (imageFiles.length > 0) {
+      const imagePromises = imageFiles.map((file) => 
+        uploadToCloudinary(file, "coretocover/products/images")
+      );
+      const results = await Promise.all(imagePromises);
+      imageUrls = results.map(r => r.secure_url);
+    }
 
-    // 2. Upload Video (if exists)
     let videoUrl = null;
     if (videoFile && videoFile.size > 0) {
-      const uploadedVideo = await uploadToCloudinary(videoFile, "coretocover/products/videos");
-      videoUrl = uploadedVideo.secure_url;
+      const vResult = await uploadToCloudinary(videoFile, "coretocover/products/videos");
+      videoUrl = vResult.secure_url;
     }
 
-    // 3. Save to Database
+    // 6. Create Record in Prisma
     const product = await prisma.product.create({
       data: {
-        sellerId: Number(sellerId),
         name: name.trim(),
-        price: Number(price),
-        productType: productType.toLowerCase(),
-        category: category.trim(),
-        description: description?.trim() || null,
-        images: imageUrls, // Storing full Cloudinary URLs now
+        price: parseFloat(price),
+        productType: productType,
+        category: category,
+        description: description || null,
+        images: imageUrls, 
         video: videoUrl,
-        availability,
+        availability: availability,
+        sellerId: Number(sellerId),
       },
     });
 
-    return NextResponse.json({ message: "Product added", product }, { status: 201 });
+    return NextResponse.json({ message: "Product listed! ", product }, { status: 201 });
 
   } catch (err) {
-    console.error("ADD PRODUCT ERROR:", err);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    console.error("BACKEND UPLOAD ERROR:", err);
+    return NextResponse.json(
+      { message: "Backend Error: " + (err.message || "Upload failed") }, 
+      { status: 500 }
+    );
   }
 }

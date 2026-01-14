@@ -59,7 +59,7 @@ const SellerDeliveryDetails = () => {
         ...delivery,
       });
 
-      triggerMsg("Delivery details saved successfully ✅", "success");
+      triggerMsg("Delivery details saved successfully ", "success");
       
       // Navigate to the next step (Bank Details) after a short delay
       setTimeout(() => {

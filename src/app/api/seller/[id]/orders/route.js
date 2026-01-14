@@ -3,7 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
   try {
-    const sellerId = Number(params.sellerId);
+    const { id } = await params;
+    const sellerId = Number(id);
+
     if (isNaN(sellerId)) return NextResponse.json([]);
 
     const orderItems = await prisma.orderItem.findMany({
@@ -28,12 +30,11 @@ export async function GET(request, { params }) {
       status: item.status,
       time: item.createdAt,
       totalAmount: item.totalAmount ?? 0,
-      pricePerUnit: item.pricePerUnit ?? null,
     }));
 
     return NextResponse.json(formatted);
   } catch (err) {
-    console.error("FETCH SELLER ORDERS ERROR:", err);
+    console.error("FETCH ORDERS ERROR:", err);
     return NextResponse.json([], { status: 500 });
   }
 }

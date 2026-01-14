@@ -1,29 +1,22 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function POST(request, { params }) {
+export async function PATCH(request, { params }) {
   try {
-    const { decisionNote } = await request.json();
-    const returnId = Number(params.id);
-    const sellerEmail = request.headers.get("x-seller-email");
+    const { id } = await params;
+    const returnId = Number(id);
+    const { reason } = await request.json();
 
-    const seller = await prisma.seller.findUnique({ where: { email: sellerEmail } });
-    const rr = await prisma.returnRequest.findUnique({ where: { id: returnId } });
-
-    if (rr.sellerId !== seller.id) return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
-
-    await prisma.returnRequest.update({
+    const updatedReturn = await prisma.returnRequest.update({
       where: { id: returnId },
-      data: { sellerApprovalStatus: "REJECTED", sellerDecisionNote: decisionNote, sellerApprovedAt: new Date() },
+      data: {
+        sellerApprovalStatus: "REJECTED",
+        sellerDecisionNote: reason,
+      }
     });
 
-    await prisma.orderItem.update({
-      where: { id: rr.orderItemId },
-      data: { returnStatus: "REJECTED", returnResolvedAt: new Date() },
-    });
-
-    return NextResponse.json({ message: "Rejected" });
+    return NextResponse.json({ message: "Return rejected by seller", updatedReturn });
   } catch (err) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    return NextResponse.json({ message: "Rejection failed" }, { status: 500 });
   }
 }

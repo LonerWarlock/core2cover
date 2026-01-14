@@ -119,7 +119,7 @@ const DesignerEditProfile = () => {
 
       await updateDesignerEditProfile(designerId, formData);
 
-      alert("Profile updated successfully ✅");
+      alert("Profile updated successfully ");
       router.push("/designerdashboard");
     } catch (err) {
       console.error(err);

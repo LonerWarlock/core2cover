@@ -176,7 +176,7 @@
 .ms-btn--ghost {
   background: transparent;
   border: 1px dashed var(--ms-border);
-  color: var(--ms-muted);
+  color: var(--outline);
 }
 
 .ms-btn--ghost:hover {

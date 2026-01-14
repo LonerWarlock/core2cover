@@ -11,7 +11,13 @@ const SellerProfile = () => {
   const router = useRouter();
   const [sellerId, setSellerId] = useState(null);
 
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    location: ""
+  });
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,50 +34,60 @@ const SellerProfile = () => {
   };
 
   /* =========================
-      INITIALISE & AUTH CHECK
+      1. AUTH CHECK
   ========================= */
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const sid = localStorage.getItem("sellerId");
-      if (!sid || isNaN(Number(sid))) {
-        router.push("/sellerlogin");
-      } else {
-        setSellerId(Number(sid));
-      }
+    const sid = localStorage.getItem("sellerId");
+    if (!sid) {
+      router.push("/sellerlogin");
+    } else {
+      setSellerId(sid);
     }
   }, [router]);
 
   /* =========================
-      FETCH SELLER PROFILE
+      2. FETCH DATA
   ========================= */
   useEffect(() => {
     if (!sellerId) return;
 
     const loadProfile = async () => {
+      setLoading(true);
       try {
         const res = await getSellerProfile(sellerId);
-        const data = res.data || res; // Tolerant to API structure
+        
+        // Ensure we are getting the data regardless of nested structure
+        const data = res.data || res; 
 
-        setProfile(data);
+        const profileData = {
+          name: data.name || "Not specified",
+          email: data.email || "Not specified",
+          phone: data.phone || "Not specified",
+          location: data.location || data.business?.city || "Not specified"
+        };
+
+        setProfile(profileData);
+        
+        // Initialise form with current data
         setFormData({
           name: data.name || "",
           email: data.email || "",
           phone: data.phone || "",
         });
+
       } catch (err) {
-        triggerMsg("Failed to load profile", "error");
-        localStorage.removeItem("sellerId");
-        router.replace("/sellerlogin");
+        console.error("Profile Load Error:", err);
+        triggerMsg("Failed to load profile details", "error");
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [sellerId, router]);
+  }, [sellerId]);
 
   /* =========================
-      SAVE PROFILE
+      3. SAVE DATA
   ========================= */
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.phone.trim()) {
@@ -86,17 +102,16 @@ const SellerProfile = () => {
         phone: formData.phone,
       });
 
-      // Optimistically update or use response data
-      const updatedSeller = res.data?.seller || res.data || res;
+      const updated = res.data?.seller || res.data || res;
       
       setProfile((prev) => ({
         ...prev,
-        name: updatedSeller.name,
-        phone: updatedSeller.phone,
+        name: updated.name,
+        phone: updated.phone,
       }));
 
       setIsEditing(false);
-      triggerMsg("Profile updated successfully ✅", "success");
+      triggerMsg("Profile updated successfully ", "success");
     } catch (err) {
       triggerMsg(
         err?.response?.data?.message || "Failed to update profile",
@@ -109,7 +124,6 @@ const SellerProfile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("sellerId");
-    window.dispatchEvent(new Event("storage"));
     router.push("/sellerlogin");
   };
 
@@ -119,7 +133,7 @@ const SellerProfile = () => {
         <Sidebar />
         <div className="bs-profile-shell">
           <div className="loading-container">
-            <h2>Initialising profile…</h2>
+            <h2 className="loading-text">Initialising Profile Details...</h2>
           </div>
         </div>
       </div>
@@ -142,10 +156,22 @@ const SellerProfile = () => {
         {!isEditing ? (
           <div className="bs-card profile-view-card">
             <div className="profile-info-group">
-              <p><strong>Business Name:</strong> {profile.name}</p>
-              <p><strong>Login Email:</strong> {profile.email}</p>
-              <p><strong>Contact Number:</strong> {profile.phone}</p>
-              <p><strong>Primary Location:</strong> {profile.location || "Not specified"}</p>
+              <div className="info-row">
+                <span className="info-label">Business Name:</span>
+                <span className="info-value">{profile.name}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Login Email:</span>
+                <span className="info-value">{profile.email}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Contact Number:</span>
+                <span className="info-value">{profile.phone}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Primary Location:</span>
+                <span className="info-value">{profile.location}</span>
+              </div>
             </div>
 
             <div className="profile-actions">
@@ -168,7 +194,7 @@ const SellerProfile = () => {
             <div className="input-field">
               <label>Full Name / Business Name</label>
               <input
-                name="name"
+                type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -176,9 +202,9 @@ const SellerProfile = () => {
             </div>
 
             <div className="input-field">
-              <label>Email Address (Immutable)</label>
+              <label>Email Address</label>
               <input
-                name="email"
+                type="email"
                 value={formData.email}
                 disabled
                 className="disabled-input"
@@ -188,7 +214,7 @@ const SellerProfile = () => {
             <div className="input-field">
               <label>Phone Number</label>
               <input
-                name="phone"
+                type="text"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 required
@@ -197,7 +223,7 @@ const SellerProfile = () => {
 
             <div className="form-buttons">
               <button type="submit" className="bs-btn bs-btn--primary" disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? "Saving Changes..." : "Save Changes"}
               </button>
               <button type="button" className="bs-btn bs-btn--ghost" onClick={() => setIsEditing(false)}>
                 Cancel

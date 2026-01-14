@@ -1,27 +1,42 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 export const uploadToCloudinary = (file, folder) => {
-  return new Promise(async (resolve, reject) => {
-    // Convert the file to a buffer for upload
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+  // Try both prefixed and non-prefixed versions
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    cloudinary.uploader.upload_stream(
-      { folder: folder, resource_type: "auto" },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
+  if (!cloudName) {
+    throw new Error("Cloudinary Cloud Name is missing in .env. Ensure CLOUDINARY_CLOUD_NAME is set.");
+  }
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+  });
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { 
+          folder: folder, 
+          resource_type: "auto",
+          chunk_size: 7000000 
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
         }
-        resolve(result);
-      }
-    ).end(buffer);
+      );
+
+      uploadStream.end(buffer);
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 

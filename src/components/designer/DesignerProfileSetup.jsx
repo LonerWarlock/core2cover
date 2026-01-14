@@ -80,7 +80,7 @@ const DesignerProfileSetup = () => {
 
       await saveDesignerProfile(formData);
 
-      // ✅ next step
+      //  next step
       router.push("/designerportfolio");
     } catch (err) {
       console.error("PROFILE SETUP ERROR:", err);

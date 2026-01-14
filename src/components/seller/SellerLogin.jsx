@@ -22,6 +22,8 @@ const SellerLogin = () => {
       return;
     }
 
+    e.preventDefault();
+
     try {
       const res = await sellerLogin({ email, password });
       localStorage.setItem("sellerId", res.data.seller.id);

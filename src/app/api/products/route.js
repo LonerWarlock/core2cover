@@ -33,11 +33,11 @@ export async function GET(request) {
         description: p.description,
         availability: p.availability,
         productType: p.productType,
-        images: p.images, // Returns full Cloudinary URLs
+        images: p.images, 
         video: p.video,
         sellerId: p.sellerId,
-        seller: p.seller.name,
-        sellerBusiness: p.seller.business,
+        seller: p.seller?.name || "Verified Seller",
+        sellerBusiness: p.seller?.business || null,
         avgRating: Number(avgRating.toFixed(1)),
         ratingCount: count,
       };

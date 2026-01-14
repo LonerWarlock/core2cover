@@ -69,7 +69,7 @@ const BusinessDetails = () => {
         gst: business.gst,
       });
 
-      triggerMsg("Business details saved successfully ✅", "success");
+      triggerMsg("Business details saved successfully ", "success");
       
       // Navigate after a short delay so user can see the success message
       setTimeout(() => {
