@@ -170,10 +170,16 @@
   /* Layout changes for Dashboard view on tablet/mobile */
   .ms-root .bs-layout-root {
     padding-top: 20px;
+    padding-left: 201px;
   }
 }
 
 @media (max-width: 500px) {
+  .ms-root .bs-layout-root {
+    padding-top: 80px;
+    padding-left: 0px;
+  }
+
   .bs-layout-root {
     padding: 20px 10px;
     background-color: var(--white); /* Seamless look for mobile */

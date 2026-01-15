@@ -177,6 +177,10 @@
 }
 
 @media (max-width: 480px) {
+  .delivery-container {
+    padding-top: 100px;
+  }
+
   .delivery-card h2 {
     font-size: 22px;
   }

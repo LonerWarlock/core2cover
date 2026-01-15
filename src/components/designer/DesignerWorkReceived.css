@@ -545,7 +545,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -583,6 +583,7 @@
 .reviews-scroll-area::-webkit-scrollbar {
   width: 6px;
 }
+
 .reviews-scroll-area::-webkit-scrollbar-thumb {
   background: var(--green-light);
   border-radius: 10px;
@@ -609,7 +610,8 @@
 }
 
 .review-header strong {
-  color: #f59e0b; /* Gold for stars */
+  color: #f59e0b;
+  /* Gold for stars */
   font-size: 1.1rem;
   background: rgba(245, 158, 11, 0.1);
   padding: 2px 8px;
@@ -671,7 +673,7 @@
 
 /* Textarea for the Rating Form */
 .c2c-dwrx-modal-box textarea {
-  width: 100%;
+  width: 94%;
   min-height: 120px;
   padding: 15px;
   border-radius: 12px;
@@ -695,6 +697,7 @@
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 12px;
+  align-items: end;
 }
 
 .cancel-btn {
@@ -705,6 +708,7 @@
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
+  height: 48px;
 }
 
 .full-width {
@@ -749,3 +753,104 @@
   color: var(--text-dark);
 }
 
+/* =========================================
+   SUBMIT RATING BUTTON STYLING
+========================================= */
+
+.c2c-dwrx-complete {
+  /* Layout & Sizing */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  /* Full width for mobile-first accessibility */
+  max-width: 200px;
+  /* Constraints size on desktop */
+  padding: 14px 24px;
+  margin-top: 15px;
+
+  /* Typography */
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  /* Colors & Theme */
+  color: #ffffff;
+  background: linear-gradient(135deg, #91a56e, #606e52);
+  /* Project theme colors */
+  border: none;
+  border-radius: 12px;
+
+  /* Interaction & Performance */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(96, 110, 82, 0.25);
+  outline: none;
+}
+
+/* Hover & Active States */
+.c2c-dwrx-complete:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px rgba(96, 110, 82, 0.35);
+}
+
+.c2c-dwrx-complete:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Loading & Disabled States */
+.c2c-dwrx-complete:disabled {
+  background: #d1d9c5;
+  /* Muted sage for disabled state */
+  color: #8f8b84;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.de-navigation-top {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.de-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: var(--green-dark);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.de-back-btn:hover {
+  background: var(--green-light);
+  border-color: var(--green-mid);
+  transform: translateX(-5px); /* Subtle nudge to the left */
+}
+
+.de-back-btn svg {
+  font-size: 16px;
+}
+
+/* Ensure responsiveness for mobile */
+@media (max-width: 768px) {
+  .de-navigation-top {
+    padding: 0 15px;
+    margin-bottom: 15px;
+  }
+  
+  .de-back-btn {
+    /* width: 100%;  */
+    justify-content: center;
+  }
+}

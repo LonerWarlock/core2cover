@@ -13,6 +13,7 @@ import {
   FaCalendarAlt,
   FaRupeeSign,
   FaStar,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { LuMapPin } from "react-icons/lu";
 import {
@@ -21,13 +22,17 @@ import {
 } from "../../api/designer";
 import api from "../../api/axios";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
-import MessageBox from "../ui/MessageBox"; // Ensure this path is correct
+import MessageBox from "../ui/MessageBox";
+import { useRouter } from "next/navigation";
+
 
 const BrandBold = () => (
   <span className="brand brand-bold">Core2Cover</span>
 );
 
 const DesignerWorkReceived = () => {
+  const router = useRouter();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -208,10 +213,18 @@ const DesignerWorkReceived = () => {
       </header>
 
       <div className="c2c-dwrx-page">
+
+        <div className="de-navigation-top de-reveal">
+          <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
+            <FaArrowLeft /> Back to Dashboard
+          </button>
+        </div>
+
         <div className="c2c-dwrx-header c2c-anim-reveal">
           <h1 className="c2c-dwrx-title">Work Requests</h1>
           <p className="c2c-dwrx-sub">Premium client leads curated exclusively for you.</p>
         </div>
+
 
         <div className="c2c-dwrx-job-list">
           {loading && <p style={{ padding: 20 }}>Loading work requests...</p>}
@@ -308,11 +321,22 @@ const DesignerWorkReceived = () => {
                 <FaStar key={n} className={n <= tempStars ? "star-active" : "star-inactive"} onClick={() => setTempStars(n)} />
               ))}
             </div>
-            <textarea placeholder="Write a review..." value={tempReview} onChange={(e) => setTempReview(e.target.value)} />
+            <textarea placeholder="Write a review..." className="review" value={tempReview} onChange={(e) => setTempReview(e.target.value)} />
             <div className="modal-actions">
               <button onClick={closeRateModal} className="cancel-btn">Cancel</button>
-              <button className="c2c-dwrx-complete" onClick={submitUserRating} disabled={submitting}>
-                {submitting ? "Saving..." : "Submit Rating"}
+              <button
+                className="c2c-dwrx-complete"
+                onClick={submitUserRating}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <span className="button-spinner"></span>
+                    Saving...
+                  </>
+                ) : (
+                  "Submit Rating"
+                )}
               </button>
             </div>
           </div>

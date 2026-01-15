@@ -13,7 +13,10 @@ import {
 } from "../../api/designer";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 // 1. Import your MessageBox component
-import MessageBox from "../ui/MessageBox"; 
+import MessageBox from "../ui/MessageBox";
+import {
+  FaArrowLeft,
+} from "react-icons/fa";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
@@ -124,7 +127,7 @@ const DesignerEditProfile = () => {
 
       // 3. Trigger Success Message instead of alert
       triggerMsg("Profile updated successfully", "success");
-      
+
       // Delay redirect slightly so user can see the message
       setTimeout(() => {
         router.push("/designerdashboard");
@@ -142,10 +145,10 @@ const DesignerEditProfile = () => {
     <>
       {/* 4. Render MessageBox */}
       {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
       )}
 
@@ -186,6 +189,11 @@ const DesignerEditProfile = () => {
         </div>
       </header>
 
+      <div className="de-navigation-top de-reveal">
+        <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
+          <FaArrowLeft /> Back to Dashboard
+        </button>
+      </div>
       <div className="dep-page">
         <div className="dep-container dep-reveal">
           <h1 className="dep-title">Edit Profile</h1>

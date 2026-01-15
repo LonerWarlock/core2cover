@@ -12,6 +12,7 @@ import {
   FaPlus,
   FaTrashAlt,
   FaSave,
+  FaArrowLeft,
 } from "react-icons/fa";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png"
 import api from "../../api/axios"; // Use your configured axios instance
@@ -49,9 +50,9 @@ const DesignerExperience = () => {
       .then((res) => {
         // Map data to include previews for existing images
         const mapped = res.data.map(w => ({
-            ...w,
-            preview: w.image, // Cloudinary URL
-            isNew: false
+          ...w,
+          preview: w.image, // Cloudinary URL
+          isNew: false
         }));
         setWorks(mapped);
       })
@@ -104,10 +105,10 @@ const DesignerExperience = () => {
     const formData = new FormData();
     formData.append("designerId", designerId);
     formData.append("description", work.description || "");
-    
+
     // Only append if it's a new file object
     if (work.image instanceof File) {
-        formData.append("image", work.image);
+      formData.append("image", work.image);
     }
 
     try {
@@ -119,10 +120,10 @@ const DesignerExperience = () => {
         res = await api.put(`/designer/portfolio/${work.id}`, formData);
       }
 
-      const updatedWork = { 
-          ...res.data.work, 
-          preview: res.data.work.image, 
-          isNew: false 
+      const updatedWork = {
+        ...res.data.work,
+        preview: res.data.work.image,
+        isNew: false
       };
 
       setWorks((prev) =>
@@ -190,6 +191,11 @@ const DesignerExperience = () => {
       </header>
 
       <div className="de-page">
+        <div className="de-navigation-top de-reveal">
+          <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
+            <FaArrowLeft /> Back to Dashboard
+          </button>
+        </div>
         <div className="de-header de-reveal">
           <h1 className="de-title">My Work Experience</h1>
           <p className="de-subtitle">Showcase your best interior & product designs.</p>
