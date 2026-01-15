@@ -496,3 +496,42 @@
     justify-content: center;
   }
 } 
+
+/* =========================================
+   PROFILE IMAGE STYLING
+========================================= */
+.profile-image-container {
+  margin-bottom: 20px;
+  display: inline-block;
+  border: 3px solid var(--green-light, #C0CCA4);
+  border-radius: 50%;
+  padding: 4px;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s var(--ease);
+}
+
+.profile-image-container:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.user-profile-img {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Verified Badge styling */
+.verified-badge {
+  background: var(--green-mid, #91A56E);
+  color: white;
+  font-size: 0.9rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  vertical-align: middle;
+  margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

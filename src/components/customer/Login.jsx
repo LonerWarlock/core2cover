@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { customerLogin } from "../../api/auth";
-import "./Login.css";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
+import { useSession, signIn } from "next-auth/react"; // Added NextAuth hooks
+import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa"; // Added FaGoogle icon
+import { customerLogin } from "../../api/auth"; //
+import "./Login.css"; //
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,16 +14,23 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const router = useRouter(); //
+  const { data: session, status } = useSession(); // Retrieve NextAuth session status
+
+  // Redirect to home if user is already authenticated via Google
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/userprofile");
+    }
+  }, [status, router]);
 
   const isEmailValid = (val) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevents the page from refreshing
+    e.preventDefault();
     setError("");
 
-    // Validation
     if (!email.trim() || !password) {
       setError("Please enter both email and password.");
       return;
@@ -39,24 +45,20 @@ export default function Login() {
       const response = await customerLogin({ email: email.trim(), password });
       const data = response?.data ?? response;
 
-      // Store Authentication Token
       if (data?.token) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.token); //
       }
 
-      // Store Customer Data
       if (data?.user) {
-        // Clear any old session data first
         localStorage.removeItem("userId");
         localStorage.removeItem("userEmail");
         localStorage.removeItem("userName");
 
-        localStorage.setItem("userId", String(data.user.id ?? ""));
-        localStorage.setItem("userEmail", data.user.email ?? "");
-        localStorage.setItem("userName", data.user.name ?? "");
+        localStorage.setItem("userId", String(data.user.id ?? "")); //
+        localStorage.setItem("userEmail", data.user.email ?? ""); //
+        localStorage.setItem("userName", data.user.name ?? ""); //
       }
 
-      // Redirect to Customer Home
       router.push("/"); 
     } catch (err) {
       const msg =
@@ -73,15 +75,11 @@ export default function Login() {
     <div className="login-page">
       <div className="login-box">
         <div className="login-header">
-          {/* logo image optionally added here */}
           <h1 className="brand-heading">Core2Cover</h1>
           <p className="login-subtitle">Welcome back! Please enter your details.</p>
         </div>
 
-        {/* CRITICAL: Added onSubmit to the form tag */}
         <form className="login-form" onSubmit={handleSubmit}>
-          
-          {/* Display Error if login fails */}
           {error && <div className="error-message" style={{ color: '#d9534f', marginBottom: '15px', fontWeight: '600' }}>{error}</div>}
 
           <div className="input-group">
@@ -89,7 +87,7 @@ export default function Login() {
             <input 
               type="email" 
               placeholder="name@example.com" 
-              value={email} // Controlled input
+              value={email}
               onChange={(e) => setEmail(e.target.value)} 
               required 
             />
@@ -101,7 +99,7 @@ export default function Login() {
               <input 
                 type={showPassword ? "text" : "password"} 
                 placeholder="••••••••" 
-                value={password} // Controlled input
+                value={password}
                 onChange={(e) => setPassword(e.target.value)} 
                 required 
               />
@@ -116,12 +114,37 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="login-utilities">
-            <Link href="/forgot-password" hidden className="forgot-link">Forgot Password?</Link>
-          </div>
-
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? "Logging in..." : "Log In"}
+          </button>
+
+          {/* Divider for Social Login */}
+          <div className="social-divider" style={{ margin: '20px 0', textAlign: 'center', color: '#8f8b84', fontSize: '0.9rem' }}>
+            <span>OR</span>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <button 
+            type="button" 
+            className="google-login-btn"
+            onClick={() => signIn("google", { callbackUrl: "/" })}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '10px',
+              border: '1px solid #eef2e6',
+              background: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <FaGoogle style={{ color: '#DB4437' }} />
+            Continue with Google
           </button>
         </form>
 
