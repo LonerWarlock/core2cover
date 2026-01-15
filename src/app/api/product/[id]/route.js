@@ -101,3 +101,37 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ message: "Delete failed" }, { status: 500 });
   }
 }
+
+export async function PATCH(request, { params }) {
+  try {
+    const resolvedParams = await params;
+    const id = Number(resolvedParams.id);
+
+    if (isNaN(id)) {
+      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+    }
+
+    // Increment the shareCount atomically
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        shareCount: {
+          increment: 1,
+        },
+      },
+      select: {
+        id: true,
+        shareCount: true,
+      }
+    });
+
+    return NextResponse.json({ 
+      message: "Share logged", 
+      shareCount: updatedProduct.shareCount 
+    }, { status: 200 });
+
+  } catch (err) {
+    console.error("SHARE_LOG_ERROR:", err);
+    return NextResponse.json({ message: "Failed to log share" }, { status: 500 });
+  }
+}

@@ -193,6 +193,7 @@ model Product {
   createdAt    DateTime @default(now())
   seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   ratings      Rating[]
+  shareCount   Int      @default(0)
 }
 
 /// =========================

@@ -26,13 +26,21 @@ const DesignerLogin = () => {
     setLoading(true);
 
     try {
-      const data = await designerLogin({
+      // Axios returns the server response in the .data property
+      const res = await designerLogin({
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
 
-      localStorage.setItem("designerId", data.designer.id);
-      router.push("/designerdashboard");
+      // res.data is the JSON object returned by your POST route
+      const loginData = res.data;
+
+      if (loginData?.designer?.id) {
+        localStorage.setItem("designerId", loginData.designer.id);
+        router.push("/designerdashboard");
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (err) {
       console.error("DESIGNER LOGIN ERROR:", err);
       setError(err?.response?.data?.message || "Invalid email or password");

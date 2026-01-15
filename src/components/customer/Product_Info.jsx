@@ -9,7 +9,7 @@ import sample from "../../assets/images/sample.jpg";
 import { addToCart } from "../../utils/cart";
 import api from "../../api/axios";
 import Image from "next/image";
-import { FaArrowLeft } from "react-icons/fa"; // Imported for the back button icon
+import { FaArrowLeft, FaShareAlt, FaTimes } from "react-icons/fa";
 
 const ProductInfo = () => {
   const router = useRouter();
@@ -19,7 +19,21 @@ const ProductInfo = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [descExpanded, setDescExpanded] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState(null); // Added state for thumbnail selection
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const fullscreenRef = React.useRef(null);
+
+  /* FULLSCREEN LOGIC */
+  const openFullscreen = () => setIsFullscreen(true);
+  const closeFullscreen = () => setIsFullscreen(false);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    if (isFullscreen) window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isFullscreen]);
 
   /* FETCH PRODUCT */
   useEffect(() => {
@@ -30,7 +44,6 @@ const ProductInfo = () => {
       .get(`/product/${productId}`)
       .then((res) => {
         setProduct(res.data || null);
-        // Set initial media if available
         if (res.data?.images?.length > 0) {
           setSelectedMedia({
             type: "image",
@@ -54,8 +67,7 @@ const ProductInfo = () => {
     description = "",
   } = product || {};
 
-  const resolvedSeller =
-    typeof seller === "string" ? seller : seller?.name || "Not specified";
+  const resolvedSeller = typeof seller === "string" ? seller : seller?.name || "Not specified";
 
   /* DESCRIPTION LOGIC */
   const descriptionWords = useMemo(
@@ -87,11 +99,10 @@ const ProductInfo = () => {
     return list;
   }, [images, video]);
 
-  // Use selectedMedia if user clicked a thumb, otherwise use first in list
   const activeMedia = selectedMedia || (mediaList.length ? mediaList[0] : null);
 
-  /* REVIEWS */
-  const [, setReviews] = useState([]);
+  /* REVIEWS STATE */
+  const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
 
@@ -110,24 +121,19 @@ const ProductInfo = () => {
   /* ACTIONS */
   const handleBuyNow = () => {
     if (!product) return;
-
     const checkoutItem = {
       materialId: product.id,
       supplierId: product.sellerId,
-      name: product.title, // API returns product.name as 'title'
+      name: product.title,
       supplier: product.seller,
       amountPerTrip: Number(product.price),
       image: product.images?.[0] || "",
-
-      // FIX: Map directly from the product object (already flattened by API)
       shippingChargeType: product.shippingChargeType || "free",
       shippingCharge: Number(product.shippingCharge || 0),
       installationAvailable: product.installationAvailable || "no",
       installationCharge: Number(product.installationCharge || 0),
-
       quantity: 1,
     };
-
     localStorage.setItem("singleCheckoutItem", JSON.stringify(checkoutItem));
     router.push("/checkout");
   };
@@ -150,27 +156,33 @@ const ProductInfo = () => {
     alert("Added to cart");
   };
 
-  if (loading)
-    return (
-      <>
-        <Navbar />
-        <p style={{ padding: 80 }}>Loading...</p>
-      </>
-    );
+  const handleShare = async () => {
+    if (!product) return;
+    const shareData = {
+      title: product.title,
+      text: `Check out this ${product.title} on Core2Cover!`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        await api.patch(`/product/${productId}`);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") console.error("Share failed:", err);
+    }
+  };
 
-  if (!product)
-    return (
-      <>
-        <Navbar />
-        <p style={{ padding: 80 }}>Product not found</p>
-      </>
-    );
+  if (loading) return <><Navbar /><p style={{ padding: 80 }}>Loading...</p></>;
+  if (!product) return <><Navbar /><p style={{ padding: 80 }}>Product not found</p></>;
 
   return (
     <>
       <Navbar />
       <div className="pd-container">
-
         {/* TOP BACK BUTTON */}
         <div className="pd-top-nav" style={{ gridColumn: "1 / -1", marginBottom: "20px" }}>
           <button className="back-btn" onClick={() => router.back()}>
@@ -182,10 +194,11 @@ const ProductInfo = () => {
           {/* Main Image Box */}
           <div
             className="pd-image-box"
-            style={{ position: "relative", width: "100%", height: "400px", background: "#f9f9f9", borderRadius: "12px", overflow: "hidden" }}
+            onClick={openFullscreen}
+            style={{ position: "relative", width: "100%", height: "400px", cursor: "zoom-in" }}
           >
             {activeMedia?.type === "video" ? (
-              <video src={activeMedia.src} controls className="pd-video" style={{ width: "100%", height: "100%" }} />
+              <video src={activeMedia.src} controls className="pd-video" />
             ) : (
               <Image
                 src={activeMedia?.src || sample.src}
@@ -205,13 +218,9 @@ const ProductInfo = () => {
                 className={`pd-thumb-container ${activeMedia?.src === m.src ? "active-thumb" : ""}`}
                 onClick={() => setSelectedMedia(m)}
                 style={{
-                  position: "relative",
-                  width: "80px",
-                  height: "80px",
-                  cursor: "pointer",
+                  position: "relative", width: "80px", height: "80px", cursor: "pointer",
                   border: activeMedia?.src === m.src ? "2px solid var(--green-dark)" : "1px solid #ddd",
-                  borderRadius: "8px",
-                  overflow: "hidden"
+                  borderRadius: "8px", overflow: "hidden"
                 }}
               >
                 <Image
@@ -263,24 +272,110 @@ const ProductInfo = () => {
             <p className="pd-price">₹{price.toLocaleString()}</p>
             <p style={{ fontSize: "0.8rem", color: "#8f8b84", marginBottom: "20px" }}>Inclusive of all taxes</p>
 
-            <button className="pd-btn pd-btn-buy" onClick={handleBuyNow}>
-              Buy Now
-            </button>
-            <button className="pd-btn pd-btn-cart" onClick={handleAddToCart}>
-              Add to Cart
+            <button
+              className="pd-btn pd-btn-share"
+              onClick={handleShare}
+              style={{ width: "50px", background: "#f3f4f6", color: "var(--green-dark)", display: "flex", justifyContent: "center", alignItems: "center" }}
+            >
+              <FaShareAlt />
             </button>
 
-            {/* IN-BOX BACK BUTTON AS WELL */}
-            <button
-              className="pd-btn pd-btn-back"
-              onClick={() => router.back()}
-              style={{ marginTop: "10px", background: "#f3f4f6", color: "#4b5563" }}
-            >
-              Go Back
-            </button>
+            <button className="pd-btn pd-btn-buy" onClick={handleBuyNow}>Buy Now</button>
+            <button className="pd-btn pd-btn-cart" onClick={handleAddToCart}>Add to Cart</button>
+            <button className="pd-btn pd-btn-back" onClick={() => router.back()} style={{ marginTop: "10px", background: "#f3f4f6", color: "#4b5563" }}>Go Back</button>
           </div>
         </div>
       </div>
+
+      {/* RATINGS & REVIEWS SECTION */}
+      {/* RATINGS & REVIEWS SECTION */}
+      <section className="pd-reviews-section">
+        <div className="pd-reviews-container">
+          <h2 className="pd-section-title">Customer Reviews</h2>
+
+          <div className="pd-reviews-layout">
+            {/* Left Column: The Amazon-style Summary */}
+            <div className="pd-rating-summary">
+              <div className="pd-summary-card">
+                <div className="pd-summary-header">
+                  <span className="pd-big-rating">{avgRating.toFixed(1)}</span>
+                  <div className="pd-summary-stars">
+                    {"★".repeat(Math.round(avgRating))}
+                    {"☆".repeat(5 - Math.round(avgRating))}
+                  </div>
+                </div>
+                <p className="pd-summary-total">{ratingCount} global ratings</p>
+
+                {/* Visual Star Bars (Static for UI feel) */}
+                <div className="pd-rating-bars">
+                  {[5, 4, 3, 2, 1].map((star) => (
+                    <div key={star} className="pd-bar-row">
+                      <span>{star} star</span>
+                      <div className="pd-bar-bg">
+                        <div
+                          className="pd-bar-fill"
+                          style={{ width: ratingCount > 0 ? `${(reviews.filter(r => r.stars === star).length / ratingCount) * 100}%` : '0%' }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: The Review Feed */}
+            <div className="pd-reviews-list">
+              <h3 className="pd-list-heading">Top reviews from India</h3>
+              {reviews.length > 0 ? (
+                reviews.map((review, index) => (
+                  <div key={index} className="pd-review-card">
+                    <div className="pd-review-user">
+                      <div className="pd-user-avatar">
+                        {review.userName?.charAt(0) || "U"}
+                      </div>
+                      <span className="pd-user-name">{review.userName || "Verified Customer"}</span>
+                    </div>
+
+                    <div className="pd-review-meta">
+                      <span className="pd-review-stars">{"★".repeat(review.stars)}</span>
+                      <span className="pd-review-headline">Verified Purchase</span>
+                    </div>
+
+                    <p className="pd-review-date">
+                      Reviewed on {new Date(review.createdAt).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </p>
+
+                    <p className="pd-review-body">{review.comment || review.review}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="pd-no-reviews">
+                  <p>There are no reviews yet. Be the first to review this product!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FULLSCREEN OVERLAY */}
+      {isFullscreen && (
+        <div className="pd-fullscreen-overlay" ref={fullscreenRef}>
+          <button className="pd-fullscreen-close" onClick={closeFullscreen}><FaTimes /></button>
+          <div className="pd-fullscreen-content">
+            {activeMedia?.type === "video" ? (
+              <video src={activeMedia.src} controls autoPlay className="pd-fullscreen-media" />
+            ) : (
+              <Image src={activeMedia?.src || sample.src} alt="Fullscreen Product" fill style={{ objectFit: "contain" }} />
+            )}
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
