@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
   try {
-    // Await the params Promise to access the id
     const resolvedParams = await params;
     const designerId = Number(resolvedParams.id);
 
@@ -13,6 +12,19 @@ export async function GET(request, { params }) {
 
     const ratings = await prisma.designerRating.findMany({
       where: { designerId },
+      include: {
+        // Fix: Go through hireRequest to reach the user
+        hireRequest: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                image: true
+              }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: "desc" },
     });
 

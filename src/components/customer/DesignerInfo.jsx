@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useRef } from "react";
 import "./DesignerInfo.css";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -16,21 +16,50 @@ import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
 
 /* ============================================================
-   HELPERS (Stars and Text)
+    HELPERS
    ============================================================ */
+
+/**
+ * Injects a line break after every N words to prevent wall-of-text
+ */
+const formatTextWithBreaks = (text, wordLimit = 20) => {
+  if (!text) return null;
+  const words = text.split(/\s+/);
+  
+  // If text is short, return as is
+  if (words.length <= wordLimit) return text;
+
+  const chunks = [];
+  for (let i = 0; i < words.length; i += wordLimit) {
+    chunks.push(words.slice(i, i + wordLimit).join(" "));
+  }
+
+  return chunks.map((chunk, index) => (
+    <React.Fragment key={index}>
+      {chunk}
+      {index < chunks.length - 1 && <><br /><br /></>}
+    </React.Fragment>
+  ));
+};
+
 const ExpandableText = ({ text = "", limit = 160 }) => {
   const [expanded, setExpanded] = useState(false);
   if (!text) return null;
   const isLong = text.length > limit;
+
   return (
-    <p className="expandable-text">
-      {expanded || !isLong ? text : `${text.slice(0, limit)}...`}
+    <div className="bio-container">
+      <div className={`expandable-text ${expanded ? "expanded" : ""}`}>
+        {expanded || !isLong 
+          ? formatTextWithBreaks(text) 
+          : `${text.slice(0, limit)}...`}
+      </div>
       {isLong && (
         <span className="see-more-btn" onClick={() => setExpanded(!expanded)}>
           {expanded ? " See less" : " See more"}
         </span>
       )}
-    </p>
+    </div>
   );
 };
 
@@ -49,7 +78,7 @@ const renderStars = (avg) => {
 };
 
 /* ============================================================
-   1. MAIN CONTENT COMPONENT
+    1. MAIN CONTENT COMPONENT
    ============================================================ */
 const DesignerInfoContent = () => {
   const searchParams = useSearchParams();
@@ -59,8 +88,8 @@ const DesignerInfoContent = () => {
   const [designer, setDesigner] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
   const [selectedWorkIndex, setSelectedWorkIndex] = useState(-1);
-  const [ratings, setRatings] = useState([]); // Stores the raw array from API
-  const [stats, setStats] = useState({ average: 0, total: 0 }); // Calculated stats
+  const [ratings, setRatings] = useState([]);
+  const [stats, setStats] = useState({ average: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [hireLoading, setHireLoading] = useState(false);
@@ -83,15 +112,12 @@ const DesignerInfoContent = () => {
           fetch(`/api/designer/${designerId}/ratings`)
         ]);
         const info = await infoRes.json();
-        const ratingsData = await ratingsRes.json(); // This is the array from your GET route
+        const ratingsData = await ratingsRes.json();
 
         setDesigner(info);
-        
-        // Handle Ratings Data
         const ratingsArray = Array.isArray(ratingsData) ? ratingsData : [];
         setRatings(ratingsArray);
 
-        // Calculate Stats locally
         if (ratingsArray.length > 0) {
           const sum = ratingsArray.reduce((acc, curr) => acc + curr.stars, 0);
           setStats({
@@ -131,7 +157,7 @@ const DesignerInfoContent = () => {
   const handleHireSubmit = async (e) => {
     e.preventDefault();
     const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
-    
+
     if (!userId) {
       triggerMsg("Please login to hire a designer", "error");
       return;
@@ -139,12 +165,12 @@ const DesignerInfoContent = () => {
 
     try {
       setHireLoading(true);
-      await hireDesigner(designerId, { 
-        ...hireForm, 
-        userId: Number(userId), 
-        budget: Number(hireForm.budget) 
+      await hireDesigner(designerId, {
+        ...hireForm,
+        userId: Number(userId),
+        budget: Number(hireForm.budget)
       });
-      
+
       triggerMsg("Request sent successfully! The designer will contact you soon.", "success");
       setShowForm(false);
       setHireForm({
@@ -165,10 +191,10 @@ const DesignerInfoContent = () => {
   return (
     <div className="designer-info-page">
       {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
       )}
 
@@ -184,19 +210,19 @@ const DesignerInfoContent = () => {
               width={150} height={150} className="designer-photo" alt="profile"
             />
             <div className={`availability-pill ${isAvailable ? "available" : "unavailable"}`}>
-               {isAvailable ? <FaCheckCircle /> : <FaMinusCircle />}
-               {designer.availability || "Unknown"}
+              {isAvailable ? <FaCheckCircle /> : <FaMinusCircle />}
+              {designer.availability || "Unknown"}
             </div>
           </div>
 
           <h1 className="designer-name">{designer.fullname}</h1>
           <p className="designer-location"><LuMapPin /> {designer.location}</p>
-          
+
           {designer.profile?.portfolio && (
-            <a 
-              href={designer.profile.portfolio.startsWith('http') ? designer.profile.portfolio : `https://${designer.profile.portfolio}`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href={designer.profile.portfolio.startsWith('http') ? designer.profile.portfolio : `https://${designer.profile.portfolio}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="portfolio-external-link"
             >
               <FaExternalLinkAlt /> View Detailed Portfolio
@@ -207,10 +233,12 @@ const DesignerInfoContent = () => {
             {renderStars(stats.average)}
             <span>({stats.total} Reviews)</span>
           </div>
+          
+          {/* Bio with 20-word line breaks */}
           <ExpandableText text={designer.profile?.bio} />
 
-          <button 
-            className={`hire-btn ${!isAvailable ? "disabled" : ""}`} 
+          <button
+            className={`hire-btn ${!isAvailable ? "disabled" : ""}`}
             onClick={() => isAvailable && setShowForm(true)}
             disabled={!isAvailable}
           >
@@ -236,7 +264,6 @@ const DesignerInfoContent = () => {
         </div>
       </section>
 
-      {/* FEEDBACK SECTION - FIXED MAPPING */}
       <section className="designer-reviews-section">
         <div className="section-header">
           <h2>Client Feedback</h2>
@@ -249,28 +276,34 @@ const DesignerInfoContent = () => {
         </div>
         <div className="reviews-container">
           {ratings.length > 0 ? (
-            ratings.map((rev, index) => (
-              <div key={rev.id || index} className="individual-review-card">
-                <div className="rev-header">
-                  <div className="rev-user-meta">
-                    <div className="rev-avatar">{(rev.reviewerName || "C")[0].toUpperCase()}</div>
-                    <div className="rev-details">
-                      <span className="reviewer-name">{rev.reviewerName || "Verified Client"}</span>
-                      <span className="review-date">{new Date(rev.createdAt).toLocaleDateString('en-GB')}</span>
+            ratings.map((rev, index) => {
+              const clientName = rev.hireRequest?.user?.name || rev.reviewerName || "Verified Client";
+
+              return (
+                <div key={rev.id || index} className="individual-review-card">
+                  <div className="rev-header">
+                    <div className="rev-user-meta">
+                      <div className="rev-avatar">{clientName[0].toUpperCase()}</div>
+                      <div className="rev-details">
+                        <span className="reviewer-name">{clientName}</span>
+                        <span className="review-date">
+                          {new Date(rev.createdAt).toLocaleDateString('en-GB')}
+                        </span>
+                      </div>
                     </div>
+                    {renderStars(rev.stars)}
                   </div>
-                  {renderStars(rev.stars)}
+                  {/* Reviews also get the 20-word break formatting */}
+                  <div className="rev-text">"{formatTextWithBreaks(rev.review) || "No written comment provided."}"</div>
                 </div>
-                <p className="rev-text">"{rev.review || "No written comment provided."}"</p>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p className="no-reviews">No client feedback available yet.</p>
           )}
-        </div>
+        </div>  
       </section>
 
-      {/* LIGHTBOX & MODAL REMAIN SAME */}
       {isLightboxOpen && (
         <div className="lightbox-overlay" onClick={() => setIsLightboxOpen(false)}>
           <button className="lightbox-close" onClick={() => setIsLightboxOpen(false)}><FaTimes /></button>

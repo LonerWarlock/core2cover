@@ -627,3 +627,25 @@ body {
     transform: none !important;
     box-shadow: none !important;
 }
+
+.expandable-text-container {
+  margin: 15px 0;
+}
+
+.expandable-text {
+  line-height: 1.6;
+  color: var(--text-main, #333);
+  white-space: pre-line; /* Ensures manual breaks are respected */
+}
+
+.see-more-btn {
+  color: var(--green-mid, #6b7c5c);
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.see-more-btn:hover {
+  text-decoration: underline;
+}
