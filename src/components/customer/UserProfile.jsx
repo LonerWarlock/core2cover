@@ -2,44 +2,53 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react"; // Import NextAuth hooks
+import Image from "next/image"; // Import Next.js Image component
 import "./UserProfile.css";
 import Navbar from "./Navbar";
 import MyOrders from "./MyOrders";
 import MyHiredDesigners from "./MyHiredDesigners";
 import { getUserByEmail, updateUserProfile } from "../../api/user";
-import { getClientHiredDesigners } from "../../api/designer"; // Import this
+import { getClientHiredDesigners } from "../../api/designer";
 import { FaStar } from "react-icons/fa";
 
 const UserProfile = () => {
   const router = useRouter();
+  const { data: session, status } = useSession(); // Get NextAuth session
   const [activeTab, setActiveTab] = useState("orders");
   const [user, setUser] = useState({ name: "", email: "", phone: "", address: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(user);
-  const [designers, setDesigners] = useState([]); // To calculate ratings
+  const [designers, setDesigners] = useState([]);
 
-  const [userEmail] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("userEmail");
-    }
+  // Determine current user ID and Email from either NextAuth or LocalStorage
+  const effectiveEmail = useMemo(() => {
+    if (status === "authenticated") return session.user.email;
+    if (typeof window !== "undefined") return localStorage.getItem("userEmail");
     return null;
-  });
+  }, [session, status]);
 
-  const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+  const effectiveUserId = useMemo(() => {
+    if (status === "authenticated") return session.user.id;
+    if (typeof window !== "undefined") return localStorage.getItem("userId");
+    return null;
+  }, [session, status]);
 
   useEffect(() => {
-    if (userEmail === null) return;
-    if (!userEmail) {
+    if (status === "loading") return;
+
+    // Redirect if no session and no local data
+    if (!effectiveEmail && status === "unauthenticated") {
       router.push("/login");
       return;
     }
 
     const loadData = async () => {
       try {
-        // Fetch user profile and hired designers (for ratings) in parallel
+        // Fetch profile and designers in parallel
         const [userRes, designersRes] = await Promise.all([
-          getUserByEmail(userEmail),
-          getClientHiredDesigners({ userId })
+          getUserByEmail(effectiveEmail),
+          getClientHiredDesigners({ userId: effectiveUserId })
         ]);
 
         setUser(userRes.data);
@@ -49,10 +58,12 @@ const UserProfile = () => {
         console.error("Failed to load profile data", err);
       }
     };
-    loadData();
-  }, [userEmail, userId, router]);
 
-  // Calculate Rating Summary for the Profile Card
+    if (effectiveEmail) {
+      loadData();
+    }
+  }, [effectiveEmail, effectiveUserId, router, status]);
+
   const ratingStats = useMemo(() => {
     const feedback = designers.filter((d) => d.userRating);
     if (feedback.length === 0) return { avg: null, count: 0 };
@@ -64,8 +75,12 @@ const UserProfile = () => {
   }, [designers]);
 
   const handleLogout = () => {
-    localStorage.clear();
-    router.push("/");
+    if (status === "authenticated") {
+      signOut({ callbackUrl: "/" }); // Logout from Google
+    } else {
+      localStorage.clear();
+      router.push("/");
+    }
   };
 
   const handleChange = (e) => {
@@ -75,7 +90,7 @@ const UserProfile = () => {
 
   const handleSave = async () => {
     try {
-      await updateUserProfile(userEmail, {
+      await updateUserProfile(effectiveEmail, {
         name: formData.name,
         phone: formData.phone,
         address: formData.address,
@@ -99,8 +114,21 @@ const UserProfile = () => {
 
         <div className="profile-info-card">
           <div className="profile-card-content">
-            {/* Left Side: User Details */}
             <div className="profile-details-column">
+              {/* Profile Image with fixed width/height to avoid Next.js error */}
+              {session?.user?.image && (
+                <div className="profile-image-container">
+                  <Image 
+                    src={session.user.image} 
+                    alt="Profile" 
+                    width={80} 
+                    height={80} 
+                    className="user-profile-img"
+                    unoptimized={true} 
+                  />
+                </div>
+              )}
+
               {isEditing ? (
                 <div className="edit-form">
                   <input type="text" name="name" value={formData.name} onChange={handleChange} className="up-profile-input" placeholder="Name" />
@@ -114,7 +142,7 @@ const UserProfile = () => {
               ) : (
                 <>
                   <div className="user-info-display">
-                    <h2>{user.name}</h2>
+                    <h2>{user.name} {status === "authenticated" && <span className="verified-badge">✓</span>}</h2>
                     <p className="user-email">{user.email}</p>
                     <div className="contact-info">
                       <p><strong>Phone:</strong> {user.phone || "—"}</p>
@@ -129,7 +157,6 @@ const UserProfile = () => {
               )}
             </div>
 
-            {/* Right Side: Rating Summary */}
             <div className="profile-rating-summary-column">
               <div className="rating-summary-badge">
                 <span className="summary-label">Client Reputation</span>
@@ -149,7 +176,6 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* TAB NAVIGATION */}
         <div className="profile-tabs-container">
           <button className={`tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>
             My Orders
@@ -159,7 +185,6 @@ const UserProfile = () => {
           </button>
         </div>
 
-        {/* TAB CONTENT */}
         <div className="tab-content-area">
           {activeTab === "orders" ? <MyOrders /> : <MyHiredDesigners />}
         </div>

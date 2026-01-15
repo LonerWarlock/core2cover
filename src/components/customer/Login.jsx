@@ -1,5 +1,7 @@
 "use client";
 
+import { signIn } from "next-auth/react";
+import { FcGoogle } from "react-icons/fc"; // npm install react-icons
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,8 +19,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const isEmailValid = (val) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  const isEmailValid = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevents the page from refreshing
@@ -57,7 +58,7 @@ export default function Login() {
       }
 
       // Redirect to Customer Home
-      router.push("/"); 
+      router.push("/");
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
@@ -75,39 +76,51 @@ export default function Login() {
         <div className="login-header">
           {/* logo image optionally added here */}
           <h1 className="brand-heading">Core2Cover</h1>
-          <p className="login-subtitle">Welcome back! Please enter your details.</p>
+          <p className="login-subtitle">
+            Welcome back! Please enter your details.
+          </p>
         </div>
 
         {/* CRITICAL: Added onSubmit to the form tag */}
         <form className="login-form" onSubmit={handleSubmit}>
-          
           {/* Display Error if login fails */}
-          {error && <div className="error-message" style={{ color: '#d9534f', marginBottom: '15px', fontWeight: '600' }}>{error}</div>}
+          {error && (
+            <div
+              className="error-message"
+              style={{
+                color: "#d9534f",
+                marginBottom: "15px",
+                fontWeight: "600",
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           <div className="input-group">
             <label>Email Address</label>
-            <input 
-              type="email" 
-              placeholder="name@example.com" 
+            <input
+              type="email"
+              placeholder="name@example.com"
               value={email} // Controlled input
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
           <div className="input-group">
             <label>Password</label>
             <div className="password-wrap">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="••••••••" 
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
                 value={password} // Controlled input
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
-              <button 
-                type="button" 
-                className="pw-toggle" 
+              <button
+                type="button"
+                className="pw-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
@@ -117,7 +130,9 @@ export default function Login() {
           </div>
 
           <div className="login-utilities">
-            <Link href="/forgot-password" hidden className="forgot-link">Forgot Password?</Link>
+            <Link href="/forgot-password" hidden className="forgot-link">
+              Forgot Password?
+            </Link>
           </div>
 
           <button type="submit" className="login-btn" disabled={loading}>
@@ -125,8 +140,16 @@ export default function Login() {
           </button>
         </form>
 
+        <button
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+          className="flex items-center justify-center w-full gap-2 p-2 mt-4 border rounded-md hover:bg-gray-50"
+        >
+          <FcGoogle size={24} />
+          <span>Continue with Google</span>
+        </button>
+
         <div className="login-footer">
-          Don't have an account? <Link href="/signup">Sign Up</Link>
+          Don&apos;t have an account? <Link href="/signup">Sign Up</Link>
         </div>
       </div>
     </div>
