@@ -50,12 +50,16 @@ export default function Checkout() {
 
     const normalized = (Array.isArray(rawItems) ? rawItems : []).map((it) => ({
       ...it,
-      // CRITICAL: Ensure all numeric fields are actual Numbers
       quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
       amountPerTrip: Number(it.amountPerTrip || it.price || 0),
-      shippingCharge: Number(it.shippingCharge || 0),
+
+      // Ensure these match the keys saved in Cart.jsx
+      shippingCharge: Number(it.shippingCharge || it.deliveryCharge || 0),
       installationCharge: Number(it.installationCharge || 0),
-      // Keep strings as lowercase for easier comparison
+
+      // CRITICAL: Preserve these strings for the useMemo logic to work
+      shippingChargeType: it.shippingChargeType || "free",
+      installationAvailable: it.installationAvailable || "no",
     }));
 
     setItems(normalized);
@@ -106,29 +110,24 @@ export default function Checkout() {
     let installationTotal = 0;
 
     items.forEach((it) => {
-      // Log each item to see why it might be zero (Open F12 Console)
-      console.log("Processing item for summary:", it);
-
       const qty = Number(it.quantity || 1);
-      const unitPrice = Number(it.amountPerTrip || it.price || 0);
       const sCharge = Number(it.shippingCharge || 0);
       const iCharge = Number(it.installationCharge || 0);
 
-      subtotal += unitPrice * qty;
+      subtotal += Number(it.amountPerTrip || 0) * qty;
 
-      // Handle Shipping - Case Insensitive
-      const isFree = String(it.shippingChargeType).toLowerCase() === "free";
-      if (!isFree && sCharge > 0) {
+      // Check if shipping is NOT free
+      const isPaidShipping = String(it.shippingChargeType).toLowerCase() !== "free";
+      if (isPaidShipping && sCharge > 0) {
         deliveryCharge += sCharge;
       }
 
-      // Handle Installation - Case Insensitive
+      // Check if installation is requested
       const hasInstallation = String(it.installationAvailable).toLowerCase() === "yes";
       if (hasInstallation && iCharge > 0) {
         installationTotal += (iCharge * qty);
       }
     });
-
     const casaCharge = Math.round(subtotal * 0.02);
     const grandTotal = subtotal + deliveryCharge + installationTotal + casaCharge;
 

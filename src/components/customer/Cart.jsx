@@ -17,7 +17,7 @@ import {
 
 const Cart = () => {
   const router = useRouter();
-  
+
   // Hydration safety state
   const [isMounted, setIsMounted] = useState(false);
   const [basketItems, setBasketItems] = useState([]);
@@ -87,30 +87,34 @@ const Cart = () => {
       CHECKOUT NAVIGATION 
   =============================== */
   const handleCheckout = () => {
-    if (!basketItems.length) {
-      alert("Your basket is currently empty.");
-      return;
-    }
+    if (!basketItems.length) return;
+
+    // Format items to match the Checkout Summary's expected keys
+    const formattedItems = basketItems.map(item => ({
+      ...item,
+      // Ensure these keys match exactly what your Checkout component reads
+      deliveryCharge: Number(item.shippingCharge || 0),
+      installationCharge: Number(item.installationCharge || 0),
+      amountPerTrip: Number(item.amountPerTrip || 0)
+    }));
 
     try {
-      localStorage.setItem("casa_cart", JSON.stringify(basketItems));
+      localStorage.setItem("casa_cart", JSON.stringify(formattedItems));
+      clearSingleCheckoutItem();
+      router.push("/checkout");
     } catch (err) {
-      console.error("Failed to save cart to localStorage", err);
+      console.error("Failed to save cart", err);
     }
-
-    clearSingleCheckoutItem();
-    router.push("/checkout");
   };
-
   // Prevent rendering the dynamic basket content until mounted on the client
   if (!isMounted) {
     return (
       <>
         <Navbar />
         <main className="cart-page">
-           <div className="cart-loading">
-             <p>Loading your shopping basket...</p>
-           </div>
+          <div className="cart-loading">
+            <p>Loading your shopping basket...</p>
+          </div>
         </main>
         <Footer />
       </>
@@ -136,8 +140,8 @@ const Cart = () => {
             {basketItems.length === 0 ? (
               <div className="cart-empty-container">
                 <p className="cart-empty">Your basket is empty.</p>
-                <button 
-                  className="continue-shopping-btn" 
+                <button
+                  className="continue-shopping-btn"
                   onClick={() => router.push('/productlisting')}
                 >
                   Continue Shopping
@@ -152,8 +156,8 @@ const Cart = () => {
                         item.image && item.image.startsWith("http")
                           ? item.image
                           : item.image
-                          ? `/${item.image}`
-                          : sample
+                            ? `/${item.image}`
+                            : sample
                       }
                       className="cart-img"
                       alt={item.name || "Product Image"}

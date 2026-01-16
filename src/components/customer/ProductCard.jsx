@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react"; // Added useState
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
 import "./ProductCard.css";
 import Sample from "../../assets/images/sample.jpg";
 import { addToCart } from "../../utils/cart";
-import MessageBox from "../ui/MessageBox"; // Import your MessageBox component
+import MessageBox from "../ui/MessageBox";
 
 const ProductCard = ({
   id,
@@ -27,8 +27,6 @@ const ProductCard = ({
   installationCharge
 }) => {
   const router = useRouter();
-  
-  // MessageBox State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   const getValidSrc = () => {
@@ -45,45 +43,46 @@ const ProductCard = ({
   const handleAddToCart = (e) => {
     e.stopPropagation();
 
+    // Resolve the seller name properly from props
+    const resolvedSellerName = typeof seller === 'string' ? seller : seller?.name;
+
     try {
       addToCart({
         materialId: id,
         supplierId: sellerId,
         name: title,
-        supplier: typeof seller === 'string' ? seller : seller?.name,
+        supplier: resolvedSellerName,
         amountPerTrip: Number(price),
-        quantity: 1,
+        trips: 1,
         image: images[0],
+        // FIX: Use the props directly instead of the non-existent 'product' object
         shippingChargeType: shippingChargeType || "free",
         shippingCharge: Number(shippingCharge || 0),
         installationAvailable: installationAvailable || "no",
         installationCharge: Number(installationCharge || 0),
       });
 
-      // Show success message
-      setMsg({ 
-        text: `${title} added to cart successfully!`, 
-        type: "success", 
-        show: true 
+      setMsg({
+        text: `${title} added to cart successfully!`,
+        type: "success",
+        show: true
       });
     } catch (error) {
-      // Show error message if cart utility fails
-      setMsg({ 
-        text: "Failed to add item to cart.", 
-        type: "error", 
-        show: true 
+      setMsg({
+        text: "Failed to add item to cart.",
+        type: "error",
+        show: true
       });
     }
   };
 
   return (
     <>
-      {/* MessageBox Implementation */}
       {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
       )}
 

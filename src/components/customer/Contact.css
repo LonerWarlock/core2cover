@@ -9,8 +9,7 @@
   --text-dark: #474747;         /* Warm charcoal */
   --text-muted: #8F8B84;        /* Muted warm gray */
 
-  --bg: linear-gradient(180deg, #F3F7EC, #E6EFD6);
-
+  --bg: linear-gradient(180deg, #fafaf8, #f1f1ec);
   --border: rgba(96,110,82,0.20);
   --shadow: 0 12px 40px rgba(96,110,82,0.14);
 

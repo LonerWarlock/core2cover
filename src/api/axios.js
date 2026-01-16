@@ -2,7 +2,8 @@ import axios from "axios";
 
 const api = axios.create({
   // This tells axios to look at the same domain/port the website is running on
-  baseURL: "/api", 
+  baseURL: "/api",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   }
@@ -21,7 +22,7 @@ api.interceptors.request.use(
       if (sellerId) config.headers["x-seller-id"] = sellerId;
       if (designerId) config.headers["x-designer-id"] = designerId; // Useful for backend validation
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -30,7 +31,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Standardised error logging
+    if (error.response?.status === 401) {
+      console.warn("Session expired or unauthorized. Redirecting to login...");
+      // Optional: Clear local storage and redirect
+      if (typeof window !== "undefined") {
+        // localStorage.clear(); 
+        // window.location.href = "/login";
+      }
+    }
     console.error("API Error Interface:", error.response?.data?.message || error.message);
     return Promise.reject(error);
   }

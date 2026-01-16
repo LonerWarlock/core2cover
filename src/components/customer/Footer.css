@@ -8,8 +8,8 @@
 .footer {
   width: 100%;
   /* Using your specific gradient theme */
-  background: radial-gradient(900px 300px at 10% 0%, #eef0ea2e, transparent 60%), 
-              linear-gradient(180deg, #ecf5d8, #e7f3cf);
+  background: radial-gradient(900px 300px at 10% 0%, #eef0ea2e, transparent 60%),
+    linear-gradient(180deg, #ecf5d8, #e7f3cf);
   color: var(--text-dark);
   padding: 0 4vw;
   font-family: sans-serif;
@@ -37,9 +37,16 @@
 }
 
 .footer-logo {
-  width: 180px;
+  width: 50px;
   height: auto;
   object-fit: contain;
+}
+
+.footer-brand span {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 
 .footer-tagline {
@@ -87,11 +94,13 @@
     height: auto;
     padding: 20px 4vw;
   }
+
   .footer-container {
     flex-direction: column;
     text-align: center;
     gap: 15px;
   }
+
   .footer-bottom {
     text-align: center;
   }
