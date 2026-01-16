@@ -308,12 +308,6 @@
   color: var(--green-dark);
 }
 
-@media (max-width: 860px) {
-  .nav-icons-desktop {
-    display: none;
-  }
-}
-
 /* Container for dropdown positioning */
 .profile-dropdown-container {
   position: relative;
@@ -428,4 +422,46 @@
 
 .pop-signout:hover {
   background: #fff5f5;
+}
+
+/* ======================================================
+   RESPONSIVE UPDATES: KEEPING DESKTOP LINKS VISIBLE
+====================================================== */
+
+@media (max-width: 860px) {
+  /* Ensure the desktop icon container stays visible */
+  .nav-icons-desktop {
+    display: flex !important; 
+    gap: 12px; /* Reduce gap to fit more items */
+    margin-right: 10px;
+  }
+
+  /* Shrink text slightly to fit the screen */
+  .nav-icon-link {
+    font-size: 0.8rem; 
+    white-space: nowrap;
+  }
+
+  /* Make the profile bubble slightly smaller for mobile balance */
+  .nav-profile-trigger {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  /* Adjust Popover to be more compact on mobile */
+  .profile-popover {
+    width: 240px;
+    right: -10px; /* Offset slightly to prevent hugging the edge */
+  }
+}
+
+@media (max-width: 600px) {
+  /* For very small screens, hide text but keep the icons */
+  
+
+  /* Ensure the Profile Bubble and Cart remain visible */
+  .nav-icons-desktop {
+    gap: 15px;
+  }
 }

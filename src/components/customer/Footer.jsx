@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
+import { FaFacebookF, FaInstagram } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
 import "./Footer.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
@@ -61,7 +62,7 @@ export default function Footer() {
             rel="noopener noreferrer"
             aria-label="Twitter"
           >
-            <FaTwitter />
+            <FaXTwitter />
           </a>
           {/* Note: Internal links like /contact usually stay in the same tab */}
           <a href="/contact" aria-label="Email">

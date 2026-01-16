@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import "./ProductCard.css";
+import "./DesignerCard.css";
 import Image from "next/image";
 import { FaStar, FaMapMarkerAlt, FaBriefcase } from "react-icons/fa";
 

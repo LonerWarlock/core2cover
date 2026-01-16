@@ -250,7 +250,7 @@ const ProductInfo = () => {
           </div>
 
           <div className="pd-description-box">
-            <p style={{ lineHeight: "1.6", color: "#474747" }}>{displayedDescription}</p>
+            <p style={{ lineHeight: "1.6", color: "#474747" }}>Description: {displayedDescription}</p>
             {isLongDescription && (
               <button
                 onClick={() => setDescExpanded(!descExpanded)}

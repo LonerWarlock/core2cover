@@ -110,7 +110,7 @@ const Navbar = () => {
             {/* DESKTOP NAV ICONS */}
             <div className="nav-icons-desktop">
               <Link href="/about" className="nav-icon-link">About Us</Link>
-              <Link href="/designers" className="nav-icon-link">Designers</Link>
+              <Link href="/designers" className="nav-icon-link designers">Designers</Link>
               <Link href="/cart" className="nav-icon-link">
                 <FaShoppingCart />
               </Link>
@@ -180,38 +180,6 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* MOBILE HAMBURGER */}
-            <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <FaTimes /> : <FaBars />}
-            </div>
-
-            {/* DRAWER MENU */}
-            <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
-              <li className="drawer-link">
-                <Link href="/about" onClick={() => setMenuOpen(false)}>About Us</Link>
-              </li>
-              <li className="drawer-link">
-                <Link href="/designers" onClick={() => setMenuOpen(false)}>Designers</Link>
-              </li>
-
-              <li className="drawer-cta">
-                <Link 
-                  href="/sellersignup" 
-                  className="seller-btn" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Become a Seller
-                </Link>
-
-                <Link 
-                  href="/designersignup" 
-                  className="seller-btn primary" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  I am a Designer
-                </Link>
-              </li>
-            </ul>
           </div>
         </div>
       </header>
