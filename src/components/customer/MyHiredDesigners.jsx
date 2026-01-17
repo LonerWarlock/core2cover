@@ -1,32 +1,38 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react"; 
 import "./MyHiredDesigners.css";
 import { LuMapPin } from "react-icons/lu";
 import { FaStar } from "react-icons/fa";
-import { getClientHiredDesigners, rateDesigner } from "../../api/designer";
+import api from "../../api/axios";
+import { rateDesigner } from "../../api/designer";
 import Image from "next/image";
+import MessageBox from "../ui/MessageBox"; // Import your custom MessageBox
 
 const MyHiredDesigners = () => {
+  const { data: session, status } = useSession();
   const [designers, setDesigners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showRating, setShowRating] = useState(false);
   const [selected, setSelected] = useState(null);
   const [ratingForm, setRatingForm] = useState({ stars: 5, review: "" });
-  const [userId, setUserId] = useState(null);
+  
+  // MessageBox State
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  useEffect(() => {
-    const storedId = localStorage.getItem("userId");
-    if (storedId) setUserId(storedId);
-    else setLoading(false);
-  }, []);
+  // Helper to trigger messages
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   const fetchHiredDesigners = async () => {
     try {
       setLoading(true);
       setError("");
-      const res = await getClientHiredDesigners({ userId });
+      // Using session-based fetching for Jerry Frostwick
+      const res = await api.get("/client/hired-designers");
       setDesigners(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setError("Failed to load hired designers");
@@ -36,8 +42,12 @@ const MyHiredDesigners = () => {
   };
 
   useEffect(() => {
-    if (userId) fetchHiredDesigners();
-  }, [userId]);
+    if (status === "authenticated") {
+      fetchHiredDesigners();
+    } else if (status === "unauthenticated") {
+      setLoading(false);
+    }
+  }, [status]);
 
   const submitRating = async (e) => {
     e.preventDefault();
@@ -48,13 +58,17 @@ const MyHiredDesigners = () => {
         stars: ratingForm.stars,
         review: ratingForm.review,
       });
-      alert("Thank you for rating the designer!");
+      
+      // Replaced alert with MessageBox trigger
+      triggerMsg("Thank you for rating the designer!", "success");
+      
       setShowRating(false);
       setSelected(null);
       setRatingForm({ stars: 5, review: "" });
       fetchHiredDesigners();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to submit rating");
+      // Replaced alert with MessageBox error trigger
+      triggerMsg(err.response?.data?.message || "Failed to submit rating", "error");
     }
   };
 
@@ -74,11 +88,21 @@ const MyHiredDesigners = () => {
     </div>
   );
 
+  if (status === "loading") return <p className="loading-text">Verifying session...</p>;
+  if (status === "unauthenticated") return <div style={{ padding: 60, textAlign: "center" }}><h2>Please login to view your designers</h2></div>;
   if (loading) return <p className="loading-text">Loading hired designers...</p>;
-  if (!userId) return <div style={{ padding: 60, textAlign: "center" }}><h2>Please login to view your designers</h2></div>;
 
   return (
     <section className="hired-designers-page">
+      {/* MessageBox UI Component */}
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
+
       <div className="page-header">
         <div className="page-header-left">
           <h1 className="page-title">My Hired Designers</h1>
@@ -99,32 +123,37 @@ const MyHiredDesigners = () => {
       {error && <p className="form-error">{error}</p>}
 
       <div className="hired-grid">
-        {designers.map((d) => (
-          <div key={d.id} className="hired-card">
-            <div className="image-container" style={{ position: 'relative', width: '80px', height: '80px' }}>
-              <Image
-                src={d.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                alt={d.name}
-                fill
-                style={{ objectFit: 'cover', borderRadius: '50%' }}
-              />
+        {designers.length === 0 ? (
+          <p className="empty-state">No designers hired yet.</p>
+        ) : (
+          designers.map((d) => (
+            <div key={d.id} className="hired-card">
+              <div className="image-container" style={{ position: 'relative', width: '80px', height: '80px' }}>
+                <Image
+                  src={d.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  alt={d.name}
+                  fill
+                  style={{ objectFit: 'cover', borderRadius: '50%' }}
+                />
+              </div>
+              <div className="hired-info">
+                <h3 className="hired-name">{d.name}</h3>
+                <p className="hired-type">{d.category}</p>
+                <p className="hired-location"><LuMapPin /> {d.location}</p>
+                <p className="hired-work"><strong>Work:</strong> {d.workType}</p>
+                <p className="hired-budget"><strong>Budget:</strong> ₹{d.budget}</p>
+                <span className={`hired-status ${d.status}`}>
+                  {d.status.toUpperCase()}
+                </span>
+                
+                {d.status === "completed" && !d.rating && (
+                  <button className="rate-btn" onClick={() => { setSelected(d); setShowRating(true); }}>Rate Designer</button>
+                )}
+                {d.rating && <span className="rated-badge">Rated ✓</span>}
+              </div>
             </div>
-            <div className="hired-info">
-              <h3 className="hired-name">{d.name}</h3>
-              <p className="hired-type">{d.category}</p>
-              <p className="hired-location"><LuMapPin /> {d.location}</p>
-              <p className="hired-work"><strong>Work:</strong> {d.workType}</p>
-              <p className="hired-budget"><strong>Budget:</strong> ₹{d.budget}</p>
-              <span className={`hired-status ${d.status}`}>
-                {d.status.toUpperCase()}
-              </span>
-              {d.status === "completed" && !d.rating && (
-                <button className="rate-btn" onClick={() => { setSelected(d); setShowRating(true); }}>Rate Designer</button>
-              )}
-              {d.rating && <span className="rated-badge">Rated ✓</span>}
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {designerRatings.length > 0 && (

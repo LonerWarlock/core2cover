@@ -3,33 +3,33 @@ import prisma from "@/lib/prisma";
 
 export async function POST(request, { params }) {
   try {
-    // 1. Await params to get the ID from the URL
-    const { id } = await params; 
-    const designerId = Number(id);
+    const { id } = await params;
+    const body = await request.json();
 
-    // 2. Get form data from request body
-    const data = await request.json();
+    const user = await prisma.user.findUnique({
+      where: { email: body.userEmail.toLowerCase().trim() }
+    });
 
-    // 3. Create the hire request
+    if (!user) return NextResponse.json({ message: "User not found" }, { status: 404 });
+
     const hireRequest = await prisma.designerHireRequest.create({
       data: {
-        userId: Number(data.userId),
-        designerId: designerId, // From URL param
-        fullName: data.fullName,
-        email: data.email,
-        mobile: data.mobile,
-        location: data.location,
-        budget: Number(data.budget),
-        workType: data.workType,
-        timelineDate: data.timelineDate ? new Date(data.timelineDate) : null,
-        description: data.description,
-        status: "pending"
+        userId: user.id, // Must be Int
+        designerId: Number(id), // Must be Int
+        fullName: body.fullName,
+        email: body.email,
+        mobile: body.mobile,
+        location: body.location,
+        budget: Number(body.budget),
+        workType: body.workType,
+        timelineDate: body.timelineDate ? new Date(body.timelineDate) : null, // Must be Date object
+        description: body.description,
       }
     });
 
-    return NextResponse.json({ message: "Success", hireRequest }, { status: 201 });
-  } catch (err) {
-    console.error("HIRE_API_ERROR:", err);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(hireRequest, { status: 201 });
+  } catch (error) {
+    console.error("PRISMA ERROR:", error.message);
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

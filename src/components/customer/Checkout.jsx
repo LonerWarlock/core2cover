@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import api from "../../api/axios";
 import {
   getCart,
@@ -18,244 +19,219 @@ import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
-import {
-  FaArrowLeft
-} from "react-icons/fa";
+import { FaArrowLeft, FaMapMarkerAlt, FaSearch } from "react-icons/fa";
+
+// Google Maps Imports
+import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
+
+// 1. Move this outside the component to prevent re-renders triggering the error
+const LIBRARIES = ["places", "maps"];
+
+const mapContainerStyle = {
+  width: "100%",
+  height: "350px",
+  borderRadius: "8px",
+  marginTop: "15px"
+};
+
+const defaultCenter = { lat: 20.5937, lng: 78.9629 };
 
 const formatINR = (n = 0) =>
   `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 export default function Checkout() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const autocompleteRef = useRef(null);
+  const mapRef = useRef(null);
+
+  // 2. Use the standardized LIBRARIES constant here
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES,
+  });
 
   const [items, setItems] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [markerPosition, setMarkerPosition] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [loading, setLoading] = useState(false);
   const [credit, setCredit] = useState(0);
   const [useCreditForFullAmount, setUseCreditForFullAmount] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  const triggerMsg = (text, type = "success") => {
-    setMsg({ text, type, show: true });
-  };
-
-  useEffect(() => {
-    // 1. Get user identity
-    const userEmail = localStorage.getItem("userEmail") || "";
-    setEmail(userEmail);
-
-    // 2. Fetch Items and Normalise Data Types
-    const single = getSingleCheckoutItem();
-    const rawItems = single ? [single] : getCart();
-
-    const normalized = (Array.isArray(rawItems) ? rawItems : []).map((it) => {
-      // DEBUG: Verify raw values coming from storage
-      console.log("Raw item charges:", it.name, it.shippingCharge, it.installationCharge);
-
-      return {
-        ...it,
-        quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
-        amountPerTrip: Number(it.amountPerTrip || it.price || 0),
-
-        // Ensure keys match exactly what was passed from Product/Cart
-        shippingCharge: Number(it.shippingCharge ?? it.deliveryCharge ?? 0),
-        installationCharge: Number(it.installationCharge ?? 0),
-
-        // Preserve strings for calculation logic
-        shippingChargeType: String(it.shippingChargeType || "Paid"),
-        installationAvailable: String(it.installationAvailable || "no"),
-      };
-    });
-
-    setItems(normalized);
-
-    // 3. Fetch User Profile
-    if (userEmail) {
-      api
-        .get(`/user/${encodeURIComponent(userEmail)}`)
-        .then((res) => {
-          setName(res.data.name || "");
-          setAddress(res.data.address || "");
-        })
-        .catch(() => { });
-    }
-
-    // 4. Fetch Credits
-    getUserCredit()
-      .then((res) => {
-        const c = Number(res.data.credit || 0);
-        setCredit(Number.isFinite(c) ? c : 0);
-      })
-      .catch(() => setCredit(0));
-  }, []);
-
-  const increment = (index) => {
-    setItems((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], quantity: copy[index].quantity + 1 };
-      return copy;
-    });
-  };
-
-  const decrement = (index) => {
-    setItems((prev) => {
-      const copy = [...prev];
-      const current = copy[index].quantity;
-      copy[index] = { ...copy[index], quantity: current > 1 ? current - 1 : 1 };
-      return copy;
-    });
-  };
+  const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
   /* =========================================
-      CALCULATION LOGIC (REINFORCED)
+      SEARCH & SELECTION HANDLERS
   ========================================= */
-  const computeSummary = useMemo(() => {
-    let subtotal = 0;
-    let deliveryCharge = 0;
-    let installationTotal = 0;
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current !== null) {
+      const place = autocompleteRef.current.getPlace();
+      if (!place.geometry || !place.geometry.location) return;
 
-    items.forEach((it) => {
-      const qty = Number(it.quantity || 1);
-      const sCharge = Number(it.shippingCharge || 0);
-      const iCharge = Number(it.installationCharge || 0);
+      const location = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng()
+      };
 
-      subtotal += Number(it.amountPerTrip || 0) * qty;
+      setMarkerPosition(location);
+      setAddress(place.formatted_address || "");
 
-      // If shipping is not free, add shipping per item (multiplied by qty)
-      const type = String(it.shippingChargeType || "").trim().toLowerCase();
-      if (type !== "free" && sCharge > 0) {
-        deliveryCharge += sCharge * qty;
+      if (mapRef.current) {
+        mapRef.current.panTo(location);
+        mapRef.current.setZoom(17);
       }
+    }
+  };
 
-      // If installation is available and charge > 0, add per item * qty
-      const install = String(it.installationAvailable || "").trim().toLowerCase();
-      if (install === "yes" && iCharge > 0) {
-        installationTotal += iCharge * qty;
+  const onMapClick = useCallback((e) => {
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+    const location = { lat, lng };
+    setMarkerPosition(location);
+
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        setAddress(results[0].formatted_address);
       }
     });
+  }, []);
 
+  useEffect(() => {
+    const effectiveEmail = session?.user?.email || localStorage.getItem("userEmail");
+    if (effectiveEmail) {
+      setEmail(effectiveEmail);
+      api.get(`/user/${encodeURIComponent(effectiveEmail)}`)
+        .then((res) => {
+          setName(res.data.name || session?.user?.name || "");
+          setAddress(res.data.address || "");
+        }).catch(() => { });
+    }
+
+    const single = getSingleCheckoutItem();
+    const rawItems = single ? [single] : getCart();
+    setItems((Array.isArray(rawItems) ? rawItems : []).map((it) => ({
+      ...it,
+      quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
+      amountPerTrip: Number(it.amountPerTrip || it.price || 0),
+      shippingCharge: Number(it.shippingCharge ?? it.deliveryCharge ?? 0),
+      installationCharge: Number(it.installationCharge ?? 0),
+      shippingChargeType: String(it.shippingChargeType || "Paid").trim(),
+      installationAvailable: String(it.installationAvailable || "no").trim(),
+    })));
+
+    getUserCredit().then((res) => setCredit(Number(res.data.credit || 0))).catch(() => setCredit(0));
+  }, [session, status]);
+
+  const computeSummary = useMemo(() => {
+    let subtotal = 0, deliveryCharge = 0, installationTotal = 0;
+    items.forEach((it) => {
+      const qty = it.quantity;
+      subtotal += it.amountPerTrip * qty;
+      if (it.shippingChargeType.toLowerCase() !== "free") deliveryCharge += it.shippingCharge * qty;
+      if (it.installationAvailable.toLowerCase() === "yes") installationTotal += it.installationCharge * qty;
+    });
     const casaCharge = Math.round(subtotal * 0.05);
-    const grandTotal = subtotal + deliveryCharge + installationTotal + casaCharge;
-
-    return { subtotal, deliveryCharge, installationTotal, casaCharge, grandTotal };
+    return { subtotal, deliveryCharge, installationTotal, casaCharge, grandTotal: subtotal + deliveryCharge + installationTotal + casaCharge };
   }, [items]);
 
   const handlePlaceOrder = async () => {
-    if (!email || !name || !address) {
-      triggerMsg("Please provide your name, email, and full address.", "error");
-      return;
-    }
-    if (!items.length) {
-      triggerMsg("Your cart is empty.", "error");
-      return;
-    }
-
-    const summary = computeSummary;
-    const creditUsed = useCreditForFullAmount ? summary.grandTotal : 0;
-
-    if (useCreditForFullAmount && credit < summary.grandTotal) {
-      triggerMsg("Insufficient store credit to complete this purchase.", "error");
-      return;
-    }
-
-    const ordersPayload = items.map((it) => ({
-      supplierId: Number(it.supplierId || it.sellerId),
-      materialId: Number(it.materialId || it.productId || 0),
-      materialName: it.name || it.materialName || "",
-      supplierName: it.supplier || it.supplierName || "",
-      trips: it.quantity,
-      amountPerTrip: it.amountPerTrip,
-      deliveryTimeMin: it.deliveryTimeMin ?? null,
-      deliveryTimeMax: it.deliveryTimeMax ?? null,
-      shippingChargeType: it.shippingChargeType,
-      shippingCharge: it.shippingCharge,
-      installationAvailable: it.installationAvailable,
-      installationCharge: it.installationCharge,
-      imageUrl: it.image || null,
-    }));
-
+    if (!email || !name || !address) return triggerMsg("Please provide your name and select a location.", "error");
     setLoading(true);
     try {
       const res = await api.post("/order/place", {
         customerEmail: email,
-        checkoutDetails: {
-          name,
-          address,
-          paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod,
-        },
-        orders: ordersPayload,
-        summary,
-        creditUsed,
+        checkoutDetails: { name, address, paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod },
+        orders: items.map(it => ({ ...it, trips: it.quantity })),
+        summary: computeSummary,
+        creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
       });
 
       if (res?.data?.orderId) {
+        // CRITICAL: Ensure the email used for checkout is saved for MyOrders to find
+        localStorage.setItem("userEmail", email.toLowerCase().trim());
+
         clearSingleCheckoutItem();
         clearCart();
         triggerMsg("Order placed successfully!", "success");
         setTimeout(() => router.push("/userprofile"), 2000);
       }
     } catch (err) {
-      triggerMsg(err?.response?.data?.message || "Failed to place order.", "error");
+      triggerMsg("Checkout failed.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (useCreditForFullAmount) setPaymentMethod("store_credit");
-  }, [useCreditForFullAmount]);
+  if (loadError) return <div className="error">Map error: {loadError.message}</div>;
+  if (!isLoaded) return <div className="loading-maps">Initialising Maps...</div>;
 
   return (
     <>
       <Navbar />
-      {msg.show && (
-        <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />
-      )}
+      {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
-      <button className="back-btn" onClick={() => router.back()}>
-        <FaArrowLeft /> Back
-      </button>
+      <div className="checkout-nav-bar" style={{ padding: '10px 5%' }}>
+        <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
+      </div>
+
       <main className="checkout-page container">
         <h1 className="checkout-title">Checkout</h1>
-
-        <section className="credit-line">
-          <div className="credit-left">
-            Store Credit: <strong>{formatINR(credit)}</strong>
-          </div>
-          <div className="credit-right">
-            <label className="credit-toggle">
-              <input
-                type="checkbox"
-                checked={useCreditForFullAmount}
-                onChange={(e) => setUseCreditForFullAmount(e.target.checked)}
-              />
-              <span>Deduct total from store credit</span>
-            </label>
-          </div>
-        </section>
 
         <div className="checkout-grid">
           <section className="checkout-left">
             <div className="checkout-card">
-              <h2>Shipping & Contact</h2>
+              <h2>Contact Information</h2>
               <label className="form-row">
                 <span>Full name</span>
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
               </label>
               <label className="form-row">
-                <span>Email</span>
-                <input value={email} disabled className="disabled-input" />
+                <span>Email Address</span>
+                <input value={email} disabled style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }} />
               </label>
-              <label className="form-row">
-                <span>Shipping Address</span>
+            </div>
+
+            <div className="checkout-card">
+              <h2><FaMapMarkerAlt /> Delivery Location</h2>
+
+              <div className="search-box-wrapper" style={{ marginBottom: '15px' }}>
+                <Autocomplete
+                  onLoad={(ref) => (autocompleteRef.current = ref)}
+                  onPlaceChanged={onPlaceChanged}
+                >
+                  <div style={{ position: 'relative' }}>
+                    <FaSearch style={{ position: 'absolute', left: '12px', top: '13px', color: '#888' }} />
+                    <input
+                      type="text"
+                      placeholder="Search for your street or house number..."
+                      style={{ width: '90%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '14px' }}
+                    />
+                  </div>
+                </Autocomplete>
+              </div>
+
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={markerPosition || defaultCenter}
+                zoom={12}
+                onLoad={(map) => (mapRef.current = map)}
+                onClick={onMapClick}
+              >
+                {markerPosition && <Marker position={markerPosition} />}
+              </GoogleMap>
+
+              <label className="form-row" style={{ marginTop: '20px' }}>
+                <span>Final Delivery Address</span>
                 <textarea
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   rows={3}
-                  placeholder="Street, City, Pincode"
+                  placeholder="The address will appear here after search or map click..."
                 />
               </label>
             </div>
@@ -263,114 +239,34 @@ export default function Checkout() {
             <div className="checkout-card">
               <h2>Payment Method</h2>
               <div className="payment-options">
-                <button
-                  type="button"
-                  disabled={useCreditForFullAmount}
-                  className={`payment-option ${paymentMethod === "cod" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("cod")}
-                >
-                  <Image src={COD} alt="COD" width={40} height={25} />
-                  <span>Cash on Delivery</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={useCreditForFullAmount}
-                  className={`payment-option ${paymentMethod === "gpay" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("gpay")}
-                >
-                  <Image src={GooglePay} alt="Google Pay" width={40} height={25} />
-                  <span>Google Pay</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={useCreditForFullAmount}
-                  className={`payment-option ${paymentMethod === "paytm" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("paytm")}
-                >
-                  <Image src={Paytm} alt="Paytm" width={40} height={25} />
-                  <span>Paytm</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={useCreditForFullAmount}
-                  className={`payment-option ${paymentMethod === "phonepe" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("phonepe")}
-                >
-                  <Image src={PhonePe} alt="PhonePe" width={40} height={25} />
-                  <span>PhonePe</span>
-                </button>
+                {['cod', 'gpay', 'paytm', 'phonepe'].map(method => (
+                  <button key={method} type="button" disabled={useCreditForFullAmount} className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
+                    <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} />
+                    <span>{method === 'cod' ? "Cash on Delivery" : method.toUpperCase()}</span>
+                  </button>
+                ))}
               </div>
-              {useCreditForFullAmount && (
-                <p className="payment-note">Payment method locked to Store Credit.</p>
-              )}
-            </div>
-
-            <div className="checkout-card">
-              <h2>Order Items</h2>
-              {items.map((it, idx) => (
-                <div key={idx} className="checkout-item">
-                  <Image
-                    className="checkout-item-img"
-                    src={it.image ? (typeof it.image === "string" && it.image.startsWith("http") ? it.image : `/${it.image}`) : "/placeholder.png"}
-                    alt={it.name}
-                    width={80}
-                    height={80}
-                    style={{ objectFit: "cover" }}
-                  />
-                  <div className="checkout-item-main">
-                    <div className="checkout-item-top">
-                      <div className="checkout-item-title">{it.name}</div>
-                      <div className="checkout-item-price">{formatINR(it.amountPerTrip)}</div>
-                    </div>
-
-                    <div className="checkout-item-details">
-                      {it.shippingCharge > 0 && <small>Delivery: {formatINR(it.shippingCharge)}</small>}
-                      {it.installationCharge > 0 && <small> • Installation: {formatINR(it.installationCharge)}</small>}
-                    </div>
-
-                    <div className="checkout-quantity">
-                      <button type="button" onClick={() => decrement(idx)}>−</button>
-                      <input type="number" value={it.quantity} readOnly />
-                      <button type="button" onClick={() => increment(idx)}>+</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </section>
 
           <aside className="checkout-right">
             <div className="summary-card">
               <h2>Order Summary</h2>
-              <div className="summary-row">
-                <span>Items Subtotal</span>
-                <span>{formatINR(computeSummary.subtotal)}</span>
-              </div>
-              <div className="summary-row">
-                <span>Delivery Charges</span>
-                <span>{formatINR(computeSummary.deliveryCharge)}</span>
-              </div>
-              <div className="summary-row">
-                <span>Installation Charges</span>
-                <span>{formatINR(computeSummary.installationTotal)}</span>
-              </div>
-              <div className="summary-row">
-                <span>Platform Fee (5%)</span>
-                <span>{formatINR(computeSummary.casaCharge)}</span>
-              </div>
+              <div className="summary-row"><span>Items Subtotal</span><span>{formatINR(computeSummary.subtotal)}</span></div>
+              <div className="summary-row"><span>Delivery</span><span>{formatINR(computeSummary.deliveryCharge)}</span></div>
+
+              {/* NEW: Installation Charge Row */}
+              {computeSummary.installationTotal > 0 && (
+                <div className="summary-row">
+                  <span>Installation Charges</span>
+                  <span>{formatINR(computeSummary.installationTotal)}</span>
+                </div>
+              )}
+
+              <div className="summary-row"><span>Platform Fee (5%)</span><span>{formatINR(computeSummary.casaCharge)}</span></div>
               <hr />
-              <div className="summary-row total">
-                <span>Total Amount</span>
-                <span>{formatINR(computeSummary.grandTotal)}</span>
-              </div>
-              <button
-                className="place-order-btn"
-                onClick={handlePlaceOrder}
-                disabled={loading || items.length === 0}
-              >
+              <div className="summary-row total"><span>Total Amount</span><span>{formatINR(computeSummary.grandTotal)}</span></div>
+              <button className="place-order-btn" onClick={handlePlaceOrder} disabled={loading || items.length === 0}>
                 {loading ? "Processing..." : "Confirm & Place Order"}
               </button>
             </div>

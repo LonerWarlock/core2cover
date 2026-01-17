@@ -16,12 +16,15 @@ const UserProfile = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("orders");
+
+  // Initialise with empty strings to prevent the 'null value' warning
   const [user, setUser] = useState({
     name: "",
     email: "",
     phone: "",
     address: "",
   });
+
   const [isEditing, setIsEditing] = useState(false);
   const [designers, setDesigners] = useState([]);
 
@@ -62,8 +65,15 @@ const UserProfile = () => {
           getClientHiredDesigners({ userId: effectiveUserId }),
         ]);
 
+        // Data Sanitisation: Convert nulls from DB into empty strings
         const userData = userRes.data || userRes;
-        setUser(userData);
+        setUser({
+          name: userData.name || "",
+          email: userData.email || "",
+          phone: userData.phone || "",    // Fixes the "—" display issue
+          address: userData.address || "", // Fixes the "—" display issue
+        });
+
         setDesigners(Array.isArray(designersRes.data) ? designersRes.data : []);
       } catch (err) {
         console.error("Failed to load profile data", err);
@@ -84,7 +94,6 @@ const UserProfile = () => {
     }
   };
 
-  // Directly updating the 'user' state which represents DB data
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
@@ -92,7 +101,6 @@ const UserProfile = () => {
 
   const handleSave = async () => {
     try {
-      // Sending current 'user' state directly to the DB
       const response = await updateUserProfile(effectiveEmail, {
         name: user.name,
         phone: user.phone,
@@ -100,7 +108,15 @@ const UserProfile = () => {
       });
 
       const updatedUser = response.data || response;
-      setUser(updatedUser);
+
+      // FIX: Apply null-checks to the save response as well
+      setUser({
+        name: updatedUser.name || "",
+        email: updatedUser.email || "",
+        phone: updatedUser.phone || "",
+        address: updatedUser.address || "",
+      });
+
       setIsEditing(false);
       alert("Profile updated successfully");
 
@@ -147,7 +163,7 @@ const UserProfile = () => {
                   <input
                     type="text"
                     name="name"
-                    value={user.name} // Using 'user' state directly
+                    value={user.name || ""} // Double-layered fix for React controlled inputs
                     onChange={handleChange}
                     className="up-profile-input"
                     placeholder="Name"
@@ -155,7 +171,7 @@ const UserProfile = () => {
                   <input
                     type="text"
                     name="phone"
-                    value={user.phone} // Using 'user' state directly
+                    value={user.phone || ""} // Ensures value is never null
                     onChange={handleChange}
                     className="up-profile-input"
                     placeholder="Phone"
@@ -163,22 +179,16 @@ const UserProfile = () => {
                   <input
                     type="text"
                     name="address"
-                    value={user.address} // Using 'user' state directly
+                    value={user.address || ""} // Ensures value is never null
                     onChange={handleChange}
                     className="up-profile-input"
                     placeholder="Address"
                   />
                   <div className="edit-actions">
-                    <button
-                      onClick={handleSave}
-                      className="up-profile-button up-save"
-                    >
+                    <button onClick={handleSave} className="up-profile-button up-save">
                       Save
                     </button>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="up-profile-button cancel"
-                    >
+                    <button onClick={() => setIsEditing(false)} className="up-profile-button cancel">
                       Cancel
                     </button>
                   </div>
@@ -205,16 +215,10 @@ const UserProfile = () => {
                     </div>
                   </div>
                   <div className="profile-actions">
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="profile-button edit"
-                    >
+                    <button onClick={() => setIsEditing(true)} className="profile-button edit">
                       Edit Profile
                     </button>
-                    <button
-                      onClick={handleLogout}
-                      className="profile-button logout"
-                    >
+                    <button onClick={handleLogout} className="profile-button logout">
                       Logout
                     </button>
                   </div>

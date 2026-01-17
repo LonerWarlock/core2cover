@@ -31,22 +31,12 @@ const getOrderStatusMeta = (status) => {
   }
 };
 
-/**
- * UPDATED LOGIC:
- * Only updates to APPROVED/REJECTED when both parties have responded.
- */
 const deriveReturnStatus = (r) => {
   if (!r) return null;
   const seller = (r.sellerApprovalStatus || "").toUpperCase();
   const admin = (r.adminApprovalStatus || "").toUpperCase();
-
-  // If either party rejects, the final status is Rejected
   if (seller === "REJECTED" || admin === "REJECTED") return "REJECTED";
-
-  // Only if BOTH have approved is it officially Approved
   if (seller === "APPROVED" && admin === "APPROVED") return "APPROVED";
-
-  // Otherwise, it is still "Requested" (waiting for the final response)
   return "REQUESTED";
 };
 
@@ -59,14 +49,9 @@ const getFinalOrderStatus = (orderStatus, returnInfo) => {
       return { text: "Return Requested", className: "status-return-requested" };
     case "APPROVED":
       if (returnInfo.refundStatus === "COMPLETED")
-        return {
-          text: "Refund Completed",
-          className: "status-refund-completed",
-        };
+        return { text: "Refund Completed", className: "status-refund-completed" };
       return {
-        text: returnInfo.refundMethod === "STORE_CREDIT"
-          ? "Returned (Store Credit)"
-          : "Refund Processing",
+        text: returnInfo.refundMethod === "STORE_CREDIT" ? "Returned (Store Credit)" : "Refund Processing",
         className: "status-returned",
       };
     case "REJECTED":
@@ -99,15 +84,49 @@ export default function MyOrders() {
   const [credit, setCredit] = useState(0);
   const [userEmail, setUserEmail] = useState(null);
 
+  // 1. Initialise user identity
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setUserEmail(localStorage.getItem("userEmail"));
+      const storedEmail = localStorage.getItem("userEmail");
+      if (storedEmail) {
+        setUserEmail(storedEmail.toLowerCase().trim());
+      }
     }
   }, []);
 
+  // 2. Fetch Orders
+  useEffect(() => {
+    if (!userEmail) return;
+    api
+      .get(`/orders/user/${encodeURIComponent(userEmail)}`)
+      .then((res) => {
+        setOrders(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((err) => {
+        console.error("Order Fetch Error:", err);
+        setOrders([]);
+      });
+  }, [userEmail]);
+
+  // 3. Fetch Returns and Credit Data
+  useEffect(() => {
+    if (!userEmail) return;
+    getUserReturns()
+      .then((res) => {
+        const arr = res.data.returns || [];
+        const map = {};
+        arr.forEach((r) => { map[r.orderItemId] = r; });
+        setReturnsMap(map);
+      })
+      .catch(() => { });
+
+    getUserCredit()
+      .then((res) => setCredit(res.data.credit || 0))
+      .catch(() => { });
+  }, [userEmail]);
+
   const canCancelOrder = (order) => {
-    if (order.orderStatus !== "confirmed" || order.orderStatus === "out_for_delivery")
-      return false;
+    if (order.orderStatus !== "confirmed" && order.orderStatus !== "pending") return false;
     const orderDate = new Date(order.createdAt);
     const diffDays = (Date.now() - orderDate.getTime()) / MS_IN_DAY;
     return diffDays <= RETURN_LIMIT_DAYS;
@@ -125,44 +144,30 @@ export default function MyOrders() {
     }
   };
 
-  useEffect(() => {
-    if (!userEmail) return;
-    api
-      .get(`/orders/user/${encodeURIComponent(userEmail)}`)
-      .then((res) => setOrders(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setOrders([]));
-  }, [userEmail]);
-
-  useEffect(() => {
-    if (!userEmail) return;
-    getUserReturns()
-      .then((res) => {
-        const arr = res.data.returns || [];
-        const map = {};
-        arr.forEach((r) => { map[r.orderItemId] = r; });
-        setReturnsMap(map);
-      })
-      .catch(() => {});
-  }, [userEmail]);
-
-  useEffect(() => {
-    getUserCredit()
-      .then((res) => setCredit(res.data.credit || 0))
-      .catch(() => {});
-  }, []);
-
-  const submitRating = async (orderItemId) => {
+  // FIXED: Passed whole order object to extract materialId
+  const submitRating = async (order) => {
+    const orderItemId = order.orderItemId;
     const stars = ratings[orderItemId];
     const comment = reviews[orderItemId] || "";
+
     if (!stars) return;
+
     try {
-      await api.post(`/order/item/${orderItemId}/rate`, { stars, comment, userEmail });
+      // payload must match what backend POST expects
+      await api.post(`/order/item/${orderItemId}/rate`, {
+        stars,
+        comment,
+        userEmail,
+        productId: order.materialId // Required for Prisma Product relation
+      });
+
       setOrders((prev) =>
         prev.map((o) => (o.orderItemId === orderItemId ? { ...o, isRated: true } : o))
       );
       setOpenRating((p) => ({ ...p, [orderItemId]: false }));
     } catch (err) {
-      console.error(err);
+      console.error("Rating Error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Failed to submit rating. Please ensure item is delivered.");
     }
   };
 
@@ -215,7 +220,11 @@ export default function MyOrders() {
       />
 
       <div className="orders-lists">
-        {filteredOrders.map((order) => {
+        {filteredOrders.length === 0 ? (
+          <div className="empty-orders-text" style={{ textAlign: "center", padding: "40px", color: "#888" }}>
+            No orders found for {userEmail}.
+          </div>
+        ) : filteredOrders.map((order) => {
           const returnInfo = returnsMap[order.orderItemId];
           const statusMeta = getFinalOrderStatus(order.orderStatus, returnInfo);
           const isDelivered = order.orderStatus === "fulfilled";
@@ -235,7 +244,7 @@ export default function MyOrders() {
                     {statusMeta.text}
                   </span>
                 </div>
-                
+
                 <div className="order-meta">
                   <p><strong>Order ID:</strong> {order.id}</p>
                   <p><strong>Seller:</strong> {order.sellerName}</p>
@@ -295,7 +304,7 @@ export default function MyOrders() {
                             ))}
                           </div>
                           <textarea className="order-review" placeholder="Write a review..." value={reviews[order.orderItemId] || ""} onChange={(e) => setReviews(p => ({ ...p, [order.orderItemId]: e.target.value }))} />
-                          <button className="track-btn" onClick={() => submitRating(order.orderItemId)}>Submit Review</button>
+                          <button className="track-btn" onClick={() => submitRating(order)}>Submit Review</button>
                         </div>
                       ) : (
                         <button className="rate-btn" onClick={() => setOpenRating(p => ({ ...p, [order.orderItemId]: true }))}>Rate Order</button>

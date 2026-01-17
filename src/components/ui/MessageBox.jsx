@@ -20,13 +20,20 @@ const MessageBox = ({ message, type = "success", onClose, duration = 4000 }) => 
   };
 
   return (
-    <div className={`message-box-container ${type}`}>
-      <div className="message-icon">{icons[type]}</div>
-      <div className="message-text">{message}</div>
-      <button className="message-close" onClick={onClose}>
-        <FaTimes />
-      </button>
-      <div className="message-progress-bar"></div>
+    <div className={`message-box-wrapper ${type}`}>
+      <div className="message-box-glass">
+        <div className="message-icon-wrapper">{icons[type]}</div>
+        <div className="message-content">
+          <p className="message-text">{message}</p>
+        </div>
+        <button className="message-close-minimal" onClick={onClose} aria-label="Close">
+          <FaTimes />
+        </button>
+        <div 
+          className="message-progress-glow" 
+          style={{ animationDuration: `${duration}ms` }}
+        />
+      </div>
     </div>
   );
 };

@@ -1,44 +1,33 @@
 import axios from "axios";
 
 const api = axios.create({
-  // This tells axios to look at the same domain/port the website is running on
-  baseURL: "/api",
+  baseURL: "/api", // HARDCODE THIS to ensure it hits your local routes
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  }
+  headers: { "Content-Type": "application/json" }
 });
 
-// Request Interceptor
+// Request Interceptor: Attach local storage IDs for extra validation
 api.interceptors.request.use(
   (config) => {
-    // Check if we are in the browser
     if (typeof window !== "undefined") {
       const userEmail = localStorage.getItem("userEmail");
       const sellerId = localStorage.getItem("sellerId");
-      const designerId = localStorage.getItem("designerId"); // Added for Designer Dashboard
+      const designerId = localStorage.getItem("designerId");
 
       if (userEmail) config.headers["x-user-email"] = userEmail;
       if (sellerId) config.headers["x-seller-id"] = sellerId;
-      if (designerId) config.headers["x-designer-id"] = designerId; // Useful for backend validation
+      if (designerId) config.headers["x-designer-id"] = designerId;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+// Response Interceptor: Better error logging
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.warn("Session expired or unauthorized. Redirecting to login...");
-      // Optional: Clear local storage and redirect
-      if (typeof window !== "undefined") {
-        // localStorage.clear(); 
-        // window.location.href = "/login";
-      }
-    }
+    // This logs the 401 error to your console
     console.error("API Error Interface:", error.response?.data?.message || error.message);
     return Promise.reject(error);
   }

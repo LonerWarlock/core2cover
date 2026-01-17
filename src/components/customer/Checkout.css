@@ -472,7 +472,7 @@
   margin-left: 20px;
   transition: var(--transition);
   font-size: 1rem;
-  position: fixed;
+  /* position: fixed; */
 }
 
 .back-btn:hover {

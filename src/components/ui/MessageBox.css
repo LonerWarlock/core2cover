@@ -1,68 +1,139 @@
-/* src/components/ui/MessageBox.css */
-.message-box-container {
+:root {
+  --sage-green: #606e52;
+  --error-red: #9e4a44;
+  --info-blue: #52667a;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+}
+
+.message-box-wrapper {
   position: fixed;
-  top: 24px;
-  right: 24px;
-  min-width: 300px;
-  max-width: 400px;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 16px 20px;
+  top: 30px;
+  right: 30px;
+  z-index: 10000;
+  perspective: 1000px;
+}
+
+.message-box-glass {
   display: flex;
   align-items: center;
-  gap: 14px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-  z-index: 9999;
-  border: 1px solid rgba(96, 110, 82, 0.1);
+  min-width: 350px;
+  padding: 18px 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.05),
+    0 5px 15px rgba(0, 0, 0, 0.03);
+  position: relative;
   overflow: hidden;
-  animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+  animation: elegantSlideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(50px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes elegantSlideIn {
+  0% {
+    transform: translateX(50px) scale(0.9);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
 }
 
-/* Types */
-.message-box-container.success { border-left: 5px solid #606e52; }
-.message-box-container.error { border-left: 5px solid #d93025; }
-.message-box-container.info { border-left: 5px solid #91a56e; }
+/* Icon Container */
+.message-icon-wrapper {
+  font-size: 22px;
+  margin-right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-.message-icon { font-size: 1.2rem; }
-.success .message-icon { color: #606e52; }
-.error .message-icon { color: #d93025; }
+.success .message-icon-wrapper {
+  color: var(--sage-green);
+}
+
+.error .message-icon-wrapper {
+  color: var(--error-red);
+}
+
+.info .message-icon-wrapper {
+  color: var(--info-blue);
+}
+
+/* Typography */
+.message-content {
+  flex: 1;
+}
 
 .message-text {
-  flex: 1;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #333;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  /* Professional, clean font */
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #2c3e50;
+  line-height: 1.5;
 }
 
-.message-close {
-  background: none;
+/* Minimalist Close */
+.message-close-minimal {
+  background: rgba(0, 0, 0, 0.03);
   border: none;
-  color: #8f8b84;
-  cursor: pointer;
-  padding: 4px;
+  color: #7f8c8d;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
-  transition: color 0.2s;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 15px;
+  transition: all 0.3s ease;
 }
 
-.message-close:hover { color: #333; }
+.message-close-minimal:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #2c3e50;
+  transform: rotate(90deg);
+}
 
-/* Progress Bar Animation */
-.message-progress-bar {
+/* Progress Glow Bar */
+.message-progress-glow {
   position: absolute;
   bottom: 0;
   left: 0;
   height: 3px;
-  background: rgba(96, 110, 82, 0.2);
   width: 100%;
-  animation: progress linear forwards;
+  background: linear-gradient(to right, transparent, currentColor);
+  transform-origin: left;
+  animation: progressLinear linear forwards;
+  opacity: 0.6;
 }
 
-@keyframes progress {
-  from { width: 100%; }
-  to { width: 0%; }
+@keyframes progressLinear {
+  0% {
+    transform: scaleX(1);
+  }
+
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+/* Type Specific Glows */
+.success .message-progress-glow {
+  color: var(--sage-green);
+}
+
+.error .message-progress-glow {
+  color: var(--error-red);
+}
+
+.info .message-progress-glow {
+  color: var(--info-blue);
 }

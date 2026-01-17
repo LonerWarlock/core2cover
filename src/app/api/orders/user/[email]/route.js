@@ -3,75 +3,54 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request, { params }) {
   try {
-    // In Next.js 15+, params is a Promise and must be awaited
-    const resolvedParams = await params;
-    const email = decodeURIComponent(resolvedParams.email);
+    const { email } = await params;
+    const decodedEmail = decodeURIComponent(email).toLowerCase().trim();
 
-    // 1. Find the user by email
+    // 1. Find the user first to get their ID
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: decodedEmail },
+      select: { id: true }
     });
 
     if (!user) {
-      return NextResponse.json([]);
+      return NextResponse.json([], { status: 200 });
     }
 
-    // 2. Fetch all orders for this user including nested items, sellers, and ratings
+    // 2. Fetch orders where the userId matches
     const orders = await prisma.order.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
+      where: {
+        userId: user.id, // Primary link
+      },
       include: {
         items: {
           include: {
-            seller: {
-              select: { name: true },
-            },
-            rating: true, // Used to determine if the item has been rated
+            rating: true,
+            seller: { select: { name: true } },
           },
         },
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    // 3. Flatten and format the orders into individual items
-    const formatted = orders.flatMap((order) =>
+    // 3. Flatten for the frontend (Jerry Frostwick's UI)
+    const flattened = orders.flatMap((order) =>
       order.items.map((item) => ({
         id: order.id,
-        displayId: `ORD-${order.id}`,
         orderItemId: item.id,
-
         productName: item.materialName,
-        sellerName: item.seller?.name || "Unknown Seller",
+        sellerName: item.seller.name,
         quantity: item.quantity,
         totalAmount: item.totalAmount,
-        imageUrl: item.imageUrl,
-
         orderStatus: item.status,
+        imageUrl: item.imageUrl,
+        isRated: !!item.rating,
         createdAt: order.createdAt,
-
-        // Determine rating status
-        isRated: Boolean(item.rating),
-
-        // Rating details if they exist
-        rating: item.rating
-          ? {
-              stars: item.rating.stars,
-              comment: item.rating.comment,
-            }
-          : null,
-
-        // Delivery details snapshot (saved at time of order)
-        deliveryTimeMin: item.deliveryTimeMin,
-        deliveryTimeMax: item.deliveryTimeMax,
-        shippingChargeType: item.shippingChargeType,
-        shippingCharge: item.shippingCharge,
-        installationAvailable: item.installationAvailable,
-        installationCharge: item.installationCharge,
       }))
     );
 
-    return NextResponse.json(formatted);
-  } catch (err) {
-    console.error("FETCH USER ORDERS ERROR:", err);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(flattened);
+  } catch (error) {
+    console.error("FETCH ERROR:", error);
+    return NextResponse.json({ message: "Error" }, { status: 500 });
   }
 }

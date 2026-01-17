@@ -184,19 +184,26 @@
 
 /* Track Button */
 .track-btn {
-    background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
-    border: none;
-    padding: 10px 18px;
-    border-radius: var(--radius);
-    color: var(--white);
-    font-weight: 800;
-    cursor: pointer;
-    transition: var(--ease);
+  background-color: transparent;
+  color: #606e52; /* Matching your credit badge text color */
+  border: 1.5px solid #606e52;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  min-width: 140px;
 }
 
 .track-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(96, 110, 82, 0.25);
+  background-color: #606e52;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(96, 110, 82, 0.2);
 }
 
 /* Rate Button */
@@ -211,8 +218,24 @@
     transition: var(--ease);
 }
 
+.track-btn:disabled {
+  border-color: #ccc;
+  color: #999;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
 .rate-btn:hover {
     transform: translateY(-2px);
+}
+
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
 }
 
 /* =========================================

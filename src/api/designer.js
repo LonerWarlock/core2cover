@@ -62,12 +62,8 @@ export const updateDesignerAvailability = async (id, availability) => {
   return response.data;
 };
 // Hire a Designer (Client -> Designer)
-export const hireDesigner = async (designerId, formData) => {
-  // Use backticks to inject the ID into the URL path
-  const response = await api.post(`/designer/${designerId}/hire`, {
-    ...formData
-  });
-  return response.data;
+export const hireDesigner = (designerId, data) => {
+  return api.post(`/designer/${designerId}/hire`, data);
 };
 
 //  FIX: Add getClientHiredDesigners

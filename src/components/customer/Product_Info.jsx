@@ -360,11 +360,23 @@ const ProductInfo = () => {
                     </div>
 
                     <p className="pd-review-date">
-                      Reviewed on {new Date(review.createdAt).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
+                      {review.createdAt ? (
+                        <>
+                          Reviewed on {(() => {
+                            const date = new Date(review.createdAt);
+                            // Check if the date object is valid
+                            return isNaN(date.getTime())
+                              ? "Recent Date"
+                              : date.toLocaleDateString('en-GB', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              });
+                          })()}
+                        </>
+                      ) : (
+                        "Reviewed recently"
+                      )}
                     </p>
 
                     <p className="pd-review-body">{review.comment || review.review}</p>

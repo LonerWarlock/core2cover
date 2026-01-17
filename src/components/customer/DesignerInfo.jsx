@@ -1,5 +1,6 @@
 "use client";
 
+import api from "../../api/axios";
 import React, { useEffect, useState, Suspense, useRef } from "react";
 import "./DesignerInfo.css";
 import Navbar from "./Navbar";
@@ -12,6 +13,7 @@ import {
 import { LuMapPin } from "react-icons/lu";
 import { useSearchParams, useRouter } from "next/navigation";
 import { hireDesigner } from "../../api/designer";
+import { useSession } from "next-auth/react"; // Import session hook
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
 
@@ -19,14 +21,9 @@ import MessageBox from "../ui/MessageBox";
     HELPERS
    ============================================================ */
 
-/**
- * Injects a line break after every N words to prevent wall-of-text
- */
 const formatTextWithBreaks = (text, wordLimit = 20) => {
   if (!text) return null;
   const words = text.split(/\s+/);
-  
-  // If text is short, return as is
   if (words.length <= wordLimit) return text;
 
   const chunks = [];
@@ -50,8 +47,8 @@ const ExpandableText = ({ text = "", limit = 160 }) => {
   return (
     <div className="bio-container">
       <div className={`expandable-text ${expanded ? "expanded" : ""}`}>
-        {expanded || !isLong 
-          ? formatTextWithBreaks(text) 
+        {expanded || !isLong
+          ? formatTextWithBreaks(text)
           : `${text.slice(0, limit)}...`}
       </div>
       {isLong && (
@@ -81,6 +78,7 @@ const renderStars = (avg) => {
     1. MAIN CONTENT COMPONENT
    ============================================================ */
 const DesignerInfoContent = () => {
+  const { data: session, status } = useSession(); // Get session status
   const searchParams = useSearchParams();
   const router = useRouter();
   const designerId = searchParams.get("id");
@@ -102,6 +100,17 @@ const DesignerInfoContent = () => {
     fullName: "", mobile: "", email: "", location: "",
     budget: "", workType: "", timelineDate: "", description: ""
   });
+
+  // Autofill form when session is available
+  useEffect(() => {
+    if (session?.user) {
+      setHireForm(prev => ({
+        ...prev,
+        fullName: session.user.name || "",
+        email: session.user.email || ""
+      }));
+    }
+  }, [session]);
 
   useEffect(() => {
     if (!designerId) return;
@@ -156,29 +165,45 @@ const DesignerInfoContent = () => {
 
   const handleHireSubmit = async (e) => {
     e.preventDefault();
-    const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
 
-    if (!userId) {
+    if (status !== "authenticated") {
       triggerMsg("Please login to hire a designer", "error");
       return;
     }
 
     try {
       setHireLoading(true);
-      await hireDesigner(designerId, {
+
+      // Log the payload to verify the data before it leaves the browser
+      console.log("Submitting Payload:", {
         ...hireForm,
-        userId: Number(userId),
+        userEmail: session.user.email
+      });
+
+      // Ensure 'hireDesigner' is imported from "../../api/designer"
+      const response = await hireDesigner(designerId, {
+        ...hireForm,
+        userEmail: session.user.email,
         budget: Number(hireForm.budget)
       });
 
-      triggerMsg("Request sent successfully! The designer will contact you soon.", "success");
+      console.log("Server Success Response:", response.data);
+      triggerMsg("Request sent successfully!", "success");
       setShowForm(false);
-      setHireForm({
-        fullName: "", mobile: "", email: "", location: "",
-        budget: "", workType: "", timelineDate: "", description: ""
-      });
+
     } catch (err) {
-      triggerMsg(err.response?.data?.message || "Failed to send request", "error");
+      // Detailed error logging
+      console.error("FULL ERROR OBJECT:", err);
+
+      if (err.response) {
+        // The server responded with a status code outside the 2xx range
+        console.error("Server Error Data:", err.response.data);
+        triggerMsg(err.response.data.message || "Request rejected by server", "error");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Setup/Network Error:", err.message);
+        triggerMsg("Failed to send request. Check console for details.", "error");
+      }
     } finally {
       setHireLoading(false);
     }
@@ -233,8 +258,7 @@ const DesignerInfoContent = () => {
             {renderStars(stats.average)}
             <span>({stats.total} Reviews)</span>
           </div>
-          
-          {/* Bio with 20-word line breaks */}
+
           <ExpandableText text={designer.profile?.bio} />
 
           <button
@@ -278,7 +302,6 @@ const DesignerInfoContent = () => {
           {ratings.length > 0 ? (
             ratings.map((rev, index) => {
               const clientName = rev.hireRequest?.user?.name || rev.reviewerName || "Verified Client";
-
               return (
                 <div key={rev.id || index} className="individual-review-card">
                   <div className="rev-header">
@@ -293,7 +316,6 @@ const DesignerInfoContent = () => {
                     </div>
                     {renderStars(rev.stars)}
                   </div>
-                  {/* Reviews also get the 20-word break formatting */}
                   <div className="rev-text">"{formatTextWithBreaks(rev.review) || "No written comment provided."}"</div>
                 </div>
               );
@@ -301,7 +323,7 @@ const DesignerInfoContent = () => {
           ) : (
             <p className="no-reviews">No client feedback available yet.</p>
           )}
-        </div>  
+        </div>
       </section>
 
       {isLightboxOpen && (
