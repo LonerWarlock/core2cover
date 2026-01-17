@@ -457,3 +457,25 @@
   transition: opacity 200ms ease, transform 200ms ease;
   transform-origin: top left;
 }
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  margin-bottom: 30px;
+  margin-top: 10px;
+  margin-left: 20px;
+  transition: var(--transition);
+  font-size: 1rem;
+  position: fixed;
+}
+
+.back-btn:hover {
+  transform: translateX(-5px);
+  color: var(--green-mid);
+}

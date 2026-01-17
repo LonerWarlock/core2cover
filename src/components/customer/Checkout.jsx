@@ -17,7 +17,10 @@ import Paytm from "../../assets/images/Paytm.png";
 import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
-import MessageBox from "../ui/MessageBox"; // Assuming you have this component
+import MessageBox from "../ui/MessageBox";
+import {
+  FaArrowLeft
+} from "react-icons/fa";
 
 const formatINR = (n = 0) =>
   `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -48,19 +51,24 @@ export default function Checkout() {
     const single = getSingleCheckoutItem();
     const rawItems = single ? [single] : getCart();
 
-    const normalized = (Array.isArray(rawItems) ? rawItems : []).map((it) => ({
-      ...it,
-      quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
-      amountPerTrip: Number(it.amountPerTrip || it.price || 0),
+    const normalized = (Array.isArray(rawItems) ? rawItems : []).map((it) => {
+      // DEBUG: Verify raw values coming from storage
+      console.log("Raw item charges:", it.name, it.shippingCharge, it.installationCharge);
 
-      // Ensure these match the keys saved in Cart.jsx
-      shippingCharge: Number(it.shippingCharge || it.deliveryCharge || 0),
-      installationCharge: Number(it.installationCharge || 0),
+      return {
+        ...it,
+        quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
+        amountPerTrip: Number(it.amountPerTrip || it.price || 0),
 
-      // CRITICAL: Preserve these strings for the useMemo logic to work
-      shippingChargeType: it.shippingChargeType || "free",
-      installationAvailable: it.installationAvailable || "no",
-    }));
+        // Ensure keys match exactly what was passed from Product/Cart
+        shippingCharge: Number(it.shippingCharge ?? it.deliveryCharge ?? 0),
+        installationCharge: Number(it.installationCharge ?? 0),
+
+        // Preserve strings for calculation logic
+        shippingChargeType: String(it.shippingChargeType || "Paid"),
+        installationAvailable: String(it.installationAvailable || "no"),
+      };
+    });
 
     setItems(normalized);
 
@@ -102,7 +110,7 @@ export default function Checkout() {
   };
 
   /* =========================================
-      CALCULATION LOGIC (FIXED)
+      CALCULATION LOGIC (REINFORCED)
   ========================================= */
   const computeSummary = useMemo(() => {
     let subtotal = 0;
@@ -116,19 +124,20 @@ export default function Checkout() {
 
       subtotal += Number(it.amountPerTrip || 0) * qty;
 
-      // Check if shipping is NOT free
-      const isPaidShipping = String(it.shippingChargeType).toLowerCase() !== "free";
-      if (isPaidShipping && sCharge > 0) {
-        deliveryCharge += sCharge;
+      // If shipping is not free, add shipping per item (multiplied by qty)
+      const type = String(it.shippingChargeType || "").trim().toLowerCase();
+      if (type !== "free" && sCharge > 0) {
+        deliveryCharge += sCharge * qty;
       }
 
-      // Check if installation is requested
-      const hasInstallation = String(it.installationAvailable).toLowerCase() === "yes";
-      if (hasInstallation && iCharge > 0) {
-        installationTotal += (iCharge * qty);
+      // If installation is available and charge > 0, add per item * qty
+      const install = String(it.installationAvailable || "").trim().toLowerCase();
+      if (install === "yes" && iCharge > 0) {
+        installationTotal += iCharge * qty;
       }
     });
-    const casaCharge = Math.round(subtotal * 0.02);
+
+    const casaCharge = Math.round(subtotal * 0.05);
     const grandTotal = subtotal + deliveryCharge + installationTotal + casaCharge;
 
     return { subtotal, deliveryCharge, installationTotal, casaCharge, grandTotal };
@@ -153,7 +162,7 @@ export default function Checkout() {
     }
 
     const ordersPayload = items.map((it) => ({
-      supplierId: Number(it.supplierId),
+      supplierId: Number(it.supplierId || it.sellerId),
       materialId: Number(it.materialId || it.productId || 0),
       materialName: it.name || it.materialName || "",
       supplierName: it.supplier || it.supplierName || "",
@@ -206,6 +215,9 @@ export default function Checkout() {
         <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />
       )}
 
+      <button className="back-btn" onClick={() => router.back()}>
+        <FaArrowLeft /> Back
+      </button>
       <main className="checkout-page container">
         <h1 className="checkout-title">Checkout</h1>
 
@@ -302,7 +314,7 @@ export default function Checkout() {
                 <div key={idx} className="checkout-item">
                   <Image
                     className="checkout-item-img"
-                    src={it.image ? (it.image.startsWith("http") ? it.image : `/${it.image}`) : "/placeholder.png"}
+                    src={it.image ? (typeof it.image === "string" && it.image.startsWith("http") ? it.image : `/${it.image}`) : "/placeholder.png"}
                     alt={it.name}
                     width={80}
                     height={80}
@@ -346,7 +358,7 @@ export default function Checkout() {
                 <span>{formatINR(computeSummary.installationTotal)}</span>
               </div>
               <div className="summary-row">
-                <span>Platform Fee (2%)</span>
+                <span>Platform Fee (5%)</span>
                 <span>{formatINR(computeSummary.casaCharge)}</span>
               </div>
               <hr />

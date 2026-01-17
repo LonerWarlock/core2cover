@@ -10,6 +10,7 @@ import { addToCart } from "../../utils/cart";
 import api from "../../api/axios";
 import Image from "next/image";
 import { FaArrowLeft, FaShareAlt, FaTimes } from "react-icons/fa";
+import MessageBox from "../ui/MessageBox"; // Ensure path is correct
 
 const ProductInfo = () => {
   const router = useRouter();
@@ -22,6 +23,13 @@ const ProductInfo = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const fullscreenRef = React.useRef(null);
+
+  // MessageBox State
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   /* FULLSCREEN LOGIC */
   const openFullscreen = () => setIsFullscreen(true);
@@ -138,6 +146,7 @@ const ProductInfo = () => {
     router.push("/checkout");
   };
 
+  // Inside ProductInfo.jsx
   const handleAddToCart = () => {
     if (!product) return;
     addToCart({
@@ -145,17 +154,17 @@ const ProductInfo = () => {
       supplierId: sellerId,
       name: title || product.name,
       supplier: resolvedSeller,
-      amountPerTrip: price,
+      amountPerTrip: Number(price),
       trips: 1,
       image: images[0],
-      shippingChargeType: product.seller?.delivery?.shippingChargeType || "Fixed",
-      shippingCharge: product.seller?.delivery?.shippingCharge || 0,
-      installationAvailable: product.seller?.delivery?.installationAvailable || "No",
-      installationCharge: product.seller?.delivery?.installationCharge || 0,
+      // Ensure these fields exist so Cart.jsx doesn't default them to 0
+      shippingChargeType: product.shippingChargeType || "Paid",
+      shippingCharge: Number(product.shippingCharge || 0),
+      installationAvailable: product.installationAvailable || "yes",
+      installationCharge: Number(product.installationCharge || 0),
     });
-    alert("Added to cart");
+    triggerMsg(`${title} added to cart successfully!`, "success");
   };
-
   const handleShare = async () => {
     if (!product) return;
     const shareData = {
@@ -169,10 +178,13 @@ const ProductInfo = () => {
         await api.patch(`/product/${productId}`);
       } else {
         await navigator.clipboard.writeText(window.location.href);
-        alert("Link copied to clipboard!");
+        triggerMsg("Link copied to clipboard!", "success");
       }
     } catch (err) {
-      if (err.name !== "AbortError") console.error("Share failed:", err);
+      if (err.name !== "AbortError") {
+        console.error("Share failed:", err);
+        triggerMsg("Could not share product.", "error");
+      }
     }
   };
 
@@ -182,6 +194,16 @@ const ProductInfo = () => {
   return (
     <>
       <Navbar />
+
+      {/* MessageBox Integration */}
+      {msg.show && (
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
+        />
+      )}
+
       <div className="pd-container">
         {/* TOP BACK BUTTON */}
         <div className="pd-top-nav" style={{ gridColumn: "1 / -1", marginBottom: "20px" }}>
@@ -288,13 +310,11 @@ const ProductInfo = () => {
       </div>
 
       {/* RATINGS & REVIEWS SECTION */}
-      {/* RATINGS & REVIEWS SECTION */}
       <section className="pd-reviews-section">
         <div className="pd-reviews-container">
           <h2 className="pd-section-title">Customer Reviews</h2>
 
           <div className="pd-reviews-layout">
-            {/* Left Column: The Amazon-style Summary */}
             <div className="pd-rating-summary">
               <div className="pd-summary-card">
                 <div className="pd-summary-header">
@@ -306,7 +326,6 @@ const ProductInfo = () => {
                 </div>
                 <p className="pd-summary-total">{ratingCount} global ratings</p>
 
-                {/* Visual Star Bars (Static for UI feel) */}
                 <div className="pd-rating-bars">
                   {[5, 4, 3, 2, 1].map((star) => (
                     <div key={star} className="pd-bar-row">
@@ -323,7 +342,6 @@ const ProductInfo = () => {
               </div>
             </div>
 
-            {/* Right Column: The Review Feed */}
             <div className="pd-reviews-list">
               <h3 className="pd-list-heading">Top reviews from India</h3>
               {reviews.length > 0 ? (

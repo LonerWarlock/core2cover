@@ -273,3 +273,121 @@
     padding: 30px 20px;
   }
 }
+
+/* =========================================
+   PREMIUM GOOGLE BUTTON (NEXT LEVEL)
+========================================= */
+
+/* Divider Styling */
+.login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 10px 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.login-divider span {
+  padding: 0 15px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* The Button */
+.google-btn-premium {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden; /* Important for shimmer */
+  transition: all 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 4px 0px rgba(96, 110, 82, 0.1);
+}
+
+.google-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  z-index: 2;
+}
+
+.btn-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  z-index: 2;
+  letter-spacing: 0.3px;
+}
+
+/* The Animated Shimmer Effect */
+.btn-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(192, 204, 164, 0.2),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: none;
+  z-index: 1;
+}
+
+/* =========================================
+   HOVER ANATOMY
+========================================= */
+
+.google-btn-premium:hover {
+  border-color: var(--green-mid);
+  transform: translateY(-3px);
+  background-color: #fafbf9;
+  box-shadow: 
+    0 10px 20px rgba(96, 110, 82, 0.15),
+    0 4px 8px rgba(96, 110, 82, 0.05);
+}
+
+/* Trigger Shimmer on Hover */
+.google-btn-premium:hover .btn-shimmer {
+  left: 200%;
+  transition: all 800ms ease;
+}
+
+/* Icon Pop Effect */
+.google-btn-premium:hover .google-icon-wrapper {
+  transform: scale(1.15) rotate(5deg);
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.google-btn-premium:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(96, 110, 82, 0.1);
+}
+
+/* Loading state for production feel */
+.google-btn-premium:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  background: #f5f5f5;
+}

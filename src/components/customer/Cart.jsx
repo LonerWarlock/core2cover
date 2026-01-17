@@ -7,7 +7,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "./Cart.css";
 import sample from "../../assets/images/sample.jpg";
-import { FaArrowLeft } from "react-icons/fa"; // Imported for the back icon
+import { FaArrowLeft } from "react-icons/fa";
 import {
   loadCart,
   updateCartItemQuantity,
@@ -89,23 +89,27 @@ const Cart = () => {
   const handleCheckout = () => {
     if (!basketItems.length) return;
 
-    // Format items to match the Checkout Summary's expected keys
+    // Explicitly map keys and ensure Number types
     const formattedItems = basketItems.map(item => ({
       ...item,
-      // Ensure these keys match exactly what your Checkout component reads
-      deliveryCharge: Number(item.shippingCharge || 0),
+      // Ensure these keys are preserved for the Checkout computation logic
+      shippingCharge: Number(item.shippingCharge || 0),
       installationCharge: Number(item.installationCharge || 0),
-      amountPerTrip: Number(item.amountPerTrip || 0)
+      shippingChargeType: item.shippingChargeType || "Paid",
+      installationAvailable: item.installationAvailable || "no",
+      amountPerTrip: Number(item.amountPerTrip || 0),
+      trips: Number(item.trips || 1),
     }));
 
     try {
       localStorage.setItem("casa_cart", JSON.stringify(formattedItems));
-      clearSingleCheckoutItem();
+      clearSingleCheckoutItem(); // Avoid conflicts with "Buy Now"
       router.push("/checkout");
     } catch (err) {
-      console.error("Failed to save cart", err);
+      console.error("Failed to save cart for checkout", err);
     }
   };
+
   // Prevent rendering the dynamic basket content until mounted on the client
   if (!isMounted) {
     return (
@@ -125,14 +129,12 @@ const Cart = () => {
     <>
       <Navbar />
 
+      <div className="cart-top-nav">
+        <button className="cart-back-btn" onClick={() => router.back()}>
+          <FaArrowLeft /> Back to Shopping
+        </button>
+      </div>
       <main className="cart-page">
-        {/* TOP NAVIGATION / BACK BUTTON */}
-        <div className="cart-top-nav">
-          <button className="cart-back-btn" onClick={() => router.back()}>
-            <FaArrowLeft /> Back to Shopping
-          </button>
-        </div>
-
         <h1 className="cart-heading">Your Shopping Basket</h1>
 
         <section className="cart-layout">
@@ -149,11 +151,11 @@ const Cart = () => {
               </div>
             ) : (
               basketItems.map((item) => (
-                <article key={item.materialId} className="cart-card">
+                <article key={`${item.materialId}-${item.supplierId}`} className="cart-card">
                   <div className="cart-img-box">
                     <Image
                       src={
-                        item.image && item.image.startsWith("http")
+                        item.image && typeof item.image === "string" && item.image.startsWith("http")
                           ? item.image
                           : item.image
                             ? `/${item.image}`

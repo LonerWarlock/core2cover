@@ -278,6 +278,9 @@
   font-size: 1rem;
   padding: 0;
   transition: transform 0.3s ease, color 0.3s ease;
+  position: fixed;
+  margin-top: 10px;
+  margin-left: 20px;
 }
 
 .cart-back-btn:hover {

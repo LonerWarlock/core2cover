@@ -12,7 +12,6 @@ export async function POST(request) {
       creditUsed = 0,
     } = body;
 
-    // 1. Basic Validation
     if (!customerEmail || !orders?.length) {
       return NextResponse.json({ message: "Invalid order data" }, { status: 400 });
     }
@@ -27,114 +26,60 @@ export async function POST(request) {
 
     const creditToUse = Number(creditUsed || 0);
 
-    // 2. Credit Validation
-    if (creditToUse > 0) {
-      if (user.credit < creditToUse) {
-        return NextResponse.json({ message: "Insufficient store credit" }, { status: 400 });
-      }
+    if (creditToUse > 0 && user.credit < creditToUse) {
+      return NextResponse.json({ message: "Insufficient store credit" }, { status: 400 });
     }
 
-    /* =========================
-       START TRANSACTION
-    ========================= */
     const result = await prisma.$transaction(async (tx) => {
-      /* =========================
-         A. CREATE ORDER RECORD
-      ========================= */
+      // 1. Create the main Order record
       const order = await tx.order.create({
         data: {
           userId: user.id,
           customerEmail,
           customerName: checkoutDetails.name,
           address: checkoutDetails.address,
-
-          // Payment Method Logic
           paymentMethod: creditToUse > 0 ? "store_credit" : checkoutDetails.paymentMethod,
-
-          subtotal: summary.subtotal,
-          casaCharge: summary.casaCharge,
-          deliveryCharge: summary.deliveryCharge,
-          grandTotal: summary.grandTotal,
+          subtotal: Number(summary.subtotal || 0),
+          casaCharge: Number(summary.casaCharge || 0),
+          deliveryCharge: Number(summary.deliveryCharge || 0),
+          grandTotal: Number(summary.grandTotal || 0),
         },
       });
 
-      /* =========================
-         B. FETCH SELLER DELIVERY SNAPSHOTS
-      ========================= */
-      // Avoid querying the same seller multiple times
-      const sellerDeliveryMap = {};
-      
-      for (const item of orders) {
-        if (!sellerDeliveryMap[item.supplierId]) {
-          sellerDeliveryMap[item.supplierId] = await tx.sellerDeliveryDetails.findUnique({
-            where: { sellerId: item.supplierId },
-          });
-        }
-      }
+      // 2. Map and Create Order Items
+      const orderItemsData = orders.map((item) => ({
+        orderId: order.id,
+        materialId: Number(item.materialId),
+        materialName: item.materialName || item.name || "Unknown Product",
+        supplierName: item.supplierName || item.supplier || "Unknown Seller",
+        sellerId: Number(item.supplierId || item.sellerId),
+        quantity: Number(item.trips || item.quantity || 1),
+        pricePerUnit: Number(item.amountPerTrip || 0),
+        totalAmount: Number(item.amountPerTrip || 0) * Number(item.trips || item.quantity || 1),
+        imageUrl: item.imageUrl || item.image || null,
 
-      /* =========================
-         C. PREPARE ORDER ITEMS DATA
-      ========================= */
-      const orderItemsData = await Promise.all(
-        orders.map(async (item) => {
-          // Fetch product to snapshot the image
-          const product = await tx.product.findUnique({
-            where: { id: item.materialId },
-          });
+        // SNAPSHOT DATA: Save the charges exactly as they were calculated
+        shippingChargeType: item.shippingChargeType || "free",
+        shippingCharge: Number(item.shippingCharge || 0),
+        installationAvailable: item.installationAvailable || "no",
+        installationCharge: Number(item.installationCharge || 0),
+      }));
 
-          const delivery = sellerDeliveryMap[item.supplierId];
-
-          return {
-            orderId: order.id,
-
-            materialId: item.materialId,
-            materialName: item.materialName,
-            supplierName: item.supplierName,
-
-            sellerId: item.supplierId,
-            quantity: item.trips,
-            pricePerUnit: item.amountPerTrip,
-            totalAmount: item.amountPerTrip * item.trips,
-
-            // Snapshot Image URL
-            imageUrl: product?.images?.[0] || null,
-
-            // Snapshot Delivery Details
-            deliveryTimeMin: delivery?.deliveryTimeMin || null,
-            deliveryTimeMax: delivery?.deliveryTimeMax || null,
-            shippingChargeType: delivery?.shippingChargeType ?? "free",
-            shippingCharge: delivery?.shippingCharge ?? 0,
-            installationAvailable: delivery?.installationAvailable ?? "no",
-            installationCharge: delivery?.installationCharge ?? 0,
-          };
-        })
-      );
-
-      /* =========================
-         D. BULK CREATE ORDER ITEMS
-      ========================= */
       await tx.orderItem.createMany({
         data: orderItemsData,
       });
 
-      /* =========================
-         E. DEDUCT STORE CREDIT
-      ========================= */
+      // 3. Update Credit if used
       if (creditToUse > 0) {
         await tx.user.update({
           where: { id: user.id },
-          data: {
-            credit: {
-              decrement: creditToUse,
-            },
-          },
+          data: { credit: { decrement: creditToUse } },
         });
       }
 
       return order;
     });
 
-    // Fetch updated user credit after transaction commits
     const updatedUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: { credit: true },
@@ -143,7 +88,6 @@ export async function POST(request) {
     return NextResponse.json({
       message: "Order placed successfully",
       orderId: result.id,
-      creditUsed: creditToUse,
       newCredit: updatedUser?.credit ?? 0,
     }, { status: 201 });
 
