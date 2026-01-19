@@ -169,3 +169,52 @@
   font-size: 1.1rem;
   color: #8F8B84;
 }
+
+/* =========================================
+   CATEGORY HEADER STYLING (h2)
+========================================= */
+.portfolio-section {
+  margin-top: 50px;
+  text-align: left; /* Align with the back button and grid */
+}
+
+.portfolio-section h2 {
+  font-family: var(--font-heading); /* Playfair Display */
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--green-dark);
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  letter-spacing: -0.02em;
+}
+
+/* Subtle Decorative Line after the text */
+.portfolio-section h2::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(96, 110, 82, 0.2), transparent);
+  margin-top: 4px;
+}
+
+/* Icon styling within h2 */
+.portfolio-section h2 svg {
+  font-size: 1.6rem;
+  color: var(--green-mid);
+  opacity: 0.9;
+}
+
+/* Mobile Adjustments for h2 */
+@media (max-width: 600px) {
+  .portfolio-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .portfolio-section h2::after {
+    display: none; /* Keep mobile view cleaner */
+  }
+}

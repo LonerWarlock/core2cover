@@ -18,12 +18,23 @@ export async function GET(request, { params }) {
     }
 
     const { email } = await params;
+    const decodedEmail = decodeURIComponent(email).toLowerCase();
     console.log("Requested Email:", email);
     console.log("Logged in Email:", session.user.email);
 
     const user = await prisma.user.findUnique({
-      where: { email: decodeURIComponent(email).toLowerCase() },
+      where: { email: decodedEmail },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,   
+        address: true, 
+        image: true,
+      }
     });
+
+    if (!user) return NextResponse.json({ message: "User not found" }, { status: 404 });
 
     console.log("Database User Result:", user ? "User Found" : "User Not in DB");
     return NextResponse.json(user);

@@ -19,12 +19,12 @@ import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
-import { FaArrowLeft, FaMapMarkerAlt, FaSearch } from "react-icons/fa";
+import sample from "../../assets/images/sample.jpg"; // Import fallback image
+import { FaArrowLeft, FaMapMarkerAlt, FaSearch, FaShoppingBag } from "react-icons/fa";
 
 // Google Maps Imports
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
 
-// 1. Move this outside the component to prevent re-renders triggering the error
 const LIBRARIES = ["places", "maps"];
 
 const mapContainerStyle = {
@@ -45,7 +45,6 @@ export default function Checkout() {
   const autocompleteRef = useRef(null);
   const mapRef = useRef(null);
 
-  // 2. Use the standardized LIBRARIES constant here
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     libraries: LIBRARIES,
@@ -64,22 +63,20 @@ export default function Checkout() {
 
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
-  /* =========================================
-      SEARCH & SELECTION HANDLERS
-  ========================================= */
+  const updateQty = (id, newQty) => {
+    if (newQty < 1) return;
+    setItems((prev) =>
+      prev.map((it) => (it.materialId === id ? { ...it, quantity: newQty } : it))
+    );
+  };
+
   const onPlaceChanged = () => {
     if (autocompleteRef.current !== null) {
       const place = autocompleteRef.current.getPlace();
       if (!place.geometry || !place.geometry.location) return;
-
-      const location = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng()
-      };
-
+      const location = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
       setMarkerPosition(location);
       setAddress(place.formatted_address || "");
-
       if (mapRef.current) {
         mapRef.current.panTo(location);
         mapRef.current.setZoom(17);
@@ -92,12 +89,9 @@ export default function Checkout() {
     const lng = e.latLng.lng();
     const location = { lat, lng };
     setMarkerPosition(location);
-
     const geocoder = new window.google.maps.Geocoder();
     geocoder.geocode({ location }, (results, status) => {
-      if (status === "OK" && results[0]) {
-        setAddress(results[0].formatted_address);
-      }
+      if (status === "OK" && results[0]) setAddress(results[0].formatted_address);
     });
   }, []);
 
@@ -127,16 +121,36 @@ export default function Checkout() {
     getUserCredit().then((res) => setCredit(Number(res.data.credit || 0))).catch(() => setCredit(0));
   }, [session, status]);
 
+  /* =========================================
+      SUMMARY CALCULATION WITH TIERED CHARGES
+  ========================================= */
   const computeSummary = useMemo(() => {
     let subtotal = 0, deliveryCharge = 0, installationTotal = 0;
+    
     items.forEach((it) => {
       const qty = it.quantity;
       subtotal += it.amountPerTrip * qty;
       if (it.shippingChargeType.toLowerCase() !== "free") deliveryCharge += it.shippingCharge * qty;
       if (it.installationAvailable.toLowerCase() === "yes") installationTotal += it.installationCharge * qty;
     });
-    const casaCharge = Math.round(subtotal * 0.05);
-    return { subtotal, deliveryCharge, installationTotal, casaCharge, grandTotal: subtotal + deliveryCharge + installationTotal + casaCharge };
+
+    // Tiered Platform Charges Logic
+    let casaCharge = 0;
+    if (subtotal < 10000) {
+      casaCharge = 89;
+    } else if (subtotal < 50000) {
+      casaCharge = 159;
+    } else {
+      casaCharge = 219;
+    }
+
+    return { 
+      subtotal, 
+      deliveryCharge, 
+      installationTotal, 
+      casaCharge, 
+      grandTotal: subtotal + deliveryCharge + installationTotal + casaCharge 
+    };
   }, [items]);
 
   const handlePlaceOrder = async () => {
@@ -150,11 +164,8 @@ export default function Checkout() {
         summary: computeSummary,
         creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
       });
-
       if (res?.data?.orderId) {
-        // CRITICAL: Ensure the email used for checkout is saved for MyOrders to find
         localStorage.setItem("userEmail", email.toLowerCase().trim());
-
         clearSingleCheckoutItem();
         clearCart();
         triggerMsg("Order placed successfully!", "success");
@@ -184,6 +195,45 @@ export default function Checkout() {
 
         <div className="checkout-grid">
           <section className="checkout-left">
+
+            {/* Review Items Section */}
+            <div className="checkout-card">
+              <h2><FaShoppingBag /> Review Items</h2>
+              <div className="checkout-items-list">
+                {items.map((item, idx) => (
+                  <div key={idx} className="checkout-item">
+                    <div className="checkout-item-img-container">
+                      <Image
+                        src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image}`) : sample}
+                        alt={item.name}
+                        width={80}
+                        height={80}
+                        className="checkout-item-img"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="checkout-item-details">
+                      <h4 className="checkout-item-name">{item.name}</h4>
+                      <p className="checkout-item-seller">Seller: {item.supplier || item.seller}</p>
+
+                      <div className="checkout-item-meta-row">
+                        <div className="checkout-qty-controls">
+                          <button onClick={() => updateQty(item.materialId, item.quantity - 1)}>-</button>
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            readOnly
+                          />
+                          <button onClick={() => updateQty(item.materialId, item.quantity + 1)}>+</button>
+                        </div>
+                        <span className="checkout-item-sub">{formatINR(item.amountPerTrip * item.quantity)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="checkout-card">
               <h2>Contact Information</h2>
               <label className="form-row">
@@ -198,12 +248,8 @@ export default function Checkout() {
 
             <div className="checkout-card">
               <h2><FaMapMarkerAlt /> Delivery Location</h2>
-
               <div className="search-box-wrapper" style={{ marginBottom: '15px' }}>
-                <Autocomplete
-                  onLoad={(ref) => (autocompleteRef.current = ref)}
-                  onPlaceChanged={onPlaceChanged}
-                >
+                <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
                   <div style={{ position: 'relative' }}>
                     <FaSearch style={{ position: 'absolute', left: '12px', top: '13px', color: '#888' }} />
                     <input
@@ -214,25 +260,12 @@ export default function Checkout() {
                   </div>
                 </Autocomplete>
               </div>
-
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={markerPosition || defaultCenter}
-                zoom={12}
-                onLoad={(map) => (mapRef.current = map)}
-                onClick={onMapClick}
-              >
+              <GoogleMap mapContainerStyle={mapContainerStyle} center={markerPosition || defaultCenter} zoom={12} onLoad={(map) => (mapRef.current = map)} onClick={onMapClick}>
                 {markerPosition && <Marker position={markerPosition} />}
               </GoogleMap>
-
               <label className="form-row" style={{ marginTop: '20px' }}>
                 <span>Final Delivery Address</span>
-                <textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  rows={3}
-                  placeholder="The address will appear here after search or map click..."
-                />
+                <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} placeholder="The address will appear here after search or map click..." />
               </label>
             </div>
 
@@ -253,17 +286,14 @@ export default function Checkout() {
             <div className="summary-card">
               <h2>Order Summary</h2>
               <div className="summary-row"><span>Items Subtotal</span><span>{formatINR(computeSummary.subtotal)}</span></div>
-              <div className="summary-row"><span>Delivery</span><span>{formatINR(computeSummary.deliveryCharge)}</span></div>
-
-              {/* NEW: Installation Charge Row */}
+              <div className="summary-row"><span>Delivery Charges</span><span>{formatINR(computeSummary.deliveryCharge)}</span></div>
               {computeSummary.installationTotal > 0 && (
-                <div className="summary-row">
-                  <span>Installation Charges</span>
-                  <span>{formatINR(computeSummary.installationTotal)}</span>
-                </div>
+                <div className="summary-row"><span>Installation Charges</span><span>{formatINR(computeSummary.installationTotal)}</span></div>
               )}
-
-              <div className="summary-row"><span>Platform Fee (5%)</span><span>{formatINR(computeSummary.casaCharge)}</span></div>
+              <div className="summary-row">
+                <span>Platform Charges</span>
+                <span>{formatINR(computeSummary.casaCharge)}</span>
+              </div>
               <hr />
               <div className="summary-row total"><span>Total Amount</span><span>{formatINR(computeSummary.grandTotal)}</span></div>
               <button className="place-order-btn" onClick={handlePlaceOrder} disabled={loading || items.length === 0}>

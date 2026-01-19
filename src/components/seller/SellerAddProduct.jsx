@@ -15,6 +15,7 @@ const SellerAddProduct = () => {
   
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [finalPrice, setFinalPrice] = useState(0); // New state for final calculation
   const [productType, setProductType] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -36,6 +37,27 @@ const SellerAddProduct = () => {
     if (!sid) router.push("/sellerlogin");
     else setSellerId(sid);
   }, [router]);
+
+  // Commission Calculation Logic
+  useEffect(() => {
+    const basePrice = parseFloat(price);
+    if (isNaN(basePrice) || basePrice <= 0) {
+      setFinalPrice(0);
+      return;
+    }
+
+    let commissionRate = 0;
+    if (basePrice < 10000) {
+      commissionRate = 0.07; // 7%
+    } else if (basePrice < 50000) {
+      commissionRate = 0.05; // 5%
+    } else {
+      commissionRate = 0.035; // 3.5%
+    }
+
+    const calculated = basePrice + (basePrice * commissionRate);
+    setFinalPrice(calculated.toFixed(2));
+  }, [price]);
 
   const productCategories = {
     finished: ["Furniture", "Modular Kitchen", "Doors & Windows", "Wardrobes", "Lighting", "Wall Panels", "Decor Items"],
@@ -60,13 +82,14 @@ const SellerAddProduct = () => {
     e.preventDefault();
     if (!name.trim()) return triggerMsg("Product name is required.", "error");
     if (images.length < 1) return triggerMsg("Upload at least 1 image.", "error");
+    if (parseFloat(finalPrice) <= 0) return triggerMsg("Valid price is required.", "error");
 
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("sellerId", sellerId);
       formData.append("name", name);
-      formData.append("price", price);
+      formData.append("price", finalPrice); // Send the final price (base + commission) to backend
       formData.append("productType", productType);
       formData.append("category", category);
       formData.append("description", description);
@@ -102,9 +125,15 @@ const SellerAddProduct = () => {
             <label className="sma-field"><span>Product Name *</span>
               <input className="sma-input" value={name} onChange={(e) => setName(e.target.value)} required suppressHydrationWarning />
             </label>
-            <label className="sma-field"><span>Price (₹) *</span>
-              <input type="number" className="sma-input" value={price} onChange={(e) => setPrice(e.target.value)} required suppressHydrationWarning />
+            
+            <label className="sma-field"><span>Your Price (₹) *</span>
+              <input type="number" className="sma-input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Amount you receive" required suppressHydrationWarning />
             </label>
+
+            <label className="sma-field"><span>Final Listing Price (incl. Commision)</span>
+              <input type="text" className="sma-input" value={`₹ ${finalPrice}`} readOnly style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed", fontWeight: "bold", color: "#606E52" }} suppressHydrationWarning />
+            </label>
+
             <label className="sma-field"><span>Product Type *</span>
               <select className="sma-input" value={productType} onChange={(e) => { setProductType(e.target.value); setCategory(""); }} required suppressHydrationWarning>
                 <option value="">Select</option>
@@ -112,19 +141,23 @@ const SellerAddProduct = () => {
                 <option value="material">Interior Material</option>
               </select>
             </label>
+
             <label className="sma-field"><span>Category *</span>
               <select className="sma-input" value={category} onChange={(e) => setCategory(e.target.value)} disabled={!productType} required suppressHydrationWarning>
                 <option value="">Select</option>
                 {productType && productCategories[productType].map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </label>
+
             <label className="sma-field sma-full"><span>Detailed Description</span>
               <textarea className="sma-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Talk about the materials, dimensions, and warranty..." />
             </label>
+
             <label className="sma-field sma-full"><span>Upload Images (1–10)</span>
               <input type="file" multiple accept="image/*" onChange={handleImages} className="sma-file" />
               <div className="sma-preview-grid">{imagePreviews.map((src, i) => <img key={i} src={src} className="sma-preview" />)}</div>
             </label>
+
             <label className="sma-field sma-full"><span>Upload Video (Max 30MB)</span>
               <input type="file" accept="video/*" onChange={handleVideo} className="sma-file" />
               {videoPreview && <video src={videoPreview} controls className="sma-preview" />}

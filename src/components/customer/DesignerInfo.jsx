@@ -1,36 +1,33 @@
 "use client";
 
 import api from "../../api/axios";
-import React, { useEffect, useState, Suspense, useRef } from "react";
+import React, { useEffect, useState, Suspense, useRef, useCallback } from "react";
 import "./DesignerInfo.css";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import {
   FaArrowLeft, FaStar, FaStarHalfAlt, FaRegStar,
-  FaTimes, FaSearchPlus, FaSearchMinus, FaExpand, FaExternalLinkAlt,
+  FaTimes, FaExpand, FaExternalLinkAlt,
   FaCheckCircle, FaMinusCircle
 } from "react-icons/fa";
 import { LuMapPin } from "react-icons/lu";
 import { useSearchParams, useRouter } from "next/navigation";
 import { hireDesigner } from "../../api/designer";
-import { useSession } from "next-auth/react"; // Import session hook
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
 
 /* ============================================================
     HELPERS
    ============================================================ */
-
 const formatTextWithBreaks = (text, wordLimit = 20) => {
   if (!text) return null;
   const words = text.split(/\s+/);
   if (words.length <= wordLimit) return text;
-
   const chunks = [];
   for (let i = 0; i < words.length; i += wordLimit) {
     chunks.push(words.slice(i, i + wordLimit).join(" "));
   }
-
   return chunks.map((chunk, index) => (
     <React.Fragment key={index}>
       {chunk}
@@ -43,13 +40,10 @@ const ExpandableText = ({ text = "", limit = 160 }) => {
   const [expanded, setExpanded] = useState(false);
   if (!text) return null;
   const isLong = text.length > limit;
-
   return (
     <div className="bio-container">
       <div className={`expandable-text ${expanded ? "expanded" : ""}`}>
-        {expanded || !isLong
-          ? formatTextWithBreaks(text)
-          : `${text.slice(0, limit)}...`}
+        {expanded || !isLong ? formatTextWithBreaks(text) : `${text.slice(0, limit)}...`}
       </div>
       {isLong && (
         <span className="see-more-btn" onClick={() => setExpanded(!expanded)}>
@@ -78,7 +72,7 @@ const renderStars = (avg) => {
     1. MAIN CONTENT COMPONENT
    ============================================================ */
 const DesignerInfoContent = () => {
-  const { data: session, status } = useSession(); // Get session status
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const designerId = searchParams.get("id");
@@ -94,14 +88,21 @@ const DesignerInfoContent = () => {
 
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  // Lightbox Zoom & Pan States
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const touchStartDist = useRef(0);
+
+  const [isMobile, setIsMobile] = useState(false);
 
   const [hireForm, setHireForm] = useState({
     fullName: "", mobile: "", email: "", location: "",
     budget: "", workType: "", timelineDate: "", description: ""
   });
 
-  // Autofill form when session is available
   useEffect(() => {
     if (session?.user) {
       setHireForm(prev => ({
@@ -113,6 +114,14 @@ const DesignerInfoContent = () => {
   }, [session]);
 
   useEffect(() => {
+    // Check for touch capability once component mounts
+    const checkTouch = () => {
+      setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    };
+    checkTouch();
+  }, []);
+
+  useEffect(() => {
     if (!designerId) return;
     const fetchAll = async () => {
       try {
@@ -122,19 +131,12 @@ const DesignerInfoContent = () => {
         ]);
         const info = await infoRes.json();
         const ratingsData = await ratingsRes.json();
-
         setDesigner(info);
-        const ratingsArray = Array.isArray(ratingsData) ? ratingsData : [];
-        setRatings(ratingsArray);
-
-        if (ratingsArray.length > 0) {
-          const sum = ratingsArray.reduce((acc, curr) => acc + curr.stars, 0);
-          setStats({
-            average: (sum / ratingsArray.length).toFixed(1),
-            total: ratingsArray.length
-          });
+        setRatings(Array.isArray(ratingsData) ? ratingsData : []);
+        if (Array.isArray(ratingsData) && ratingsData.length > 0) {
+          const sum = ratingsData.reduce((acc, curr) => acc + curr.stars, 0);
+          setStats({ average: (sum / ratingsData.length).toFixed(1), total: ratingsData.length });
         }
-
         if (info.works?.length > 0) {
           setSelectedWorkIndex(0);
           setActiveImage(info.works[0].image);
@@ -150,60 +152,80 @@ const DesignerInfoContent = () => {
     fetchAll();
   }, [designerId]);
 
-  const triggerMsg = (text, type = "success") => {
-    setMsg({ text, type, show: true });
+  const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
+  const handleHireChange = (e) => setHireForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  // ZOOM LOGIC (Scroll Wheel)
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    const delta = e.deltaY * -0.002;
+    setZoomLevel(prev => {
+      const nextZoom = Math.min(Math.max(prev + delta, 1), 5);
+      if (nextZoom === 1) setPosition({ x: 0, y: 0 });
+      return nextZoom;
+    });
+  }, []);
+
+  // PANNING LOGIC
+  const handleMouseDown = (e) => {
+    if (zoomLevel <= 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
-  const handleHireChange = (e) => {
-    const { name, value } = e.target;
-    setHireForm(prev => ({ ...prev, [name]: value }));
+  const handleMouseMove = (e) => {
+    if (!isDragging || zoomLevel <= 1) return;
+    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
-  const handleZoom = (direction) => {
-    setZoomLevel(prev => direction === 'in' ? Math.min(prev + 0.5, 4) : Math.max(prev - 0.5, 1));
+  const handleMouseUp = () => setIsDragging(false);
+
+  // MOBILE TOUCH LOGIC (Pinch to zoom & Pan)
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - position.x, y: e.touches[0].clientY - position.y });
+    } else if (e.touches.length === 2) {
+      touchStartDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 1 && isDragging && zoomLevel > 1) {
+      setPosition({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = (dist - touchStartDist.current) * 0.01;
+      setZoomLevel(prev => Math.min(Math.max(prev + delta, 1), 5));
+      touchStartDist.current = dist;
+    }
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
   };
 
   const handleHireSubmit = async (e) => {
     e.preventDefault();
-
     if (status !== "authenticated") {
       triggerMsg("Please login to hire a designer", "error");
       return;
     }
-
     try {
       setHireLoading(true);
-
-      // Log the payload to verify the data before it leaves the browser
-      console.log("Submitting Payload:", {
-        ...hireForm,
-        userEmail: session.user.email
-      });
-
-      // Ensure 'hireDesigner' is imported from "../../api/designer"
-      const response = await hireDesigner(designerId, {
-        ...hireForm,
-        userEmail: session.user.email,
-        budget: Number(hireForm.budget)
-      });
-
-      console.log("Server Success Response:", response.data);
+      await hireDesigner(designerId, { ...hireForm, userEmail: session.user.email, budget: Number(hireForm.budget) });
       triggerMsg("Request sent successfully!", "success");
       setShowForm(false);
-
     } catch (err) {
-      // Detailed error logging
-      console.error("FULL ERROR OBJECT:", err);
-
-      if (err.response) {
-        // The server responded with a status code outside the 2xx range
-        console.error("Server Error Data:", err.response.data);
-        triggerMsg(err.response.data.message || "Request rejected by server", "error");
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Setup/Network Error:", err.message);
-        triggerMsg("Failed to send request. Check console for details.", "error");
-      }
+      triggerMsg("Failed to send request.", "error");
     } finally {
       setHireLoading(false);
     }
@@ -211,62 +233,27 @@ const DesignerInfoContent = () => {
 
   if (loading || !designer) return <div className="loading-pad">Loading designer profile...</div>;
 
-  const isAvailable = designer.availability?.toLowerCase() === "available";
-
   return (
     <div className="designer-info-page">
-      {msg.show && (
-        <MessageBox
-          message={msg.text}
-          type={msg.type}
-          onClose={() => setMsg({ ...msg, show: false })}
-        />
-      )}
+      {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
-      <button className="back-btn" onClick={() => router.back()}>
-        <FaArrowLeft /> Back
-      </button>
+      <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
 
       <div className="designer-info-layout">
         <div className="designer-text">
           <div className="profile-header-wrap">
-            <Image
-              src={designer.profile?.profileImage || "/assets/images/sample.jpg"}
-              width={150} height={150} className="designer-photo" alt="profile"
-            />
-            <div className={`availability-pill ${isAvailable ? "available" : "unavailable"}`}>
-              {isAvailable ? <FaCheckCircle /> : <FaMinusCircle />}
+            <Image src={designer.profile?.profileImage || "/assets/images/sample.jpg"} width={150} height={150} className="designer-photo" alt="profile" />
+            <div className={`availability-pill ${designer.availability?.toLowerCase() === "available" ? "available" : "unavailable"}`}>
+              {designer.availability?.toLowerCase() === "available" ? <FaCheckCircle /> : <FaMinusCircle />}
               {designer.availability || "Unknown"}
             </div>
           </div>
-
           <h1 className="designer-name">{designer.fullname}</h1>
           <p className="designer-location"><LuMapPin /> {designer.location}</p>
-
-          {designer.profile?.portfolio && (
-            <a
-              href={designer.profile.portfolio.startsWith('http') ? designer.profile.portfolio : `https://${designer.profile.portfolio}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="portfolio-external-link"
-            >
-              <FaExternalLinkAlt /> View Detailed Portfolio
-            </a>
-          )}
-
-          <div className="designer-rating-summary">
-            {renderStars(stats.average)}
-            <span>({stats.total} Reviews)</span>
-          </div>
-
+          <div className="designer-rating-summary">{renderStars(stats.average)}<span>({stats.total} Reviews)</span></div>
           <ExpandableText text={designer.profile?.bio} />
-
-          <button
-            className={`hire-btn ${!isAvailable ? "disabled" : ""}`}
-            onClick={() => isAvailable && setShowForm(true)}
-            disabled={!isAvailable}
-          >
-            {isAvailable ? "Hire This Designer" : "Currently Unavailable"}
+          <button className={`hire-btn ${designer.availability?.toLowerCase() !== "available" ? "disabled" : ""}`} onClick={() => designer.availability?.toLowerCase() === "available" && setShowForm(true)}>
+            {designer.availability?.toLowerCase() === "available" ? "Hire This Designer" : "Currently Unavailable"}
           </button>
         </div>
 
@@ -288,53 +275,38 @@ const DesignerInfoContent = () => {
         </div>
       </section>
 
-      <section className="designer-reviews-section">
-        <div className="section-header">
-          <h2>Client Feedback</h2>
-          {stats.total > 0 && (
-            <div className="overall-rating-badge">
-              <span className="avg-num">{stats.average}</span>
-              <div className="stars-wrap">{renderStars(stats.average)}</div>
-            </div>
-          )}
-        </div>
-        <div className="reviews-container">
-          {ratings.length > 0 ? (
-            ratings.map((rev, index) => {
-              const clientName = rev.hireRequest?.user?.name || rev.reviewerName || "Verified Client";
-              return (
-                <div key={rev.id || index} className="individual-review-card">
-                  <div className="rev-header">
-                    <div className="rev-user-meta">
-                      <div className="rev-avatar">{clientName[0].toUpperCase()}</div>
-                      <div className="rev-details">
-                        <span className="reviewer-name">{clientName}</span>
-                        <span className="review-date">
-                          {new Date(rev.createdAt).toLocaleDateString('en-GB')}
-                        </span>
-                      </div>
-                    </div>
-                    {renderStars(rev.stars)}
-                  </div>
-                  <div className="rev-text">"{formatTextWithBreaks(rev.review) || "No written comment provided."}"</div>
-                </div>
-              );
-            })
-          ) : (
-            <p className="no-reviews">No client feedback available yet.</p>
-          )}
-        </div>
-      </section>
-
       {isLightboxOpen && (
-        <div className="lightbox-overlay" onClick={() => setIsLightboxOpen(false)}>
-          <button className="lightbox-close" onClick={() => setIsLightboxOpen(false)}><FaTimes /></button>
-          <div className="lightbox-controls">
-            <button onClick={(e) => { e.stopPropagation(); handleZoom('in'); }}><FaSearchPlus /></button>
-            <button onClick={(e) => { e.stopPropagation(); handleZoom('out'); }}><FaSearchMinus /></button>
-          </div>
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img src={activeImage} alt="Fullscreen" style={{ transform: `scale(${zoomLevel})`, transition: 'transform 0.3s ease' }} className="lightbox-img" />
+        <div className="lightbox-overlay" onWheel={handleWheel} onClick={closeLightbox}>
+          <button className="lightbox-close" onClick={closeLightbox}><FaTimes /></button>
+
+          <span className="lightbox-controls-aesthetic">
+            {isMobile
+              ? "Pinch to Zoom • Swipe to Move"
+              : "Scroll to Zoom • Drag to Move"}
+          </span>
+
+          <div
+            className="lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={() => setIsDragging(false)}
+          >
+            <img
+              src={activeImage}
+              alt="Fullscreen"
+              onMouseDown={handleMouseDown}
+              draggable="false"
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${zoomLevel})`,
+                transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                touchAction: 'none'
+              }}
+              className="lightbox-img"
+            />
           </div>
         </div>
       )}
@@ -342,10 +314,7 @@ const DesignerInfoContent = () => {
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Hire {designer.fullname}</h2>
-              <FaTimes onClick={() => setShowForm(false)} style={{ cursor: 'pointer' }} />
-            </div>
+            <div className="modal-header"><h2>Hire {designer.fullname}</h2><FaTimes onClick={() => setShowForm(false)} style={{ cursor: 'pointer' }} /></div>
             <form className="modal-form" onSubmit={handleHireSubmit}>
               <div className="form-grid">
                 <div><label>Full Name</label><input name="fullName" value={hireForm.fullName} onChange={handleHireChange} required /></div>
@@ -374,6 +343,7 @@ const DesignerInfoContent = () => {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 };
@@ -382,7 +352,6 @@ const DesignerInfo = () => (
   <Suspense fallback={<div>Loading Page...</div>}>
     <Navbar />
     <DesignerInfoContent />
-    <Footer />
   </Suspense>
 );
 

@@ -9,6 +9,7 @@ import {
 } from "../../api/seller";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
+import { FaTimes, FaExpand } from "react-icons/fa"; // Added icons for the Lightbox
 
 /* =========================
    SAFE HELPERS
@@ -42,6 +43,9 @@ export default function SellerReturns() {
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedReturnId, setSelectedReturnId] = useState(null);
+  
+  /* 🔹 Lightbox state */
+  const [fullscreenImg, setFullscreenImg] = useState(null);
 
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
@@ -171,14 +175,19 @@ export default function SellerReturns() {
 
                     {r.images?.length > 0 && (
                       <div className="return-images">
-                        {r.images.map((img, idx) => (
-                          <img
-                            key={idx}
-                            src={img.startsWith('http') ? img : `http://localhost:3000${img}`}
-                            alt="Return proof"
-                            className="return-thumb"
-                          />
-                        ))}
+                        {r.images.map((img, idx) => {
+                          const fullUrl = img.startsWith('http') ? img : `http://localhost:3000${img}`;
+                          return (
+                            <div 
+                              key={idx} 
+                              className="thumb-wrapper"
+                              onClick={() => setFullscreenImg(fullUrl)}
+                            >
+                              <img src={fullUrl} alt="Return proof" className="return-thumb" />
+                              <div className="thumb-overlay"><FaExpand /></div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 
@@ -213,6 +222,18 @@ export default function SellerReturns() {
         )}
       </div>
 
+      {/* LIGHTBOX / FULLSCREEN VIEW */}
+      {fullscreenImg && (
+        <div className="lightbox-overlay" onClick={() => setFullscreenImg(null)}>
+          <button className="lightbox-close" onClick={() => setFullscreenImg(null)}>
+            <FaTimes />
+          </button>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img src={fullscreenImg} alt="Return Evidence Fullscreen" />
+          </div>
+        </div>
+      )}
+
       {/* APPROVE CONFIRMATION MODAL */}
       {approveModalOpen && (
         <div className="modal-overlay">
@@ -223,7 +244,6 @@ export default function SellerReturns() {
               <button className="cancel-btn" onClick={() => setApproveModalOpen(false)}>
                 Cancel
               </button>
-              {/* Added primary action button below */}
               <button className="confirm-reject-btn" style={{ background: "#6b7c5c" }} onClick={handleApprove}>
                 Confirm Approval
               </button>

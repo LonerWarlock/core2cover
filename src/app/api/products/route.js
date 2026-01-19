@@ -12,7 +12,18 @@ export async function GET(request) {
         seller: {
           select: {
             name: true,
-            business: { select: { city: true, state: true } },
+            // Access delivery details through the 'delivery' relation
+            delivery: {
+              select: {
+                shippingChargeType: true,
+                shippingCharge: true,
+                installationAvailable: true,
+                installationCharge: true,
+              }
+            },
+            business: { 
+              select: { city: true, state: true } 
+            },
           },
         },
         ratings: { select: { stars: true } },
@@ -40,6 +51,11 @@ export async function GET(request) {
         sellerBusiness: p.seller?.business || null,
         avgRating: Number(avgRating.toFixed(1)),
         ratingCount: count,
+        // Pull fields from the nested delivery object
+        shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
+        shippingCharge: p.seller?.delivery?.shippingCharge || 0,
+        installationAvailable: p.seller?.delivery?.installationAvailable || "no",
+        installationCharge: p.seller?.delivery?.installationCharge || 0,
       };
     });
 

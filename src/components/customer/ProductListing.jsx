@@ -5,8 +5,8 @@ import Navbar from "./Navbar";
 import ProductCard from "./ProductCard";
 import Footer from "./Footer";
 import "./ProductListing.css";
-import { useSearchParams, useRouter } from "next/navigation"; // Added useRouter
-import { FaArrowLeft } from "react-icons/fa"; // Added for the icon
+import { useSearchParams, useRouter } from "next/navigation";
+import { FaArrowLeft, FaStar, FaRegClock, FaGem, FaLayerGroup } from "react-icons/fa";
 
 const ProductListing = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -14,25 +14,15 @@ const ProductListing = () => {
   const [loading, setLoading] = useState(true);
 
   const searchParams = useSearchParams();
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
-  /* =========================================
-      PAGE TITLE & DESCRIPTION
-  ========================================= */
   const currentPageTitle = searchParams.get("page") || "Readymade Products";
   const currentPageDesc = searchParams.get("desc") || "Find the perfect product that enhances your quality of living.";
 
-  /* =========================================
-      DETERMINE PRODUCT TYPE
-      finished | material
-  ========================================= */
   const pageProductType = currentPageTitle.toLowerCase().includes("raw")
     ? "material"
     : "finished";
 
-  /* =========================================
-      FETCH PRODUCTS FROM BACKEND
-  ========================================= */
   useEffect(() => {
     fetch(`/api/products?type=${pageProductType}`)
       .then((res) => res.json())
@@ -48,9 +38,6 @@ const ProductListing = () => {
       });
   }, [pageProductType]);
 
-  /* =========================================
-      CATEGORY LIST
-  ========================================= */
   const categories = useMemo(() => {
     const uniqueCategories = products
       .map((p) => p.category)
@@ -59,29 +46,73 @@ const ProductListing = () => {
   }, [products]);
 
   /* =========================================
-      FILTERED PRODUCTS
+      NEW CATEGORIZATION LOGIC
   ========================================= */
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === "All") return products;
-    return products.filter(
-      (p) => p.category === selectedCategory
-    );
+  const categorizedData = useMemo(() => {
+    const baseList = selectedCategory === "All" 
+      ? products 
+      : products.filter(p => p.category === selectedCategory);
+
+    return {
+      // Products with rating >= 4.5
+      topRated: baseList.filter(p => Number(p.avgRating) >= 4.5),
+      
+      // Products priced above ₹15,000 (Luxury/High-end)
+      premium: baseList.filter(p => Number(p.price) >= 15000),
+      
+      // Sorted by ID or date to show latest additions
+      newArrivals: [...baseList].sort((a, b) => b.id - a.id).slice(0, 4),
+      
+      // The rest of the items
+      explore: baseList.filter(p => 
+        Number(p.avgRating) < 4.5 && 
+        Number(p.price) < 15000
+      )
+    };
   }, [products, selectedCategory]);
+
+  const renderSection = (title, icon, list) => {
+    if (list.length === 0) return null;
+    return (
+      <div className="portfolio-section" style={{ marginTop: '50px', textAlign: 'left' }}>
+        <h2 style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '15px', 
+          fontSize: '2rem', 
+          color: '#606E52', 
+          fontFamily: '"Playfair Display", serif',
+          fontWeight: '500'
+        }}>
+           {icon} {title}
+        </h2>
+        <div className="product-grid">
+          {list.map((product) => (
+            <ProductCard
+              key={product.id}
+              {...product}
+              title={product.name}
+              origin={product.sellerBusiness ? `${product.sellerBusiness.city}, ${product.sellerBusiness.state}` : "Not specified"}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
       <Navbar />
-
       <section className="products-section">
-        {/* Added Back Button */}
-        <button className="back-btn" onClick={() => router.back()}>
-          <FaArrowLeft /> Back
-        </button>
+        <div className="listing-top-nav">
+          <button className="back-btn" onClick={() => router.back()}>
+            <FaArrowLeft /> Back
+          </button>
+        </div>
 
         <h2 className="products-title">{currentPageTitle}</h2>
         <p className="products-subtitle">{currentPageDesc}</p>
 
-        {/* Category Filter */}
         <div className="category-filter">
           {categories.map((cat) => (
             <button
@@ -94,41 +125,18 @@ const ProductListing = () => {
           ))}
         </div>
 
-        {/* Product Grid */}
-        <div className="product-grid">
-          {loading ? (
-            <div style={{ padding: "20px", gridColumn: "1 / -1", color: "#6b7280" }}>
-              Loading products...
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div style={{ padding: "20px", gridColumn: "1 / -1", color: "#6b7280" }}>
-              No products available.
-            </div>
-          ) : (
-            filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                sellerId={product.sellerId}
-                title={product.name}
-                category={product.category}
-                description={product.description}
-                price={product.price}
-                availability={product.availability}
-                avgRating={product.avgRating}
-                ratingCount={product.ratingCount}
-                images={product.images || []}
-                video={product.video}
-                seller={product.seller}
-                origin={
-                  product.sellerBusiness
-                    ? `${product.sellerBusiness.city}, ${product.sellerBusiness.state}`
-                    : "Not specified"
-                }
-              />
-            ))
-          )}
-        </div>
+        {loading ? (
+          <div style={{ padding: "100px", textAlign: 'center', color: "#6b7280" }}>Loading Core2Cover collection...</div>
+        ) : products.length === 0 ? (
+          <div className="no-results">No items found in this category.</div>
+        ) : (
+          <>
+            {renderSection("New Arrivals", <FaRegClock />, categorizedData.newArrivals)}
+            {renderSection("Top Rated Picks", <FaStar style={{color: '#facc15'}}/>, categorizedData.topRated)}
+            {renderSection("Premium Collection", <FaGem style={{color: '#91A56E'}}/>, categorizedData.premium)}
+            {renderSection("Explore More", <FaLayerGroup />, categorizedData.explore)}
+          </>
+        )}
       </section>
       <Footer />
     </>

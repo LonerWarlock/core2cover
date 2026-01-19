@@ -479,3 +479,174 @@
   transform: translateX(-5px);
   color: var(--green-mid);
 }
+
+/* =========================================
+   AESTHETIC HEADINGS (h2)
+========================================= */
+
+.checkout-card h2, 
+.summary-card h2 {
+  font-family: "Big Caslon", "Playfair Display", serif; /* Premium accent font */
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--olive); /* Brand green */
+  margin-bottom: 22px;
+  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  letter-spacing: -0.01em;
+}
+
+/* Sophisticated Underline Accent */
+.checkout-card h2::after,
+.summary-card h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px; /* Short line for a curated feel */
+  height: 2px;
+  background-color: var(--olive);
+  border-radius: 2px;
+  opacity: 0.8;
+}
+
+/* Icon styling inside h2 */
+.checkout-card h2 svg {
+  font-size: 1.1rem;
+  color: var(--olive);
+  opacity: 0.9;
+}
+
+/* Subtle border to the whole card header for separation */
+.checkout-card h2 {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* Summary Card specific h2 styling */
+.summary-card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+  .checkout-card h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Product Review Section Styles */
+.checkout-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkout-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  background: #fdfdfb;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  align-items: center;
+}
+
+.checkout-item-img-container {
+  flex-shrink: 0;
+}
+
+.checkout-item-img {
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border-soft);
+}
+
+.checkout-item-details {
+  flex: 1;
+}
+
+.checkout-item-name {
+  font-family: "Big Caslon", serif;
+  font-size: 1.1rem;
+  color: var(--charcoal);
+  margin: 0 0 4px 0;
+}
+
+.checkout-item-seller {
+  font-size: 0.8rem;
+  color: var(--warm-gray);
+  margin-bottom: 8px;
+}
+
+.checkout-item-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.checkout-item-qty {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--olive);
+  background: rgba(96, 110, 82, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.checkout-item-sub {
+  font-weight: 700;
+  color: var(--charcoal);
+  font-size: 0.95rem;
+}
+
+/* Quantity Controls for Checkout Item */
+.checkout-qty-controls {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 32px;
+}
+
+.checkout-qty-controls button {
+  background: none;
+  border: none;
+  width: 30px;
+  height: 100%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--olive);
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkout-qty-controls button:hover {
+  background: var(--ivory);
+}
+
+.checkout-qty-controls input {
+  width: 35px;
+  border: none;
+  border-left: 1px solid var(--border-soft);
+  border-right: 1px solid var(--border-soft);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  background: transparent;
+  /* Hide arrows */
+  -moz-appearance: textfield;
+}
+
+.checkout-qty-controls input::-webkit-outer-spin-button,
+.checkout-qty-controls input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

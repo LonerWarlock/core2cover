@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
@@ -10,14 +10,26 @@ import MyOrders from "./MyOrders";
 import MyHiredDesigners from "./MyHiredDesigners";
 import { getUserByEmail, updateUserProfile } from "../../api/user";
 import { getClientHiredDesigners } from "../../api/designer";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
+import MessageBox from "../ui/MessageBox";
+import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
+
+const libraries = ["places"];
 
 const UserProfile = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("orders");
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+  
+  // Google Maps Loader
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    libraries,
+  });
 
-  // Initialise with empty strings to prevent the 'null value' warning
+  const autocompleteRef = useRef(null);
+
   const [user, setUser] = useState({
     name: "",
     email: "",
@@ -40,15 +52,9 @@ const UserProfile = () => {
     return null;
   }, [session, status]);
 
-  const ratingStats = useMemo(() => {
-    const feedback = designers.filter((d) => d.userRating);
-    if (feedback.length === 0) return { avg: null, count: 0 };
-    const total = feedback.reduce((sum, d) => sum + d.userRating.stars, 0);
-    return {
-      avg: (total / feedback.length).toFixed(1),
-      count: feedback.length,
-    };
-  }, [designers]);
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   useEffect(() => {
     if (status === "loading") return;
@@ -65,14 +71,20 @@ const UserProfile = () => {
           getClientHiredDesigners({ userId: effectiveUserId }),
         ]);
 
-        // Data Sanitisation: Convert nulls from DB into empty strings
         const userData = userRes.data || userRes;
+        
         setUser({
           name: userData.name || "",
           email: userData.email || "",
-          phone: userData.phone || "",    // Fixes the "—" display issue
-          address: userData.address || "", // Fixes the "—" display issue
+          phone: userData.phone || "",
+          address: userData.address || "",
         });
+
+        // Automatically prompt Google users to complete profile if data is missing
+        if (status === "authenticated" && (!userData.phone || !userData.address)) {
+          setIsEditing(true);
+          triggerMsg("Please complete your profile details.", "info");
+        }
 
         setDesigners(Array.isArray(designersRes.data) ? designersRes.data : []);
       } catch (err) {
@@ -85,12 +97,20 @@ const UserProfile = () => {
     }
   }, [effectiveEmail, effectiveUserId, router, status]);
 
+  const handlePlaceSelect = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      const address = place.formatted_address || place.name;
+      setUser((prev) => ({ ...prev, address }));
+    }
+  };
+
   const handleLogout = () => {
     if (status === "authenticated") {
-      signOut({ callbackUrl: "/" });
+      signOut({ redirect: true, callbackUrl: "/login" });
     } else {
       localStorage.clear();
-      router.push("/");
+      router.push("/login");
     }
   };
 
@@ -100,6 +120,11 @@ const UserProfile = () => {
   };
 
   const handleSave = async () => {
+    if (!user.phone || !user.address) {
+      triggerMsg("Phone and Address are required.", "error");
+      return;
+    }
+
     try {
       const response = await updateUserProfile(effectiveEmail, {
         name: user.name,
@@ -109,7 +134,6 @@ const UserProfile = () => {
 
       const updatedUser = response.data || response;
 
-      // FIX: Apply null-checks to the save response as well
       setUser({
         name: updatedUser.name || "",
         email: updatedUser.email || "",
@@ -118,14 +142,13 @@ const UserProfile = () => {
       });
 
       setIsEditing(false);
-      alert("Profile updated successfully");
+      triggerMsg("Profile updated successfully", "success");
 
       if (status === "authenticated") {
-        window.location.reload();
+        router.refresh();
       }
     } catch (err) {
-      console.error("Update Error:", err);
-      alert(err.response?.data?.message || err.message || "Failed to update profile");
+      triggerMsg(err.response?.data?.message || "Failed to update profile", "error");
     }
   };
 
@@ -134,6 +157,13 @@ const UserProfile = () => {
   return (
     <>
       <Navbar />
+      {msg.show && (
+        <MessageBox 
+          message={msg.text} 
+          type={msg.type} 
+          onClose={() => setMsg({ ...msg, show: false })} 
+        />
+      )}
       <div className="profile-page-wrapper">
         <div className="profile-header-section">
           <button onClick={() => router.back()} className="back-button">
@@ -160,37 +190,49 @@ const UserProfile = () => {
 
               {isEditing ? (
                 <div className="edit-form">
-                  <input
-                    type="text"
-                    name="name"
-                    value={user.name || ""} // Double-layered fix for React controlled inputs
-                    onChange={handleChange}
-                    className="up-profile-input"
-                    placeholder="Name"
-                  />
-                  <input
-                    type="text"
-                    name="phone"
-                    value={user.phone || ""} // Ensures value is never null
-                    onChange={handleChange}
-                    className="up-profile-input"
-                    placeholder="Phone"
-                  />
-                  <input
-                    type="text"
-                    name="address"
-                    value={user.address || ""} // Ensures value is never null
-                    onChange={handleChange}
-                    className="up-profile-input"
-                    placeholder="Address"
-                  />
+                  <h3>Complete Your Profile</h3>
+                  <div className="input-group">
+                    <label>Name</label>
+                    <input type="text" name="name" value={user.name || ""} onChange={handleChange} className="up-profile-input" />
+                  </div>
+                  <div className="input-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone" value={user.phone || ""} onChange={handleChange} className="up-profile-input" placeholder="+91 00000 00000" />
+                  </div>
+                  
+                  <div className="input-group">
+                    <label>Address (Your Location)</label>
+                    {isLoaded ? (
+                      <Autocomplete
+                        onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                        onPlaceChanged={handlePlaceSelect}
+                      >
+                        <input
+                          type="text"
+                          name="address"
+                          value={user.address || ""}
+                          onChange={handleChange}
+                          className="up-profile-input"
+                          placeholder="Search for your address..."
+                        />
+                      </Autocomplete>
+                    ) : (
+                      <input
+                        type="text"
+                        name="address"
+                        value={user.address || ""}
+                        onChange={handleChange}
+                        className="up-profile-input"
+                        placeholder="Loading maps..."
+                      />
+                    )}
+                  </div>
+
                   <div className="edit-actions">
-                    <button onClick={handleSave} className="up-profile-button up-save">
-                      Save
-                    </button>
-                    <button onClick={() => setIsEditing(false)} className="up-profile-button cancel">
-                      Cancel
-                    </button>
+                    <button onClick={handleSave} className="up-profile-button up-save">Save Profile</button>
+                    {user.phone && user.address && (
+                       <button onClick={() => setIsEditing(false)} className="up-profile-button cancel">Cancel</button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -198,68 +240,27 @@ const UserProfile = () => {
                   <div className="user-info-display">
                     <h2>
                       {session?.user?.name || user.name || "User"}{" "}
-                      {status === "authenticated" && (
-                        <span className="verified-badge">✓</span>
-                      )}
+                      {status === "authenticated" && <span className="verified-badge">✓</span>}
                     </h2>
-                    <p className="user-email">
-                      {session?.user?.email || user.email}
-                    </p>
+                    <p className="user-email">{session?.user?.email || user.email}</p>
                     <div className="contact-info">
-                      <p>
-                        <strong>Phone:</strong> {user.phone || "—"}
-                      </p>
-                      <p>
-                        <strong>Address:</strong> {user.address || "—"}
-                      </p>
+                      <p><strong>Phone:</strong> {user.phone || "—"}</p>
+                      <p><strong>Address:</strong> {user.address || "—"}</p>
                     </div>
                   </div>
                   <div className="profile-actions">
-                    <button onClick={() => setIsEditing(true)} className="profile-button edit">
-                      Edit Profile
-                    </button>
-                    <button onClick={handleLogout} className="profile-button logout">
-                      Logout
-                    </button>
+                    <button onClick={() => setIsEditing(true)} className="profile-button edit">Edit Profile</button>
+                    <button onClick={handleLogout} className="profile-button logout">Logout</button>
                   </div>
                 </>
               )}
-            </div>
-
-            <div className="profile-rating-summary-column">
-              <div className="rating-summary-badge">
-                <span className="summary-label">Client Reputation</span>
-                {ratingStats.avg ? (
-                  <div className="summary-stats">
-                    <div className="summary-stars">
-                      <span className="summary-score">{ratingStats.avg}</span>
-                      <FaStar className="star-icon" />
-                    </div>
-                    <p className="summary-count">
-                      Based on {ratingStats.count} Designer Reviews
-                    </p>
-                  </div>
-                ) : (
-                  <p className="no-rating-text">No designer feedback yet</p>
-                )}
-              </div>
             </div>
           </div>
         </div>
 
         <div className="profile-tabs-container">
-          <button
-            className={`tab-btn ${activeTab === "orders" ? "active" : ""}`}
-            onClick={() => setActiveTab("orders")}
-          >
-            My Orders
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "designers" ? "active" : ""}`}
-            onClick={() => setActiveTab("designers")}
-          >
-            Hired Designers
-          </button>
+          <button className={`tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>My Orders</button>
+          <button className={`tab-btn ${activeTab === "designers" ? "active" : ""}`} onClick={() => setActiveTab("designers")}>Hired Designers</button>
         </div>
 
         <div className="tab-content-area">

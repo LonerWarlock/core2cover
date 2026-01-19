@@ -1,21 +1,34 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/options";
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
+    let userLocation = searchParams.get("location");
+
+    // If no location in params, try to get it from the logged-in user's profile
+    if (!userLocation) {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: session.user.email },
+          select: { address: true }
+        });
+        userLocation = dbUser?.address || "";
+      }
+    }
 
     const designers = await prisma.designer.findMany({
       where: {
         availability: "Available",
-        // Multi-field search logic
         ...(search && {
           OR: [
             { fullname: { contains: search, mode: 'insensitive' } },
             { location: { contains: search, mode: 'insensitive' } },
             { profile: { bio: { contains: search, mode: 'insensitive' } } },
-            { profile: { designerType: { contains: search, mode: 'insensitive' } } },
           ]
         })
       },
@@ -28,6 +41,7 @@ export async function GET(request) {
     const formatted = designers.map(d => {
       const count = d.ratings.length;
       const avg = count > 0 ? (d.ratings.reduce((a, b) => a + b.stars, 0) / count).toFixed(1) : 0;
+      
       return {
         id: d.id,
         name: d.fullname,
@@ -37,7 +51,10 @@ export async function GET(request) {
         experience: d.profile?.experience,
         bio: d.profile?.bio,
         avgRating: Number(avg),
-        totalRatings: count
+        totalRatings: count,
+        // Match logic: Check if designer city is mentioned in user's address
+        isLocal: userLocation && d.location && 
+                 userLocation.toLowerCase().includes(d.location.toLowerCase())
       };
     });
 

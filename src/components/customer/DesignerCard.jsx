@@ -2,22 +2,24 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import "./ProductCard.css";
-import "./DesignerCard.css";
 import Image from "next/image";
 import { FaStar, FaMapMarkerAlt, FaBriefcase } from "react-icons/fa";
+import "./DesignerCard.css";
 
-const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, origin, experience, bio }) => {
+const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, location, experience, bio, isLocal }) => {
   const router = useRouter();
   
-  // 1. SAFE IMAGE FALLBACK
-  // Ensure we never pass null or an empty string to the 'src' prop
-  const finalImage = (image && image.length > 0) ? image : "/assets/placeholder-designer.jpg";
+  // Robust Image Validation to prevent "Invalid URL" crash
+  const finalImage = (typeof image === "string" && image.startsWith("http")) 
+    ? image 
+    : "/assets/placeholder-designer.jpg"; 
 
   return (
-    <article className="product-card" onClick={() => router.push(`/designer_info?id=${id}`)}>
+    <article 
+      className={`product-card ${isLocal ? "local-highlight" : ""}`} 
+      onClick={() => router.push(`/designer_info?id=${id}`)}
+    >
       <div className="product-image-container">
-        {/* 2. USE THE VALIDATED SOURCE */}
         <Image 
           src={finalImage} 
           alt={name} 
@@ -25,9 +27,9 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, orig
           width={340} 
           height={340} 
           priority={id < 4}
-          unoptimized={!finalImage.startsWith('http')} // Optional: useful if using local assets
         />
         <span className="product-badge">{category}</span>
+        {/* {isLocal && <span className="local-badge">Near You</span>} */}
       </div>
 
       <div className="product-info">
@@ -36,7 +38,6 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, orig
           <div className="product-rating-badge">
             <FaStar className="star-icon" />
             <span className="rating-val">{avgRating || 0}</span>
-            <span className="rating-count">({totalRatings || 0})</span>
           </div>
         </div>
 
@@ -44,22 +45,16 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, orig
 
         <div className="product-seller-group">
           <span className="seller-label">
-            <FaBriefcase style={{marginRight: '6px'}} /> 
-            {experience || 0} Years Experience
+            <FaBriefcase style={{ marginRight: "6px" }} /> {experience || 0} Yrs Experience
           </span>
           <span className="location-label">
-            <FaMapMarkerAlt /> {origin || "Location Independent"}
+            <FaMapMarkerAlt /> {location || "Remote"}
           </span>
         </div>
 
         <div className="product-footer-row">
           <span className="price-tag">Verified</span>
-          <button
-            className="product-view-btn"
-            onClick={() => router.push(`/designer_info?id=${id}`)}
-          >
-            View Profile
-          </button>
+          <button className="product-view-btn">View Profile</button>
         </div>
       </div>
     </article>

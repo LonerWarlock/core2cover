@@ -23,7 +23,7 @@ export const authOptions = {
         strategy: "jwt",
     },
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
             console.log("JWT Callback - Token:", token);
             if (user) {
                 token.id = user.id;
@@ -32,12 +32,21 @@ export const authOptions = {
             return token;
         },
         async session({ session, token }) {
-            console.log("Session Callback - Session User:", session.user);
             if (token?.id && session.user) {
                 session.user.id = token.id;
             }
             return session;
         },
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    cookies: {
+        sessionToken: {
+            name: `next-auth.session-token`,
+            options: {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+    },
 };
