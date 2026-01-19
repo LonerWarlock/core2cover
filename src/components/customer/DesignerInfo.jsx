@@ -234,117 +234,119 @@ const DesignerInfoContent = () => {
   if (loading || !designer) return <div className="loading-pad">Loading designer profile...</div>;
 
   return (
-    <div className="designer-info-page">
-      {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
+    <>
+      <div className="designer-info-page">
+        {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
-      <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
+        <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
 
-      <div className="designer-info-layout">
-        <div className="designer-text">
-          <div className="profile-header-wrap">
-            <Image src={designer.profile?.profileImage || "/assets/images/sample.jpg"} width={150} height={150} className="designer-photo" alt="profile" />
-            <div className={`availability-pill ${designer.availability?.toLowerCase() === "available" ? "available" : "unavailable"}`}>
-              {designer.availability?.toLowerCase() === "available" ? <FaCheckCircle /> : <FaMinusCircle />}
-              {designer.availability || "Unknown"}
+        <div className="designer-info-layout">
+          <div className="designer-text">
+            <div className="profile-header-wrap">
+              <Image src={designer.profile?.profileImage || "/assets/images/sample.jpg"} width={150} height={150} className="designer-photo" alt="profile" />
+              <div className={`availability-pill ${designer.availability?.toLowerCase() === "available" ? "available" : "unavailable"}`}>
+                {designer.availability?.toLowerCase() === "available" ? <FaCheckCircle /> : <FaMinusCircle />}
+                {designer.availability || "Unknown"}
+              </div>
             </div>
+            <h1 className="designer-name">{designer.fullname}</h1>
+            <p className="designer-location"><LuMapPin /> {designer.location}</p>
+            <div className="designer-rating-summary">{renderStars(stats.average)}<span>({stats.total} Reviews)</span></div>
+            <ExpandableText text={designer.profile?.bio} />
+            <button className={`hire-btn ${designer.availability?.toLowerCase() !== "available" ? "disabled" : ""}`} onClick={() => designer.availability?.toLowerCase() === "available" && setShowForm(true)}>
+              {designer.availability?.toLowerCase() === "available" ? "Hire This Designer" : "Currently Unavailable"}
+            </button>
           </div>
-          <h1 className="designer-name">{designer.fullname}</h1>
-          <p className="designer-location"><LuMapPin /> {designer.location}</p>
-          <div className="designer-rating-summary">{renderStars(stats.average)}<span>({stats.total} Reviews)</span></div>
-          <ExpandableText text={designer.profile?.bio} />
-          <button className={`hire-btn ${designer.availability?.toLowerCase() !== "available" ? "disabled" : ""}`} onClick={() => designer.availability?.toLowerCase() === "available" && setShowForm(true)}>
-            {designer.availability?.toLowerCase() === "available" ? "Hire This Designer" : "Currently Unavailable"}
-          </button>
-        </div>
 
-        <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
-          <Image src={activeImage} alt="Main" width={800} height={600} priority style={{ objectFit: "cover", cursor: "zoom-in" }} />
-          <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
-        </div>
-      </div>
-
-      <section className="portfolio-section">
-        <h2>Works Portfolio</h2>
-        <div className="portfolio-row">
-          {designer.works?.map((w, i) => (
-            <div key={w.id} className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`} onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}>
-              <Image src={w.image} width={300} height={200} alt="Work" />
-              <p className="work_desc">{w.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {isLightboxOpen && (
-        <div className="lightbox-overlay" onWheel={handleWheel} onClick={closeLightbox}>
-          <button className="lightbox-close" onClick={closeLightbox}><FaTimes /></button>
-
-          <span className="lightbox-controls-aesthetic">
-            {isMobile
-              ? "Pinch to Zoom • Swipe to Move"
-              : "Scroll to Zoom • Drag to Move"}
-          </span>
-
-          <div
-            className="lightbox-content"
-            onClick={(e) => e.stopPropagation()}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={() => setIsDragging(false)}
-          >
-            <img
-              src={activeImage}
-              alt="Fullscreen"
-              onMouseDown={handleMouseDown}
-              draggable="false"
-              style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${zoomLevel})`,
-                transition: isDragging ? 'none' : 'transform 0.15s ease-out',
-                cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                touchAction: 'none'
-              }}
-              className="lightbox-img"
-            />
+          <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
+            <Image src={activeImage} alt="Main" width={800} height={600} priority style={{ objectFit: "cover", cursor: "zoom-in" }} />
+            <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
           </div>
         </div>
-      )}
 
-      {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
-            <div className="modal-header"><h2>Hire {designer.fullname}</h2><FaTimes onClick={() => setShowForm(false)} style={{ cursor: 'pointer' }} /></div>
-            <form className="modal-form" onSubmit={handleHireSubmit}>
-              <div className="form-grid">
-                <div><label>Full Name</label><input name="fullName" value={hireForm.fullName} onChange={handleHireChange} required /></div>
-                <div><label>Mobile</label><input name="mobile" value={hireForm.mobile} onChange={handleHireChange} required /></div>
-                <div><label>Email</label><input type="email" name="email" value={hireForm.email} onChange={handleHireChange} required /></div>
-                <div><label>Location</label><input name="location" value={hireForm.location} onChange={handleHireChange} required /></div>
-                <div><label>Budget (₹)</label><input type="number" name="budget" value={hireForm.budget} onChange={handleHireChange} required /></div>
-                <div>
-                  <label>Work Type</label>
-                  <select name="workType" value={hireForm.workType} onChange={handleHireChange} required>
-                    <option value="">Select type</option>
-                    <option>Interior Design</option>
-                    <option>Product Design</option>
-                    <option>Renovation</option>
-                    <option>Furniture Design</option>
-                  </select>
+        <section className="portfolio-section">
+          <h2>Works Portfolio</h2>
+          <div className="portfolio-row">
+            {designer.works?.map((w, i) => (
+              <div key={w.id} className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`} onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}>
+                <Image src={w.image} width={300} height={200} alt="Work" />
+                <p className="work_desc">{w.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {isLightboxOpen && (
+          <div className="lightbox-overlay" onWheel={handleWheel} onClick={closeLightbox}>
+            <button className="lightbox-close" onClick={closeLightbox}><FaTimes /></button>
+
+            <span className="lightbox-controls-aesthetic">
+              {isMobile
+                ? "Pinch to Zoom • Swipe to Move"
+                : "Scroll to Zoom • Drag to Move"}
+            </span>
+
+            <div
+              className="lightbox-content"
+              onClick={(e) => e.stopPropagation()}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => setIsDragging(false)}
+            >
+              <img
+                src={activeImage}
+                alt="Fullscreen"
+                onMouseDown={handleMouseDown}
+                draggable="false"
+                style={{
+                  transform: `translate(${position.x}px, ${position.y}px) scale(${zoomLevel})`,
+                  transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                  cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                  touchAction: 'none'
+                }}
+                className="lightbox-img"
+              />
+            </div>
+          </div>
+        )}
+
+        {showForm && (
+          <div className="modal-overlay" onClick={() => setShowForm(false)}>
+            <div className="modal-box" onClick={e => e.stopPropagation()}>
+              <div className="modal-header"><h2>Hire {designer.fullname}</h2><FaTimes onClick={() => setShowForm(false)} style={{ cursor: 'pointer' }} /></div>
+              <form className="modal-form" onSubmit={handleHireSubmit}>
+                <div className="form-grid">
+                  <div><label>Full Name</label><input name="fullName" value={hireForm.fullName} onChange={handleHireChange} required /></div>
+                  <div><label>Mobile</label><input name="mobile" value={hireForm.mobile} onChange={handleHireChange} required /></div>
+                  <div><label>Email</label><input type="email" name="email" value={hireForm.email} onChange={handleHireChange} required /></div>
+                  <div><label>Location</label><input name="location" value={hireForm.location} onChange={handleHireChange} required /></div>
+                  <div><label>Budget (₹)</label><input type="number" name="budget" value={hireForm.budget} onChange={handleHireChange} required /></div>
+                  <div>
+                    <label>Work Type</label>
+                    <select name="workType" value={hireForm.workType} onChange={handleHireChange} required>
+                      <option value="">Select type</option>
+                      <option>Interior Design</option>
+                      <option>Product Design</option>
+                      <option>Renovation</option>
+                      <option>Furniture Design</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-              <div><label>Target Date</label><input type="date" name="timelineDate" value={hireForm.timelineDate} onChange={handleHireChange} required /></div>
-              <div className="desc"><label>Description</label><textarea name="description" value={hireForm.description} onChange={handleHireChange} /></div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="submit-btn" disabled={hireLoading}>{hireLoading ? "Sending..." : "Submit"}</button>
-              </div>
-            </form>
+                <div><label>Target Date</label><input type="date" name="timelineDate" value={hireForm.timelineDate} onChange={handleHireChange} required /></div>
+                <div className="desc"><label>Description</label><textarea name="description" value={hireForm.description} onChange={handleHireChange} /></div>
+                <div className="modal-actions">
+                  <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
+                  <button type="submit" className="submit-btn" disabled={hireLoading}>{hireLoading ? "Sending..." : "Submit"}</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       <Footer />
-    </div>
+    </>
   );
 };
 
