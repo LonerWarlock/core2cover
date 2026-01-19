@@ -22,6 +22,7 @@ import MessageBox from "../ui/MessageBox";
 import sample from "../../assets/images/sample.jpg"; // Import fallback image
 import { FaArrowLeft, FaMapMarkerAlt, FaSearch, FaShoppingBag } from "react-icons/fa";
 
+
 // Google Maps Imports
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
 

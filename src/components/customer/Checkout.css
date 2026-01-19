@@ -484,12 +484,14 @@
    AESTHETIC HEADINGS (h2)
 ========================================= */
 
-.checkout-card h2, 
+.checkout-card h2,
 .summary-card h2 {
-  font-family: "Big Caslon", "Playfair Display", serif; /* Premium accent font */
+  font-family: "Big Caslon", "Playfair Display", serif;
+  /* Premium accent font */
   font-size: 1.4rem;
   font-weight: 600;
-  color: var(--olive); /* Brand green */
+  color: var(--olive);
+  /* Brand green */
   margin-bottom: 22px;
   padding-bottom: 10px;
   display: flex;
@@ -506,7 +508,8 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 40px; /* Short line for a curated feel */
+  width: 40px;
+  /* Short line for a curated feel */
   height: 2px;
   background-color: var(--olive);
   border-radius: 2px;
@@ -649,4 +652,118 @@
 .checkout-qty-controls input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* =========================================================
+   RESPONSIVENESS FOR 425PX (Mobile Large)
+   ========================================================= */
+
+@media (max-width: 425px) {
+
+  /* Tighten container padding to give more room to content */
+  .container {
+    padding: 16px 12px;
+  }
+
+  /* Reduce title size and margins */
+  .checkout-title {
+    font-size: 1.45rem;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  /* Credit bar: Stack vertically if the text is long */
+  .credit-line {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 12px;
+  }
+
+  /* Checkout Item: Switch to a vertical layout for better image viewing */
+  .checkout-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .checkout-item-img-container {
+    width: 100%;
+    max-width: 200px;
+    /* Keep image from becoming too massive */
+    margin-bottom: 12px;
+  }
+
+  .checkout-item-img {
+    width: 100%;
+    height: 140px;
+    /* Fixed height for consistency */
+  }
+
+  /* Meta row: Center the quantity and price */
+  .checkout-item-meta-row {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .checkout-qty-controls {
+    justify-content: center;
+    width: 110px;
+    margin: 0 auto;
+  }
+
+  /* Payment Options: Optimize for thumb-tapping */
+  .payment-option {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .payment-option span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Headings: Shrink the Big Caslon font slightly */
+  .checkout-card h2,
+  .summary-card h2 {
+    font-size: 1.15rem;
+    justify-content: center;
+    /* Center headings for a balanced mobile look */
+  }
+
+  .checkout-card h2::after,
+  .summary-card h2::after {
+    left: 50%;
+    transform: translateX(-50%);
+    /* Center the accent line */
+  }
+
+  /* Summary Card: Adjust total row prominence */
+  .summary-card {
+    padding: 18px;
+    margin-top: 10px;
+  }
+
+  .summary-row.total {
+    font-size: 1rem;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 10px;
+  }
+
+  /* Place Order Button: Full width prominence */
+  .place-order-btn {
+    padding: 16px;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+
+  /* Back Button adjustment */
+  .back-btn {
+    margin-left: 0;
+    margin-bottom: 20px;
+    justify-content: center;
+    width: 100%;
+  }
 }
