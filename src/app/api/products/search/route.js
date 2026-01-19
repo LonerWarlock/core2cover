@@ -15,24 +15,45 @@ export async function GET(request) {
       ],
       availability: { not: "discontinued" },
     },
-    include: { seller: { include: { business: true } }, ratings: true },
+    include: { 
+      seller: { 
+        include: { 
+          business: true,
+          delivery: true // Added to ensure delivery charges aren't lost in search
+        } 
+      }, 
+      ratings: true 
+    },
     orderBy: { createdAt: "desc" },
   });
 
-  // Format logic (same as index.js but using Cloudinary URLs directly)
-  const formatted = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    category: p.category,
-    price: p.price,
-    description: p.description,
-    images: p.images, // Cloudinary URLs are stored directly
-    video: p.video,
-    availability: p.availability,
-    sellerId: p.sellerId,
-    sellerName: p.seller.name,
-    avgRating: 0, // Simplified for brevity, add calc logic if needed
-  }));
+  const formatted = products.map((p) => {
+    // Logic to calculate actual ratings instead of hardcoded 0
+    const total = p.ratings.reduce((sum, r) => sum + r.stars, 0);
+    const count = p.ratings.length;
+    const avgRating = count ? (total / count).toFixed(1) : 0;
+
+    return {
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      description: p.description,
+      images: p.images,
+      video: p.video,
+      availability: p.availability,
+      sellerId: p.sellerId,
+      sellerName: p.seller.name,
+      location: p.seller.business ? `${p.seller.business.city}, ${p.seller.business.state}` : "Remote",
+      avgRating: Number(avgRating),
+      ratingCount: count,
+      // Ensure shipping/installation data is passed to results
+      shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
+      shippingCharge: p.seller?.delivery?.shippingCharge || 0,
+      installationAvailable: p.seller?.delivery?.installationAvailable || "no",
+      installationCharge: p.seller?.delivery?.installationCharge || 0,
+    };
+  });
 
   return NextResponse.json(formatted);
 }

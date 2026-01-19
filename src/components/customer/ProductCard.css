@@ -322,9 +322,31 @@
 }
 
 .price-tag {
-  font-size: 1.2rem;
+  font-family: var(--font-heading); /* Playfair Display/Serif for a luxury feel */
+  font-size: 1.35rem; /* Slightly larger for prominence */
   font-weight: 800;
-  color: #111827;
+  color: var(--text-dark); /* Using your branding variable */
+  letter-spacing: -0.02em; /* Tight tracking often seen in high-end design */
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+}
+
+/* Optional: Add a subtle 'starting from' or currency symbol styling */
+.price-tag::before {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-right: 2px;
+  color: var(--green-mid); /* Accent color for the currency symbol */
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* Subtle glow effect on hover for the card */
+.product-card:hover .price-tag {
+  color: var(--green-dark);
+  transition: color 0.3s ease;
 }
 
 .product-view-btn {

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Sidebar from "./Sidebar";
-import MessageBox from "../ui/MessageBox"; // Ensure this path is correct
+import MessageBox from "../ui/MessageBox";
 import "./SellerProducts.css";
-import { FaStar, FaRegStar } from "react-icons/fa";
+import { FaStar, FaRegStar, FaInfoCircle } from "react-icons/fa";
 import { 
   getSellerProducts, 
   deleteSellerProduct,
@@ -39,6 +39,21 @@ const SellerProducts = () => {
     existingImages: [],
     newImages: []
   });
+
+  /* =========================================
+      COMMISSION CALCULATION HELPER
+  ========================================= */
+  const calculateFinalPrice = (base) => {
+    const val = parseFloat(base);
+    if (isNaN(val) || val <= 0) return 0;
+    
+    let rate = 0;
+    if (val < 10000) rate = 0.07;
+    else if (val < 50000) rate = 0.05;
+    else rate = 0.035;
+
+    return (val + (val * rate)).toFixed(2);
+  };
 
   /* =========================================
       1. FETCH PRODUCTS LOGIC
@@ -96,7 +111,7 @@ const SellerProducts = () => {
     setEditingProduct(product);
     setEditForm({
       name: product.name,
-      price: product.price,
+      price: product.price, // This is the final price from DB, seller edits base
       category: product.category,
       description: product.description || "",
       availability: product.availability || "available",
@@ -114,11 +129,13 @@ const SellerProducts = () => {
   const submitUpdate = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
-    triggerMsg("Uploading changes... Please wait.", "success");
+    
+    // We send the final calculated price to the backend
+    const finalCalculatedPrice = calculateFinalPrice(editForm.price);
 
     const formData = new FormData();
     formData.append("name", editForm.name);
-    formData.append("price", editForm.price);
+    formData.append("price", finalCalculatedPrice); 
     formData.append("category", editForm.category);
     formData.append("description", editForm.description);
     formData.append("availability", editForm.availability);
@@ -134,7 +151,7 @@ const SellerProducts = () => {
       setEditingProduct(null);
       fetchProducts(sellerId);
     } catch (err) {
-      triggerMsg("Failed to update the product. Please check your connection.", "error");
+      triggerMsg("Failed to update the product.", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -195,8 +212,17 @@ const SellerProducts = () => {
                 <input className="ms-input" name="name" value={editForm.name} onChange={handleEditChange} required />
               </div>
               <div className="ms-field">
-                <label className="ms-label">Price (₹)</label>
+                <label className="ms-label">Your Price (₹)</label>
                 <input className="ms-input" type="number" name="price" value={editForm.price} onChange={handleEditChange} required />
+              </div>
+              <div className="ms-field">
+                <label className="ms-label">Listing Price (Incl. Commission)</label>
+                <input 
+                  className="ms-input" 
+                  value={`₹ ${calculateFinalPrice(editForm.price)}`} 
+                  readOnly 
+                  style={{ backgroundColor: "#f3f4f6", color: "#606E52", fontWeight: "bold" }}
+                />
               </div>
               <div className="ms-field">
                 <label className="ms-label">Availability</label>
@@ -242,7 +268,9 @@ const SellerProducts = () => {
               <h3>Customer Feedback: {selectedProduct.name}</h3>
               <button onClick={() => setSelectedProduct(null)} className="ms-btn ms-btn--ghost">Close</button>
             </div>
-            {/* Reviews list rendering logic... */}
+            <div className="ms-review-summary">
+                <p>Average Rating: {ratingData.avgRating} / 5 ({ratingData.count} reviews)</p>
+            </div>
           </section>
         )}
 
