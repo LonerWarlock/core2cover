@@ -331,6 +331,7 @@
   align-items: center;
   gap: 2px;
   position: relative;
+
 }
 
 /* Optional: Add a subtle 'starting from' or currency symbol styling */
@@ -338,7 +339,6 @@
   font-size: 0.9rem;
   font-weight: 600;
   margin-right: 2px;
-  color: var(--green-mid); /* Accent color for the currency symbol */
   align-self: flex-start;
   margin-top: 4px;
 }
