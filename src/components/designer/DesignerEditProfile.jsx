@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import "./DesignerEditProfile.css";
 import "./DesignerDashboard.css";
-import { FaCamera, FaBars, FaTimes } from "react-icons/fa";
+import { FaCamera, FaBars, FaTimes, FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,11 +12,7 @@ import {
   updateDesignerProfile,
 } from "../../api/designer";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
-// 1. Import your MessageBox component
 import MessageBox from "../ui/MessageBox";
-import {
-  FaArrowLeft,
-} from "react-icons/fa";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
@@ -25,7 +21,7 @@ const DesignerEditProfile = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerId, setDesignerId] = useState(null);
 
-  // 2. Message Box State
+  // Message Box State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   const [form, setForm] = useState({
@@ -44,7 +40,6 @@ const DesignerEditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Helper to trigger the message box
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
@@ -106,7 +101,7 @@ const DesignerEditProfile = () => {
 
   /* =========================
       SUBMIT UPDATE (API)
-  ========================= */
+  ======================== */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -125,10 +120,8 @@ const DesignerEditProfile = () => {
 
       await updateDesignerProfile(designerId, formData);
 
-      // 3. Trigger Success Message instead of alert
       triggerMsg("Profile updated successfully", "success");
 
-      // Delay redirect slightly so user can see the message
       setTimeout(() => {
         router.push("/designerdashboard");
       }, 2000);
@@ -143,7 +136,6 @@ const DesignerEditProfile = () => {
 
   return (
     <>
-      {/* 4. Render MessageBox */}
       {msg.show && (
         <MessageBox
           message={msg.text}
@@ -155,7 +147,13 @@ const DesignerEditProfile = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link href="/designerdashboard" className="nav-link nav-logo-link">
+            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
+            <Link 
+              href="/" 
+              className="nav-link nav-logo-link" 
+              draggable="true"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
               <span className="nav-logo-wrap">
                 <Image
                   src={CoreToCoverLogo}

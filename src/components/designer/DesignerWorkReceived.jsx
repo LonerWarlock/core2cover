@@ -135,7 +135,6 @@ const DesignerWorkReceived = () => {
 
   const submitUserRating = async (e) => {
     e.preventDefault();
-    // Ensure both the target job and designer ID are present
     if (!rateTarget || !designerId) {
       triggerMsg("Missing designer or job information. Please refresh.", "error");
       return;
@@ -143,27 +142,19 @@ const DesignerWorkReceived = () => {
 
     try {
       setSubmitting(true);
-
-      // Call the rateUser API utility
       await rateUser(designerId, {
         hireRequestId: rateTarget.id,
         stars: tempStars,
         review: tempReview,
       });
 
-      // --- SUCCESS BLOCK: Triggers if backend returns status 200/201 ---
       triggerMsg("Client rated successfully!", "success");
-
-      // Refresh the local data and close the modal
       await fetchData();
       closeRateModal();
-
-      // Clear the temporary form data
       setTempStars(5);
       setTempReview("");
 
     } catch (err) {
-      // --- ERROR BLOCK: Triggers if backend crashes or fails ---
       const errorMessage = err.response?.data?.message || "Failed to rate client";
       triggerMsg(errorMessage, "error");
     } finally {
@@ -182,7 +173,6 @@ const DesignerWorkReceived = () => {
 
   return (
     <>
-      {/* GLOBAL MESSAGE BOX */}
       {msg.show && (
         <MessageBox
           message={msg.text}
@@ -194,7 +184,13 @@ const DesignerWorkReceived = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link href="/designerdashboard" className="nav-logo-link">
+            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
+            <Link 
+              href="/" 
+              className="nav-logo-link" 
+              draggable="true"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
               <span className="nav-logo-wrap">
                 <Image src={CoreToCoverLogo} alt="Logo" width={120} height={50} style={{ height: "auto", width: "50px" }} />
                 <BrandBold />

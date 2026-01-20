@@ -74,7 +74,7 @@ export async function POST(request) {
         conversionFactor: conversionFactor, 
         productType: productType,
         category: category,
-        description: description || null,
+        description: description || null ,
         images: imageUrls, 
         video: videoUrl,
         availability: availability,

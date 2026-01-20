@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
 import "./SellerProducts.css";
-import { FaBoxes, FaTruckLoading, FaRulerCombined } from "react-icons/fa"; // Added icons for better UI
+import { FaBoxes, FaTruckLoading, FaRulerCombined, FaStar } from "react-icons/fa"; // Added FaStar for feedback section
 import { 
   getSellerProducts, 
   deleteSellerProduct,
@@ -161,9 +161,14 @@ const SellerProducts = () => {
     }
   };
 
+  /* FIXED VIEW REVIEWS WITH AUTO-SCROLL */
   const viewReviews = async (product) => {
     setSelectedProduct(product);
     setLoadingReviews(true);
+    
+    // Smooth scroll to top as soon as button is clicked
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     try {
       const res = await getProductRatings(product.id);
       setRatingData({
@@ -171,7 +176,6 @@ const SellerProducts = () => {
         count: res.data.count || 0,
         reviews: res.data.reviews || [],
       });
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       triggerMsg("Failed to load customer reviews.", "error");
     } finally {
@@ -270,12 +274,12 @@ const SellerProducts = () => {
               <button onClick={() => setSelectedProduct(null)} className="ms-btn ms-btn--ghost">Close</button>
             </div>
             <div className="ms-review-summary">
-                <p>Average Rating: {ratingData.avgRating} / 5 ({ratingData.count} reviews)</p>
+                <p>Average Rating: <FaStar color="#facc15" /> {ratingData.avgRating} / 5 ({ratingData.count} reviews)</p>
             </div>
+            {/* You can map through ratingData.reviews here if needed */}
           </section>
         )}
 
-        {/* UPDATED GRID DISPLAY WITH ALL INFORMATION */}
         <section className="ms-grid">
           {loading ? <p>Loading catalogue...</p> : materials.map((m) => (
             <div key={m.id} className="ms-card">
@@ -294,7 +298,6 @@ const SellerProducts = () => {
                 <p className="ms-price">₹{Number(m.price).toLocaleString('en-IN')} <span className="ms-unit-text">/ {m.unit || 'pcs'}</span></p>
                 <p className="ms-category">{m.category}</p>
 
-                {/* LOGISTICS INFO BLOCK */}
                 <div className="ms-logistics-info">
                   <div className="ms-info-item">
                     <FaTruckLoading title="Units per Trip" />

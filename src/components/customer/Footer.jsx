@@ -57,7 +57,7 @@ export default function Footer() {
             <FaInstagram />
           </a>
           <a
-            href="https://twitter.com"
+            href="https://x.com/Core2Cover"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Twitter"

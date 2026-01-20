@@ -8,28 +8,21 @@ import { signOut, useSession } from "next-auth/react";
 import {
   FaSearch,
   FaShoppingCart,
-  FaBars,
-  FaTimes,
   FaSignOutAlt,
   FaStore,
   FaPalette,
   FaUserCircle
 } from "react-icons/fa";
 
-// Import your CSS file
 import "./Navbar.css";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 
-// Provided BrandBold Helper
 const BrandBold = ({ children }) => (
   <span className="brand brand-bold">{children}</span>
 );
 
-// Import your Logo Asset (ensure path is correct)
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
-
 const Navbar = () => {
   const { data: session, status } = useSession();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
@@ -43,13 +36,11 @@ const Navbar = () => {
   const isContactPage = pathname === "/contact";
   const currentPageTitle = isDesignerSection ? "Professional Designers" : "Readymade Products";
 
-  // Sync search query with URL params
   useEffect(() => {
     const q = searchParams.get("search");
     if (q) setSearchQuery(q);
   }, [searchParams]);
 
-  // Close profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -67,12 +58,11 @@ const Navbar = () => {
     
     const targetPath = isDesignerSection ? "/designers" : "/searchresults";
     router.push(`${targetPath}?search=${encodeURIComponent(query)}`);
-    setMenuOpen(false);
   };
 
   const handleProfileToggle = () => {
     if (status === "unauthenticated") {
-      router.push("/login"); // Redirect to login if not authenticated
+      router.push("/login");
     } else {
       setProfileOpen(!profileOpen);
     }
@@ -90,9 +80,14 @@ const Navbar = () => {
     <>
       <header className="navbar">
         <div className="nav-container">
-          {/* LOGO / BRAND SECTION */}
+          {/* LOGO / BRAND SECTION - Updated for Drag & Drop support */}
           <div className="nav-left">
-            <div className="nav-logo-link" onClick={() => router.push("/")}>
+            <Link 
+              href="/" 
+              className="nav-logo-link" 
+              draggable="true"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
               <span className="nav-logo-wrap">
                 <Image 
                   src={CoreToCoverLogo} 
@@ -103,11 +98,10 @@ const Navbar = () => {
                 />
                 <BrandBold>Core2Cover</BrandBold>
               </span>
-            </div>
+            </Link>
           </div>
 
           <div className="nav-right">
-            {/* DESKTOP NAV ICONS */}
             <div className="nav-icons-desktop">
               <Link href="/about" className="nav-icon-link">About Us</Link>
               <Link href="/designers" className="nav-icon-link designers">Designers</Link>
@@ -115,7 +109,6 @@ const Navbar = () => {
                 <FaShoppingCart />
               </Link>
               
-              {/* PROFILE DROPDOWN CONTAINER */}
               <div className="profile-dropdown-container" ref={dropdownRef}>
                 <div className="nav-profile-trigger" onClick={handleProfileToggle}>
                   {session?.user?.image ? (
@@ -133,7 +126,6 @@ const Navbar = () => {
                   )}
                 </div>
 
-                {/* THE POP-OUT BOX */}
                 {profileOpen && status === "authenticated" && (
                   <div className="profile-popover shadow-reveal">
                     <div className="popover-header">
@@ -142,30 +134,13 @@ const Navbar = () => {
                     </div>
 
                     <div className="popover-body">
-                      {/* My Account Link */}
-                      <Link 
-                        href="/userprofile" 
-                        className="pop-item" 
-                        onClick={() => setProfileOpen(false)}
-                      >
+                      <Link href="/userprofile" className="pop-item" onClick={() => setProfileOpen(false)}>
                         <FaUserCircle /> My Account
                       </Link>
-
-                      {/* Become a Seller */}
-                      <Link 
-                        href="/sellersignup" 
-                        className="pop-item" 
-                        onClick={() => setProfileOpen(false)}
-                      >
+                      <Link href="/sellersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
                         <FaStore /> Become a Seller
                       </Link>
-
-                      {/* Designer Sign Up */}
-                      <Link 
-                        href="/designersignup" 
-                        className="pop-item" 
-                        onClick={() => setProfileOpen(false)}
-                      >
+                      <Link href="/designersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
                         <FaPalette /> I am a Designer
                       </Link>
                     </div>
@@ -179,12 +154,10 @@ const Navbar = () => {
                 )}
               </div>
             </div>
-
           </div>
         </div>
       </header>
 
-      {/* SEARCH BAR SECTION */}
       {!isHomePage && !isContactPage && (
         <div className="search-container">
           <form onSubmit={handleSearch} className="search_form">

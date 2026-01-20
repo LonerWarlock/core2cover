@@ -86,8 +86,14 @@ const DesignerDashboard = () => {
 
       <header className="navbar">
         <div className="nav-container">
+          {/* LOGO WRAPPER - Updated for Drag & Drop support */}
           <div className="nav-left">
-            <Link href="/designerdashboard" className="nav-logo-link">
+            <Link 
+              href="/" 
+              className="nav-logo-link" 
+              draggable="true"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
               <span className="nav-logo-wrap">
                 <Image
                   src={CoreToCoverLogo}
@@ -192,7 +198,6 @@ const DesignerDashboard = () => {
           {ratingData.reviews.length > 0 ? (
             <div className="history-list">
               {ratingData.reviews.map((rev, index) => {
-                // Ensure we get a display name from the available data
                 const displayName = rev.reviewerName || "Client";
                 
                 return (

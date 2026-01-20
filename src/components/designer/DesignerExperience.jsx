@@ -48,7 +48,6 @@ const DesignerExperience = () => {
 
     api.get(`/designer/${designerId}/portfolio`)
       .then((res) => {
-        // Map data to include previews for existing images
         const mapped = res.data.map(w => ({
           ...w,
           preview: w.image, // Cloudinary URL
@@ -106,7 +105,6 @@ const DesignerExperience = () => {
     formData.append("designerId", designerId);
     formData.append("description", work.description || "");
 
-    // Only append if it's a new file object
     if (work.image instanceof File) {
       formData.append("image", work.image);
     }
@@ -116,7 +114,6 @@ const DesignerExperience = () => {
       if (work.isNew) {
         res = await api.post(`/designer/portfolio`, formData);
       } else {
-        // Dynamic route for updates
         res = await api.put(`/designer/portfolio/${work.id}`, formData);
       }
 
@@ -160,7 +157,13 @@ const DesignerExperience = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link href="/designerdashboard" className="nav-logo-link">
+            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
+            <Link 
+              href="/" 
+              className="nav-logo-link" 
+              draggable="true"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
               <span className="nav-logo-wrap">
                 <Image
                   src={CoreToCoverLogo}

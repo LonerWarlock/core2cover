@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import Image from 'next/image';
-import { useRouter } from "next/navigation"; // CHANGED
-import { FiHome, FiShoppingCart, FiUser, FiMenu, FiX, FiPackage } from "react-icons/fi";
+import Link from 'next/link'; // IMPORTED FOR DRAG & DROP
+import { useRouter } from "next/navigation";
+import { FiHome, FiShoppingCart, FiUser, FiMenu, FiX, FiPackage, FiRotateCcw } from "react-icons/fi";
 import { PiBank } from "react-icons/pi";
 import { AiOutlineProduct } from "react-icons/ai";
-import { FiRotateCcw } from "react-icons/fi";
 import { IoBusinessOutline } from "react-icons/io5";
 import "./Sidebar.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 
 const Sidebar = () => {
-  const router = useRouter(); // CHANGED
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -44,9 +44,19 @@ const Sidebar = () => {
         <>
           <div className="nav">
             <button className="nav-hamburger" onClick={() => setMenuOpen(true)}><FiMenu /></button>
-            <div className="nav-logo">
-               <Image src={CoreToCoverLogo} alt="CoreToCover" width={120} height={40} className="sidebar-logo-img" style={{objectFit: "contain"}} />
-            </div>
+            
+            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
+            <Link href="/" className="nav-logo" draggable="true" style={{ display: 'flex', alignItems: 'center' }}>
+              <Image 
+                src={CoreToCoverLogo} 
+                alt="CoreToCover" 
+                width={120} 
+                height={40} 
+                className="sidebar-logo-img" 
+                style={{objectFit: "contain"}} 
+              />
+            </Link>
+            
             <div className="nav-placeholder" />
           </div>
 
@@ -62,9 +72,19 @@ const Sidebar = () => {
         </>
       ) : (
         <div className="sidebar-panel">
-          <div className="sidebar-logo">
-             <Image src={CoreToCoverLogo} alt="CoreToCover" width={150} height={50} className="sidebar-logo-img" style={{objectFit: "contain"}} />
-          </div>
+          
+          {/* LOGO WRAPPER - Updated for Drag & Drop support */}
+          <Link href="/" className="sidebar-logo" draggable="true" style={{ display: 'block', width: '100%' }}>
+            <Image 
+              src={CoreToCoverLogo} 
+              alt="CoreToCover" 
+              width={150} 
+              height={50} 
+              className="sidebar-logo-img" 
+              style={{objectFit: "contain"}} 
+            />
+          </Link>
+
           <nav className="sidebar-nav">
             {navItems.map((item) => (
               <button key={item.path} className="sidebar-nav-item" onClick={() => router.push(item.path)}>
@@ -77,4 +97,5 @@ const Sidebar = () => {
     </div>
   );
 };
+
 export default Sidebar;
