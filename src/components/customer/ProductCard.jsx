@@ -21,7 +21,11 @@ const ProductCard = ({
   avgRating,
   ratingCount,
   origin,
-  // New props to match ProductInfo logic
+  // Logistics Props
+  unit,
+  unitsPerTrip,
+  conversionFactor,
+  productType,
   shippingChargeType,
   shippingCharge,
   installationAvailable,
@@ -56,9 +60,11 @@ const ProductCard = ({
         name: title,
         supplier: resolvedSellerName,
         amountPerTrip: Number(price),
-        trips: 1,
+        trips: 1, // Default to 1 trip from card
         image: images[0] || "",
-        // Synced fields ensuring Cart.jsx/Checkout.jsx calculations work
+        unit: unit || "pcs",
+        unitsPerTrip: unitsPerTrip || 1,
+        conversionFactor: conversionFactor || 1,
         shippingChargeType: shippingChargeType || "Paid",
         shippingCharge: Number(shippingCharge || 0),
         installationAvailable: installationAvailable || "no",
@@ -128,7 +134,9 @@ const ProductCard = ({
           </div>
 
           <div className="product-footer-row">
-            <div className="price-tag">₹{Number(price).toLocaleString('en-IN')}</div>
+            <div className="price-tag">₹{Number(price).toLocaleString('en-IN')}
+              <span className="price-unit"> / {unit || 'pcs'}</span>
+            </div>
             <button
               className="product-view-btn"
               onClick={handleAddToCart}

@@ -64,7 +64,7 @@ export default function Footer() {
           >
             <FaXTwitter />
           </a>
-          {/* Note: Internal links like /contact usually stay in the same tab */}
+          {/* Note: Internal links like "/contact" usually stay in the same tab */}
           <a href="/contact" aria-label="Email">
             <MdEmail />
           </a>

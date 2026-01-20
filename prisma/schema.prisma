@@ -182,8 +182,15 @@ model SellerBankDetails {
 model Product {
   id           Int      @id @default(autoincrement())
   name         String
-  price        Float
-  productType  String
+  price        Float    // Base price per Unit
+
+  // LOGISTICS & UNIT LOGIC
+  unit         String   @default("pcs") // e.g., "sq. ft", "sheet", "metre"
+  unitsPerTrip Int      @default(1)     // Max units that fit in one trip/vehicle
+  conversionFactor Float @default(1.0) // How many [sqft/metres] are in ONE [sheet/piece]?
+  shippingCharge  Int      @default(0)
+
+  productType  String   // e.g., "Raw Material"
   category     String
   description  String?
   images       String[]
@@ -224,46 +231,47 @@ model Order {
 /// ORDER ITEM (SELLER LEVEL)
 /// =========================
 model OrderItem {
-  id      Int   @id @default(autoincrement())
-  orderId Int
-  order   Order @relation(fields: [orderId], references: [id])
+  id           Int      @id @default(autoincrement())
+  orderId      Int
+  order        Order    @relation(fields: [orderId], references: [id])
 
-  sellerId Int
-  seller   Seller @relation(fields: [sellerId], references: [id])
+  sellerId     Int
+  seller       Seller   @relation(fields: [sellerId], references: [id])
 
   materialId   Int
   materialName String
   supplierName String
   imageUrl     String?
 
-  quantity     Int
-  pricePerUnit Float
-  totalAmount  Float
+  // --- QUANTITY & LOGISTICS (NEW LOGIC) ---
+  quantity      Int      // e.g., 120 (Total units requested)
+  unit          String?  // e.g., "sq. ft", "sheets", "metres"
+  totalTrips    Int      @default(1) // Calculated as: ceil(quantity / unitsPerTrip)
+  
+  pricePerUnit  Float    // Price per individual unit (e.g., ₹ per sq. ft)
+  totalAmount   Float    // Calculation: (quantity * pricePerUnit) + (totalTrips * shippingCharge) + (installation)
+  shippingCharge  Int
 
-  status String @default("pending") // existing
+  status        String   @default("pending")
 
-  // NEW: return and refund fields
+  // --- RETURN & REFUND ---
   returnStatus      ReturnStatus @default(NONE)
   returnReason      String?
   returnRequestedAt DateTime?
   returnResolvedAt  DateTime?
-
   refundAmount      Float?
   refundStatus      RefundStatus @default(NONE)
   refundProcessedAt DateTime?
 
-  //  DELIVERY SNAPSHOT
-  deliveryTimeMin       Int?
-  deliveryTimeMax       Int?
-  shippingChargeType    String?
-  shippingCharge        Int?
-  installationAvailable String?
-  installationCharge    Int?
+  // --- DELIVERY SNAPSHOT (PRESERVED & ENHANCED) ---
+  deliveryTimeMin       Int?     // Preserved: e.g., 2 days
+  deliveryTimeMax       Int?     // Preserved: e.g., 5 days
+  shippingChargeType    String?  // Now usually "Per Trip" for raw materials
+  installationAvailable String?  // Preserved: e.g., "yes"
+  installationCharge    Int?     // Preserved: Cost per unit for setup/fitting
 
-  createdAt DateTime @default(now())
-  rating    Rating?
-
-  // relation to ReturnRequest (one-to-one)
+  createdAt     DateTime @default(now())
+  rating        Rating?
   returnRequest ReturnRequest?
 }
 

@@ -32,7 +32,6 @@ export async function PUT(request, { params }) {
     const productId = Number(params.id);
     const formData = await request.formData();
 
-    // 1. Extract Text Fields
     const name = formData.get("name");
     const category = formData.get("category");
     const productType = formData.get("productType");
@@ -40,70 +39,54 @@ export async function PUT(request, { params }) {
     const description = formData.get("description");
     const availability = formData.get("availability");
     const existingImagesRaw = formData.get("existingImages");
-    const removeVideo = formData.get("removeVideo");
+    
+    // NEW RAW MATERIAL FIELDS
+    const unit = formData.get("unit");
+    const unitsPerTrip = formData.get("unitsPerTrip");
+    const conversionFactor = formData.get("conversionFactor");
 
-    // 2. Validation
     if (!productType) {
       return NextResponse.json({ message: "productType is required" }, { status: 400 });
     }
 
-    // 3. Handle Existing Images (JSON Parsing)
     let keptImages = [];
     if (existingImagesRaw) {
-      try {
-        keptImages = JSON.parse(existingImagesRaw);
-      } catch (e) {
-        console.error("Error parsing existingImages:", e);
-        keptImages = [];
-      }
+      try { keptImages = JSON.parse(existingImagesRaw); } 
+      catch (e) { keptImages = []; }
     }
 
-    // 4. Handle New Image Uploads (Cloudinary)
-    const newImageFiles = formData.getAll("images"); // Returns array of File objects
+    const newImageFiles = formData.getAll("images");
     let newImageUrls = [];
-
     if (newImageFiles && newImageFiles.length > 0) {
-      // Filter out invalid/empty files
       const validFiles = newImageFiles.filter((f) => f.size > 0);
-      
-      const uploadPromises = validFiles.map((file) => 
-        uploadToCloudinary(file, "coretocover/products/images")
-      );
-      
+      const uploadPromises = validFiles.map((file) => uploadToCloudinary(file, "coretocover/products/images"));
       const results = await Promise.all(uploadPromises);
       newImageUrls = results.map((r) => r.secure_url);
     }
 
-    // Combine kept images (old URLs) with new uploads (new URLs)
     const finalImages = [...keptImages, ...newImageUrls];
 
-    // 5. Handle Video Logic
-    const videoFile = formData.get("video");
-    let videoPath = undefined; // undefined means "do not update this field" in Prisma
+    // Build the Update Object
+    const updateData = {
+      name: name?.trim(),
+      category: category?.trim(),
+      productType,
+      price: Number(price),
+      description: description?.trim() || null,
+      availability,
+      images: finalImages,
+    };
 
-    if (videoFile && videoFile.size > 0) {
-      // User uploaded a NEW video -> Upload and set URL
-      const videoUpload = await uploadToCloudinary(videoFile, "coretocover/products/videos");
-      videoPath = videoUpload.secure_url;
-    } else if (removeVideo === "true") {
-      // User explicitly clicked "Remove Video" -> Set to null
-      videoPath = null;
+    // Only apply raw material logic if the type matches
+    if (productType === "material") {
+      updateData.unit = unit || "pcs";
+      updateData.unitsPerTrip = unitsPerTrip ? parseInt(unitsPerTrip) : 1;
+      updateData.conversionFactor = conversionFactor ? parseFloat(conversionFactor) : 1.0;
     }
 
-    // 6. Update Database
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
-      data: {
-        name: name?.trim(),
-        category: category?.trim(),
-        productType,
-        price: Number(price),
-        description: description?.trim() || null,
-        availability,
-        images: finalImages,
-        // Only update video field if we have a new URL or explicit null
-        ...(videoPath !== undefined && { video: videoPath }),
-      },
+      data: updateData,
     });
 
     return NextResponse.json({

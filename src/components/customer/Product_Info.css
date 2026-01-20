@@ -655,3 +655,123 @@
     font-size: 0.92rem;
   }
 }
+
+/* =========================================
+   PROFESSIONAL LOGISTICS INTERFACE
+   ========================================= */
+
+.pd-logistics-panel {
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid #eaeaea; 
+  background: transparent;
+}
+
+.pd-logistics-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+  letter-spacing: 0.02em;
+}
+
+.pd-logistics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: center;
+}
+
+/* Underline Style Input Group */
+.pd-input-group {
+  position: relative;
+  border-bottom: 1px solid #ccc; 
+  padding-bottom: 5px;
+  transition: border-color 0.3s ease;
+}
+
+.pd-input-group:focus-within {
+  border-color: #606E52;
+}
+
+.pd-input-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #888;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.pd-quantity-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+  outline: none;
+  padding: 5px 0;
+}
+
+/* Coverage Display */
+.pd-coverage-display {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-coverage-value {
+  font-size: 1.4rem;
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  color: #606E52;
+}
+
+/* Minimalist Trip Estimator */
+.pd-trip-estimator {
+  margin-top: 25px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: #666;
+  background: #fdfdfd;
+  padding: 12px 0;
+}
+
+.pd-trip-estimator svg {
+  color: #606E52;
+  font-size: 0.9rem;
+}
+
+.pd-trip-highlight {
+  color: #1a1a1a;
+  font-weight: 600;
+  border-bottom: 1px dotted #606E52;
+}
+
+/* Price Unit & Subtotal Preview */
+.pd-price-unit {
+  font-size: 14px;
+  font-weight: normal;
+  color: #666;
+}
+
+.pd-total-preview {
+  display: block;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #606E52;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Responsive Scaling */
+@media (max-width: 768px) {
+  .pd-logistics-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

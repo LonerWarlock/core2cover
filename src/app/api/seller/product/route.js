@@ -15,7 +15,23 @@ export async function POST(request) {
     const description = formData.get("description");
     const availability = formData.get("availability") || "available";
 
-    // 2. Extract Media
+    // UPDATED LOGISTICS FIELDS
+    const unit = formData.get("unit") || "pcs";
+    
+    // Logic to handle empty strings from the frontend
+    const rawUnitsPerTrip = formData.get("unitsPerTrip");
+    const rawConversionFactor = formData.get("conversionFactor");
+
+    // Convert to numbers, defaulting to 1 if empty or invalid
+    const unitsPerTrip = (rawUnitsPerTrip && !isNaN(rawUnitsPerTrip) && rawUnitsPerTrip !== "") 
+      ? parseInt(rawUnitsPerTrip) 
+      : 1;
+    
+    const conversionFactor = (rawConversionFactor && !isNaN(rawConversionFactor) && rawConversionFactor !== "") 
+      ? parseFloat(rawConversionFactor) 
+      : 1.0;
+
+    // 2. Media Extraction
     const imageFiles = formData.getAll("images"); 
     const videoFile = formData.get("video");
 
@@ -24,7 +40,6 @@ export async function POST(request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    // 4. Check if Seller Exists in DB
     const seller = await prisma.seller.findUnique({
       where: { id: Number(sellerId) }
     });
@@ -33,7 +48,7 @@ export async function POST(request) {
       return NextResponse.json({ message: "Seller not found" }, { status: 404 });
     }
 
-    // 5. Upload Media to Cloudinary
+    // 4. Media Upload
     let imageUrls = [];
     if (imageFiles.length > 0) {
       const imagePromises = imageFiles.map((file) => 
@@ -49,11 +64,14 @@ export async function POST(request) {
       videoUrl = vResult.secure_url;
     }
 
-    // 6. Create Record in Prisma
+    // 5. Create Record in Prisma
     const product = await prisma.product.create({
       data: {
         name: name.trim(),
         price: parseFloat(price),
+        unit: unit,
+        unitsPerTrip: unitsPerTrip,
+        conversionFactor: conversionFactor, 
         productType: productType,
         category: category,
         description: description || null,
@@ -64,7 +82,7 @@ export async function POST(request) {
       },
     });
 
-    return NextResponse.json({ message: "Product listed! ", product }, { status: 201 });
+    return NextResponse.json({ message: "Product listed!", product }, { status: 201 });
 
   } catch (err) {
     console.error("BACKEND UPLOAD ERROR:", err);

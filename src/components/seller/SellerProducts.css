@@ -429,3 +429,98 @@
   font-size: 0.9rem;
   color: #7a7f75;
 }
+
+/* =========================================
+   NEW LOGISTICS & CARD ENHANCEMENTS
+   ========================================= */
+
+/* Status Badge on Image */
+.ms-img-container {
+  position: relative;
+}
+
+.ms-status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 2;
+}
+
+.ms-status-badge.available { color: #2e7d32; border: 1px solid #2e7d32; }
+.ms-status-badge.low_stock { color: #ed6c02; border: 1px solid #ed6c02; }
+.ms-status-badge.out_of_stock { color: #d32f2f; border: 1px solid #d32f2f; }
+
+/* Header row for Name and Type Tag */
+.ms-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.ms-type-tag {
+  background: #f0f2f5;
+  color: #666;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Price with Unit */
+.ms-unit-text {
+  font-size: 0.9rem;
+  color: #888;
+  font-weight: normal;
+}
+
+/* Logistics Info Block */
+.ms-logistics-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 10px;
+  background: #f9fbf9; /* Light green tint to match Core2Cover theme */
+  border-radius: 8px;
+  border: 1px dashed #e0e0e0;
+}
+
+.ms-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.ms-info-item svg {
+  color: #606E52; /* Your primary theme color */
+  font-size: 1rem;
+}
+
+/* Description Preview */
+.ms-desc-preview {
+  font-size: 0.8rem;
+  color: #777;
+  line-height: 1.4;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Read-only field styling for Edit Panel */
+.ms-input.ms-readonly {
+  background-color: #f3f4f6;
+  color: #606E52;
+  font-weight: bold;
+  cursor: not-allowed;
+}

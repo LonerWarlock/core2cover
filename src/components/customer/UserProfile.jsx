@@ -165,10 +165,10 @@ const UserProfile = () => {
         />
       )}
       <div className="profile-page-wrapper">
-        <div className="profile-header-section">
           <button onClick={() => router.back()} className="back-button">
             ← Back
           </button>
+        <div className="profile-header-section">
           <h1 className="main-profile-title">My Account</h1>
         </div>
 

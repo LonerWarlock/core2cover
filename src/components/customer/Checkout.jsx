@@ -19,9 +19,8 @@ import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
-import sample from "../../assets/images/sample.jpg"; // Import fallback image
-import { FaArrowLeft, FaMapMarkerAlt, FaSearch, FaShoppingBag } from "react-icons/fa";
-
+import sample from "../../assets/images/sample.jpg";
+import { FaArrowLeft, FaMapMarkerAlt, FaSearch, FaShoppingBag, FaTruckLoading, FaRulerCombined, FaTools } from "react-icons/fa";
 
 // Google Maps Imports
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
@@ -31,8 +30,9 @@ const LIBRARIES = ["places", "maps"];
 const mapContainerStyle = {
   width: "100%",
   height: "350px",
-  borderRadius: "8px",
-  marginTop: "15px"
+  borderRadius: "12px",
+  marginTop: "15px",
+  border: "1px solid rgba(0,0,0,0.1)"
 };
 
 const defaultCenter = { lat: 20.5937, lng: 78.9629 };
@@ -64,10 +64,20 @@ export default function Checkout() {
 
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
+  /* ======================================================
+      TRIP-SENSITIVE QUANTITY UPDATE
+  ====================================================== */
   const updateQty = (id, newQty) => {
     if (newQty < 1) return;
     setItems((prev) =>
-      prev.map((it) => (it.materialId === id ? { ...it, quantity: newQty } : it))
+      prev.map((it) => {
+        if (it.materialId === id) {
+          const capacity = Number(it.unitsPerTrip || 1);
+          const newTrips = Math.ceil(newQty / capacity);
+          return { ...it, quantity: newQty, trips: newTrips };
+        }
+        return it;
+      })
     );
   };
 
@@ -109,59 +119,78 @@ export default function Checkout() {
 
     const single = getSingleCheckoutItem();
     const rawItems = single ? [single] : getCart();
-    setItems((Array.isArray(rawItems) ? rawItems : []).map((it) => ({
-      ...it,
-      quantity: Number(it.quantity ?? it.trips ?? 1) || 1,
-      amountPerTrip: Number(it.amountPerTrip || it.price || 0),
-      shippingCharge: Number(it.shippingCharge ?? it.deliveryCharge ?? 0),
-      installationCharge: Number(it.installationCharge ?? 0),
-      shippingChargeType: String(it.shippingChargeType || "Paid").trim(),
-      installationAvailable: String(it.installationAvailable || "no").trim(),
-    })));
+
+    setItems((Array.isArray(rawItems) ? rawItems : []).map((it) => {
+      const qty = Number(it.quantity || 1);
+      const upt = Number(it.unitsPerTrip || 1);
+
+      return {
+        ...it,
+        quantity: qty,
+        unit: it.unit || "pcs",
+        conversionFactor: Number(it.conversionFactor || 1),
+        unitsPerTrip: upt,
+        trips: Math.ceil(qty / upt),
+        amountPerTrip: Number(it.amountPerTrip || it.price || 0),
+        shippingCharge: Number(it.shippingCharge ?? 0),
+        installationCharge: Number(it.installationCharge ?? 0),
+        shippingChargeType: String(it.shippingChargeType || "Paid").trim(),
+        installationAvailable: String(it.installationAvailable || "no").trim(),
+      };
+    }));
 
     getUserCredit().then((res) => setCredit(Number(res.data.credit || 0))).catch(() => setCredit(0));
   }, [session, status]);
 
-  /* =========================================
-      SUMMARY CALCULATION WITH TIERED CHARGES
-  ========================================= */
+  /* ======================================================
+      SUMMARY CALCULATION (TRIP & INSTALLATION LOGIC)
+  ====================================================== */
   const computeSummary = useMemo(() => {
     let subtotal = 0, deliveryCharge = 0, installationTotal = 0;
-    
+
     items.forEach((it) => {
-      const qty = it.quantity;
-      subtotal += it.amountPerTrip * qty;
-      if (it.shippingChargeType.toLowerCase() !== "free") deliveryCharge += it.shippingCharge * qty;
-      if (it.installationAvailable.toLowerCase() === "yes") installationTotal += it.installationCharge * qty;
+      subtotal += (Number(it.amountPerTrip) * it.quantity);
+
+      // Delivery Logic: Skip if explicitly Free
+      const isFreeShipping = it.shippingChargeType?.toLowerCase() === "free";
+      if (!isFreeShipping) {
+        deliveryCharge += (Number(it.shippingCharge) * it.trips);
+      }
+
+      // STRICT Installation Charge Logic
+      if (it.installationAvailable?.toLowerCase() === "yes") {
+        installationTotal += (Number(it.installationCharge) * it.quantity);
+      }
     });
 
-    // Tiered Platform Charges Logic
     let casaCharge = 0;
-    if (subtotal < 10000) {
-      casaCharge = 89;
-    } else if (subtotal < 50000) {
-      casaCharge = 159;
-    } else {
-      casaCharge = 219;
-    }
+    if (subtotal < 10000) casaCharge = 89;
+    else if (subtotal < 50000) casaCharge = 159;
+    else casaCharge = 219;
 
-    return { 
-      subtotal, 
-      deliveryCharge, 
-      installationTotal, 
-      casaCharge, 
-      grandTotal: subtotal + deliveryCharge + installationTotal + casaCharge 
+    return {
+      subtotal,
+      deliveryCharge,
+      installationTotal,
+      casaCharge,
+      grandTotal: subtotal + deliveryCharge + installationTotal + casaCharge
     };
   }, [items]);
 
   const handlePlaceOrder = async () => {
-    if (!email || !name || !address) return triggerMsg("Please provide your name and select a location.", "error");
+    if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
     setLoading(true);
     try {
       const res = await api.post("/order/place", {
         customerEmail: email,
         checkoutDetails: { name, address, paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod },
-        orders: items.map(it => ({ ...it, trips: it.quantity })),
+        orders: items.map(it => ({
+          ...it,
+          trips: it.trips,
+          unit: it.unit,
+          conversionFactor: it.conversionFactor,
+          unitsPerTrip: it.unitsPerTrip
+        })),
         summary: computeSummary,
         creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
       });
@@ -173,7 +202,7 @@ export default function Checkout() {
         setTimeout(() => router.push("/userprofile"), 2000);
       }
     } catch (err) {
-      triggerMsg("Checkout failed.", "error");
+      triggerMsg(err.response?.data?.message || "Checkout failed.", "error");
     } finally {
       setLoading(false);
     }
@@ -187,7 +216,7 @@ export default function Checkout() {
       <Navbar />
       {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
-      <div className="checkout-nav-bar" style={{ padding: '10px 5%' }}>
+      <div className="checkout-nav-bar">
         <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
       </div>
 
@@ -196,8 +225,6 @@ export default function Checkout() {
 
         <div className="checkout-grid">
           <section className="checkout-left">
-
-            {/* Review Items Section */}
             <div className="checkout-card">
               <h2><FaShoppingBag /> Review Items</h2>
               <div className="checkout-items-list">
@@ -206,7 +233,7 @@ export default function Checkout() {
                     <div className="checkout-item-img-container">
                       <Image
                         src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image}`) : sample}
-                        alt={item.name}
+                        alt={item.name || "Product Image"} // Added required alt property
                         width={80}
                         height={80}
                         className="checkout-item-img"
@@ -217,15 +244,20 @@ export default function Checkout() {
                       <h4 className="checkout-item-name">{item.name}</h4>
                       <p className="checkout-item-seller">Seller: {item.supplier || item.seller}</p>
 
+                      <div className="checkout-logistics-info">
+                        <span><FaRulerCombined /> {(item.quantity * item.conversionFactor).toFixed(0)} Sq. Ft</span>
+                        <span><FaTruckLoading /> {item.trips} Trip(s)</span>
+                        {item.installationAvailable === "yes" && (
+                          <span className="installation-tag"><FaTools /> Installation Incl.</span>
+                        )}
+                      </div>
+
                       <div className="checkout-item-meta-row">
                         <div className="checkout-qty-controls">
                           <button onClick={() => updateQty(item.materialId, item.quantity - 1)}>-</button>
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            readOnly
-                          />
+                          <input type="number" value={item.quantity} readOnly />
                           <button onClick={() => updateQty(item.materialId, item.quantity + 1)}>+</button>
+                          <span className="checkout-unit-tag">{item.unit}</span>
                         </div>
                         <span className="checkout-item-sub">{formatINR(item.amountPerTrip * item.quantity)}</span>
                       </div>
@@ -237,36 +269,34 @@ export default function Checkout() {
 
             <div className="checkout-card">
               <h2>Contact Information</h2>
-              <label className="form-row">
-                <span>Full name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
-              </label>
-              <label className="form-row">
-                <span>Email Address</span>
-                <input value={email} disabled style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }} />
-              </label>
+              <div className="form-grid">
+                <label className="form-row">
+                  <span>Full name</span>
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
+                </label>
+                <label className="form-row">
+                  <span>Email Address</span>
+                  <input value={email} disabled className="disabled-input" />
+                </label>
+              </div>
             </div>
 
             <div className="checkout-card">
               <h2><FaMapMarkerAlt /> Delivery Location</h2>
-              <div className="search-box-wrapper" style={{ marginBottom: '15px' }}>
+              <div className="search-box-wrapper">
                 <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
-                  <div style={{ position: 'relative' }}>
-                    <FaSearch style={{ position: 'absolute', left: '12px', top: '13px', color: '#888' }} />
-                    <input
-                      type="text"
-                      placeholder="Search for your street or house number..."
-                      style={{ width: '90%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '14px' }}
-                    />
+                  <div className="checkout-search-inner">
+                    <FaSearch className="search-icon" />
+                    <input type="text" placeholder="Search for your street or house number..." />
                   </div>
                 </Autocomplete>
               </div>
               <GoogleMap mapContainerStyle={mapContainerStyle} center={markerPosition || defaultCenter} zoom={12} onLoad={(map) => (mapRef.current = map)} onClick={onMapClick}>
                 {markerPosition && <Marker position={markerPosition} />}
               </GoogleMap>
-              <label className="form-row" style={{ marginTop: '20px' }}>
+              <label className="form-row address-textarea" style={{ marginTop: "15px" }}>
                 <span>Final Delivery Address</span>
-                <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} placeholder="The address will appear here after search or map click..." />
+                <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} placeholder="Pin your location on the map..." />
               </label>
             </div>
 
@@ -274,7 +304,7 @@ export default function Checkout() {
               <h2>Payment Method</h2>
               <div className="payment-options">
                 {['cod', 'gpay', 'paytm', 'phonepe'].map(method => (
-                  <button key={method} type="button" disabled={useCreditForFullAmount} className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
+                  <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
                     <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} />
                     <span>{method === 'cod' ? "Cash on Delivery" : method.toUpperCase()}</span>
                   </button>
@@ -285,21 +315,37 @@ export default function Checkout() {
 
           <aside className="checkout-right">
             <div className="summary-card">
-              <h2>Order Summary</h2>
-              <div className="summary-row"><span>Items Subtotal</span><span>{formatINR(computeSummary.subtotal)}</span></div>
-              <div className="summary-row"><span>Delivery Charges</span><span>{formatINR(computeSummary.deliveryCharge)}</span></div>
-              {computeSummary.installationTotal > 0 && (
-                <div className="summary-row"><span>Installation Charges</span><span>{formatINR(computeSummary.installationTotal)}</span></div>
-              )}
-              <div className="summary-row">
-                <span>Platform Charges</span>
-                <span>{formatINR(computeSummary.casaCharge)}</span>
+              <h2 className="summary-title">Order Summary</h2>
+              <div className="summary-details">
+                <div className="summary-row">
+                  <span>Items Subtotal</span>
+                  <span>{formatINR(computeSummary.subtotal)}</span>
+                </div>
+                <div className="summary-row">
+                  <span>Delivery ({items.reduce((acc, i) => acc + i.trips, 0)} trips)</span>
+                  <span>{formatINR(computeSummary.deliveryCharge)}</span>
+                </div>
+                {computeSummary.installationTotal > 0 && (
+                  <div className="summary-row highlight-row">
+                    <span><FaTools /> Installation Charges</span>
+                    <span>{formatINR(computeSummary.installationTotal)}</span>
+                  </div>
+                )}
+                <div className="summary-row">
+                  <span>Platform Charges</span>
+                  <span>{formatINR(computeSummary.casaCharge)}</span>
+                </div>
               </div>
-              <hr />
-              <div className="summary-row total"><span>Total Amount</span><span>{formatINR(computeSummary.grandTotal)}</span></div>
+              <hr className="summary-divider" />
+              <div className="summary-row total">
+                <span>Total Amount</span>
+                <span>{formatINR(computeSummary.grandTotal)}</span>
+              </div>
+
               <button className="place-order-btn" onClick={handlePlaceOrder} disabled={loading || items.length === 0}>
-                {loading ? "Processing..." : "Confirm & Place Order"}
+                {loading ? "Processing Order..." : "Confirm & Place Order"}
               </button>
+              <p className="checkout-note">Secure encryption applied to all transactions.</p>
             </div>
           </aside>
         </div>

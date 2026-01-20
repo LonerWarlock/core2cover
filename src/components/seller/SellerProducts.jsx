@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
 import "./SellerProducts.css";
-import { FaStar, FaRegStar, FaInfoCircle } from "react-icons/fa";
+import { FaBoxes, FaTruckLoading, FaRulerCombined } from "react-icons/fa"; // Added icons for better UI
 import { 
   getSellerProducts, 
   deleteSellerProduct,
@@ -18,16 +19,13 @@ const SellerProducts = () => {
   const [sellerId, setSellerId] = useState(null);
   const [slideIndex, setSlideIndex] = useState({});
 
-  // Message Box State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
-  // Review State
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [ratingData, setRatingData] = useState({ avgRating: 0, count: 0, reviews: [] });
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-  // Edit State
   const [editingProduct, setEditingProduct] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -36,28 +34,24 @@ const SellerProducts = () => {
     category: "",
     description: "",
     availability: "available",
+    unit: "pcs",
+    unitsPerTrip: "",
+    conversionFactor: "",
+    productType: "",
     existingImages: [],
     newImages: []
   });
 
-  /* =========================================
-      COMMISSION CALCULATION HELPER
-  ========================================= */
   const calculateFinalPrice = (base) => {
     const val = parseFloat(base);
     if (isNaN(val) || val <= 0) return 0;
-    
     let rate = 0;
     if (val < 10000) rate = 0.07;
     else if (val < 50000) rate = 0.05;
     else rate = 0.035;
-
     return (val + (val * rate)).toFixed(2);
   };
 
-  /* =========================================
-      1. FETCH PRODUCTS LOGIC
-  ========================================= */
   const fetchProducts = useCallback(async (sid) => {
     try {
       setLoading(true);
@@ -80,15 +74,10 @@ const SellerProducts = () => {
       if (sid) {
         setSellerId(sid);
         fetchProducts(sid);
-      } else {
-        setLoading(false);
-      }
+      } else setLoading(false);
     }
   }, [fetchProducts]);
 
-  /* =========================================
-      2. SLIDESHOW TIMER
-  ========================================= */
   useEffect(() => {
     if (materials.length === 0) return;
     const timer = setInterval(() => {
@@ -104,17 +93,18 @@ const SellerProducts = () => {
     return () => clearInterval(timer);
   }, [materials]);
 
-  /* =========================================
-      3. EDIT LOGIC
-  ========================================= */
   const startEdit = (product) => {
     setEditingProduct(product);
     setEditForm({
       name: product.name,
-      price: product.price, // This is the final price from DB, seller edits base
+      price: product.price, 
       category: product.category,
       description: product.description || "",
       availability: product.availability || "available",
+      unit: product.unit || "pcs",
+      unitsPerTrip: product.unitsPerTrip || "",
+      conversionFactor: product.conversionFactor || "",
+      productType: product.productType,
       existingImages: product.images || [],
       newImages: []
     });
@@ -130,24 +120,27 @@ const SellerProducts = () => {
     e.preventDefault();
     setIsUpdating(true);
     
-    // We send the final calculated price to the backend
     const finalCalculatedPrice = calculateFinalPrice(editForm.price);
-
     const formData = new FormData();
     formData.append("name", editForm.name);
     formData.append("price", finalCalculatedPrice); 
     formData.append("category", editForm.category);
     formData.append("description", editForm.description);
     formData.append("availability", editForm.availability);
-    formData.append("existingImages", JSON.stringify(editForm.existingImages));
+    formData.append("productType", editForm.productType);
     
-    editForm.newImages.forEach(file => {
-      formData.append("images", file);
-    });
+    if (editForm.productType === "material") {
+      formData.append("unit", editForm.unit);
+      formData.append("unitsPerTrip", editForm.unitsPerTrip);
+      formData.append("conversionFactor", editForm.conversionFactor);
+    }
+
+    formData.append("existingImages", JSON.stringify(editForm.existingImages));
+    editForm.newImages.forEach(file => formData.append("images", file));
 
     try {
       await updateSellerProduct(editingProduct.id, formData);
-      triggerMsg("Catalogue updated successfully! ", "success");
+      triggerMsg("Catalogue updated successfully!", "success");
       setEditingProduct(null);
       fetchProducts(sellerId);
     } catch (err) {
@@ -157,9 +150,6 @@ const SellerProducts = () => {
     }
   };
 
-  /* =========================================
-      4. DELETE & REVIEWS LOGIC
-  ========================================= */
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -191,13 +181,7 @@ const SellerProducts = () => {
 
   return (
     <div className="ms-root">
-      {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
-        />
-      )}
+      {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
       <Sidebar />
       <main className="ms-main">
         <h1 className="ms-title">Inventory Catalogue</h1>
@@ -217,13 +201,33 @@ const SellerProducts = () => {
               </div>
               <div className="ms-field">
                 <label className="ms-label">Listing Price (Incl. Commission)</label>
-                <input 
-                  className="ms-input" 
-                  value={`₹ ${calculateFinalPrice(editForm.price)}`} 
-                  readOnly 
-                  style={{ backgroundColor: "#f3f4f6", color: "#606E52", fontWeight: "bold" }}
-                />
+                <input className="ms-input" value={`₹ ${calculateFinalPrice(editForm.price)}`} readOnly style={{ backgroundColor: "#f3f4f6", color: "#606E52", fontWeight: "bold" }} />
               </div>
+              
+              {editForm.productType === "material" && (
+                <>
+                  <div className="ms-field">
+                    <label className="ms-label">Unit</label>
+                    <select className="ms-select" name="unit" value={editForm.unit} onChange={handleEditChange}>
+                      <option value="pcs">Pieces</option>
+                      <option value="sqft">Sq. Ft</option>
+                      <option value="sheet">Sheets</option>
+                      <option value="metre">Metres</option>
+                    </select>
+                  </div>
+                  <div className="ms-field">
+                    <label className="ms-label">Units per Trip</label>
+                    <input className="ms-input" type="number" name="unitsPerTrip" value={editForm.unitsPerTrip} onChange={handleEditChange} required />
+                  </div>
+                  {(editForm.unit === "sheet" || editForm.unit === "pcs") && (
+                    <div className="ms-field">
+                      <label className="ms-label">Sq. Ft per {editForm.unit}</label>
+                      <input className="ms-input" type="number" step="0.01" name="conversionFactor" value={editForm.conversionFactor} onChange={handleEditChange} required />
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="ms-field">
                 <label className="ms-label">Availability</label>
                 <select className="ms-select" name="availability" value={editForm.availability} onChange={handleEditChange}>
@@ -247,14 +251,11 @@ const SellerProducts = () => {
                     </div>
                   ))}
                 </div>
-                <label className="ms-label">Upload New Photos</label>
                 <input type="file" multiple accept="image/*" onChange={(e) => setEditForm(p => ({...p, newImages: Array.from(e.target.files)}))} className="ms-file" />
               </div>
 
               <div className="ms-edit-actions ms-full">
-                <button type="submit" className="ms-btn ms-btn--primary" disabled={isUpdating}>
-                  {isUpdating ? "Finalising..." : "Save Changes"}
-                </button>
+                <button type="submit" className="ms-btn ms-btn--primary" disabled={isUpdating}>{isUpdating ? "Finalising..." : "Save Changes"}</button>
                 <button type="button" className="ms-btn ms-btn--outline" onClick={() => setEditingProduct(null)}>Cancel</button>
               </div>
             </form>
@@ -274,18 +275,47 @@ const SellerProducts = () => {
           </section>
         )}
 
-        {/* GRID DISPLAY */}
+        {/* UPDATED GRID DISPLAY WITH ALL INFORMATION */}
         <section className="ms-grid">
           {loading ? <p>Loading catalogue...</p> : materials.map((m) => (
             <div key={m.id} className="ms-card">
               <div className="ms-img-container">
                 <img src={m.images[slideIndex[m.id] || 0] || "/placeholder.jpg"} className="ms-thumb" alt={m.name} />
+                <div className={`ms-status-badge ${m.availability}`}>
+                  {m.availability.replace('_', ' ')}
+                </div>
               </div>
               <div className="ms-body">
-                <h3 className="ms-name">{m.name}</h3>
-                <p className="ms-price">₹{Number(m.price).toLocaleString('en-IN')}</p>
+                <div className="ms-header-row">
+                  <h3 className="ms-name">{m.name}</h3>
+                  <span className="ms-type-tag">{m.productType}</span>
+                </div>
+                
+                <p className="ms-price">₹{Number(m.price).toLocaleString('en-IN')} <span className="ms-unit-text">/ {m.unit || 'pcs'}</span></p>
                 <p className="ms-category">{m.category}</p>
+
+                {/* LOGISTICS INFO BLOCK */}
+                <div className="ms-logistics-info">
+                  <div className="ms-info-item">
+                    <FaTruckLoading title="Units per Trip" />
+                    <span>{m.unitsPerTrip || 1} {m.unit || 'pcs'} / trip</span>
+                  </div>
+                  
+                  {m.productType === "material" && (m.unit === "sheet" || m.unit === "pcs") && (
+                    <div className="ms-info-item">
+                      <FaRulerCombined title="Conversion Factor" />
+                      <span>{m.conversionFactor || 1} sq. ft / {m.unit}</span>
+                    </div>
+                  )}
+                </div>
+
+                {m.description && (
+                  <p className="ms-desc-preview">
+                    {m.description.substring(0, 60)}{m.description.length > 60 ? "..." : ""}
+                  </p>
+                )}
               </div>
+              
               <div className="ms-actions">
                 <button className="ms-btn ms-btn--outline" onClick={() => startEdit(m)}>Edit</button>
                 <button className="ms-btn ms-btn--ghost" onClick={() => viewReviews(m)}>Reviews</button>

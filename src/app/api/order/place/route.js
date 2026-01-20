@@ -46,24 +46,39 @@ export async function POST(request) {
         },
       });
 
-      // 2. Map and Create Order Items
-      const orderItemsData = orders.map((item) => ({
-        orderId: order.id,
-        materialId: Number(item.materialId),
-        materialName: item.materialName || item.name || "Unknown Product",
-        supplierName: item.supplierName || item.supplier || "Unknown Seller",
-        sellerId: Number(item.supplierId || item.sellerId),
-        quantity: Number(item.trips || item.quantity || 1),
-        pricePerUnit: Number(item.amountPerTrip || 0),
-        totalAmount: Number(item.amountPerTrip || 0) * Number(item.trips || item.quantity || 1),
-        imageUrl: item.imageUrl || item.image || null,
+      // 2. Map and Create Order Items with Logistics Data
+      const orderItemsData = orders.map((item) => {
+        const qty = Number(item.quantity || 1);
+        const trips = Number(item.trips || 1);
+        const price = Number(item.amountPerTrip || 0);
+        const shipCharge = Number(item.shippingCharge || 0);
+        
+        // Final calculation for this specific item including trip-based shipping
+        const itemShippingTotal = item.shippingChargeType === "Paid" ? (trips * shipCharge) : 0;
+        const itemTotal = (qty * price) + itemShippingTotal;
 
-        // SNAPSHOT DATA: Save the charges exactly as they were calculated
-        shippingChargeType: item.shippingChargeType || "free",
-        shippingCharge: Number(item.shippingCharge || 0),
-        installationAvailable: item.installationAvailable || "no",
-        installationCharge: Number(item.installationCharge || 0),
-      }));
+        return {
+          orderId: order.id,
+          materialId: Number(item.materialId),
+          materialName: item.materialName || item.name || "Unknown Product",
+          supplierName: item.supplierName || item.supplier || "Unknown Seller",
+          sellerId: Number(item.supplierId || item.sellerId),
+          
+          // MAP TO SCHEMA FIELDS
+          quantity: qty,
+          unit: item.unit || "pcs",
+          totalTrips: trips, 
+          pricePerUnit: price,
+          totalAmount: itemTotal,
+          imageUrl: item.imageUrl || item.image || null,
+
+          // SNAPSHOT DELIVERY DATA
+          shippingChargeType: item.shippingChargeType || "Paid",
+          shippingCharge: shipCharge,
+          installationAvailable: item.installationAvailable || "no",
+          installationCharge: Number(item.installationCharge || 0),
+        };
+      });
 
       await tx.orderItem.createMany({
         data: orderItemsData,

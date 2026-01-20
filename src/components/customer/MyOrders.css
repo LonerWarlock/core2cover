@@ -178,51 +178,40 @@
 .order-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 12px;
+    /* Allows buttons to wrap on medium screens */
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
 }
 
 /* Track Button */
 .track-btn {
-  background-color: transparent;
-  color: #606e52; /* Matching your credit badge text color */
-  border: 1.5px solid #606e52;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 8px;
-  min-width: 140px;
+    background: var(--green-dark);
+    color: var(--white);
+    border: none;
 }
 
 .track-btn:hover {
-  background-color: #606e52;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(96, 110, 82, 0.2);
+    background-color: #606e52;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(96, 110, 82, 0.2);
 }
 
 /* Rate Button */
 .rate-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    padding: 10px 18px;
-    border-radius: var(--radius);
+    background: var(--white);
+    border: 1.5px solid var(--green-dark);
     color: var(--green-dark);
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--ease);
 }
 
 .track-btn:disabled {
-  border-color: #ccc;
-  color: #999;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
+    border-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
 }
 
 .rate-btn:hover {
@@ -230,12 +219,31 @@
 }
 
 .order-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 15px;
-  border-top: 1px solid #eee;
-  padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.track-btn,
+.rate-btn,
+.cancel-btn {
+    flex: 0 1 auto;
+    /* Default: take only necessary space */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+    height: 42px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: var(--ease);
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 /* =========================================
@@ -684,7 +692,139 @@
 }
 
 .status-refund-completed {
-  background: #dcfce7;
-  color: #047857;
-  font-weight: 600;
+    background: #dcfce7;
+    color: #047857;
+    font-weight: 600;
+}
+
+/* =========================================
+   MY ORDERS - LOGISTICS & UNIT STYLES
+   ========================================= */
+
+/* Logistics Info Container */
+.order-logistics-row {
+    display: flex;
+    gap: 12px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+/* Individual Logistics Badges */
+.log-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #4b5563;
+    /* Muted slate gray */
+    background: #f8fafc;
+    /* Very light cool gray */
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.log-detail svg {
+    color: #606E52;
+    /* Brand Primary Green */
+    font-size: 1rem;
+}
+
+.log-detail:hover {
+    border-color: #606E52;
+    background: #f0f2ee;
+}
+
+/* Return Status Pill Overrides for Aesthetics */
+.return-pending {
+    color: #92400e;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.return-approved {
+    color: #047857;
+    font-weight: 600;
+}
+
+.return-rejected {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+/* Refund Method Label Spacing */
+.refund-label-spacing {
+    margin-left: 12px;
+    cursor: pointer;
+}
+
+/* Star Icon Spacing */
+.rating-star-icon {
+    cursor: pointer;
+    margin-right: 4px;
+    transition: transform 0.1s ease;
+}
+
+.rating-star-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 480px) {
+    .order-logistics-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .log-detail {
+        width: fit-content;
+    }
+}
+
+@media (max-width: 900px) {
+    .order-actions {
+        gap: 10px;
+    }
+    
+    .track-btn, .rate-btn, .cancel-btn {
+        min-width: 120px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Mobile - Stack buttons vertically for full width */
+@media (max-width: 700px) {
+    .order-actions {
+        flex-direction: column; /* Clean vertical stack */
+        align-items: stretch; /* Buttons take full width of card */
+    }
+
+    .track-btn, 
+    .rate-btn, 
+    .cancel-btn {
+        width: 100%;
+        min-width: 100%;
+        flex: 1 1 auto;
+    }
+    
+    .rated-pill {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 420px) {
+    .order-actions {
+        padding-top: 12px;
+        gap: 8px;
+    }
+    
+    .track-btn, .rate-btn, .cancel-btn {
+        height: 48px; /* Slightly larger tap target for thumbs */
+    }
 }

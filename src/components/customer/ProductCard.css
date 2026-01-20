@@ -205,7 +205,7 @@
   .product-card {
     flex-direction: row;
     max-width: 100%;
-    height: 180px;
+    height: 195px;
     border-radius: 12px;
   }
 
@@ -393,4 +393,59 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* Base Price Styling */
+.price-tag {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap; /* Allows unit to drop down if name is very long on tiny screens */
+  gap: 4px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.price-unit {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap; /* Prevents "sq. ft" from splitting into two lines */
+}
+
+/* Tablet Responsiveness (under 1024px) */
+@media (max-width: 1024px) {
+  .price-tag {
+    font-size: 1.15rem;
+  }
+  .price-unit {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile Responsiveness (under 768px) */
+@media (max-width: 768px) {
+  .product-footer-row {
+    flex-direction: column; /* Stack price and button if space is tight */
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .price-tag {
+    font-size: 1.1rem;
+    width: 100%;
+  }
+
+  .price-unit {
+    font-size: 0.75rem;
+  }
+}
+
+/* Very Small Devices (under 480px) */
+@media (max-width: 480px) {
+  .price-tag {
+    display: flex;
+    justify-content: space-between; /* Pushes price and unit to edges if needed */
+    align-items: center;
+  }
 }

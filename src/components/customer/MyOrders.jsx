@@ -7,6 +7,7 @@ import sample from "../../assets/images/sample.jpg";
 import api from "../../api/axios";
 import { cancelOrder } from "../../api/order";
 import { GiSandsOfTime } from "react-icons/gi";
+import { FaTruckLoading, FaRulerCombined } from "react-icons/fa";
 import { requestReturn, getUserReturns, getUserCredit } from "../../api/return";
 import Image from "next/image";
 
@@ -84,7 +85,6 @@ export default function MyOrders() {
   const [credit, setCredit] = useState(0);
   const [userEmail, setUserEmail] = useState(null);
 
-  // 1. Initialise user identity
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedEmail = localStorage.getItem("userEmail");
@@ -94,7 +94,6 @@ export default function MyOrders() {
     }
   }, []);
 
-  // 2. Fetch Orders
   useEffect(() => {
     if (!userEmail) return;
     api
@@ -108,7 +107,6 @@ export default function MyOrders() {
       });
   }, [userEmail]);
 
-  // 3. Fetch Returns and Credit Data
   useEffect(() => {
     if (!userEmail) return;
     getUserReturns()
@@ -144,7 +142,6 @@ export default function MyOrders() {
     }
   };
 
-  // FIXED: Passed whole order object to extract materialId
   const submitRating = async (order) => {
     const orderItemId = order.orderItemId;
     const stars = ratings[orderItemId];
@@ -153,12 +150,11 @@ export default function MyOrders() {
     if (!stars) return;
 
     try {
-      // payload must match what backend POST expects
       await api.post(`/order/item/${orderItemId}/rate`, {
         stars,
         comment,
         userEmail,
-        productId: order.materialId // Required for Prisma Product relation
+        productId: order.materialId 
       });
 
       setOrders((prev) =>
@@ -205,9 +201,9 @@ export default function MyOrders() {
 
   return (
     <div className="orders-page">
-      <header className="orders-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <header className="orders-header-row">
         <h2 className="orders-title">Your Orders</h2>
-        <div className="credit-badge" style={{ position: "fixed", bottom: 20, right: 20, zIndex: 1000, background: "#FFFFFF", color: "#606E52", padding: "10px 16px", borderRadius: 999, fontWeight: 600, border: "1px solid #bae6fd", boxShadow: "0 4px 10px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="credit-badge">
           Store Credit: ₹{credit}
         </div>
       </header>
@@ -221,7 +217,7 @@ export default function MyOrders() {
 
       <div className="orders-lists">
         {filteredOrders.length === 0 ? (
-          <div className="empty-orders-text" style={{ textAlign: "center", padding: "40px", color: "#888" }}>
+          <div className="empty-orders-text">
             No orders found for {userEmail}.
           </div>
         ) : filteredOrders.map((order) => {
@@ -248,7 +244,13 @@ export default function MyOrders() {
                 <div className="order-meta">
                   <p><strong>Order ID:</strong> {order.id}</p>
                   <p><strong>Seller:</strong> {order.sellerName}</p>
-                  <p><strong>Quantity:</strong> {order.quantity}</p>
+                  
+                  {/* Logistics Insight Row */}
+                  <div className="order-logistics-row">
+                    <span className="log-detail"><FaRulerCombined /> {order.quantity} {order.unit || 'units'}</span>
+                    <span className="log-detail"><FaTruckLoading /> {order.totalTrips || 1} Trip(s)</span>
+                  </div>
+
                   <p><strong>Total:</strong> ₹{order.totalAmount}</p>
                 </div>
 
@@ -261,13 +263,13 @@ export default function MyOrders() {
                     {returnInfo ? (
                       <div className="rated-pill">
                         {derivedStatus === "REQUESTED" && (
-                          <span style={{ color: "#92400e" }}>Return requested <GiSandsOfTime /></span>
+                          <span className="return-pending">Return requested <GiSandsOfTime /></span>
                         )}
                         {derivedStatus === "APPROVED" && (
-                          <span style={{ color: "#047857" }}>Return approved</span>
+                          <span className="return-approved">Return approved</span>
                         )}
                         {derivedStatus === "REJECTED" && (
-                          <span style={{ color: "#b91c1c" }}>Return rejected</span>
+                          <span className="return-rejected">Return rejected</span>
                         )}
                       </div>
                     ) : openReturnBox[order.orderItemId] ? (
@@ -280,7 +282,7 @@ export default function MyOrders() {
                           <label>
                             <input type="radio" name={`refund-${order.orderItemId}`} value="STORE_CREDIT" checked={refundMethod[order.orderItemId] === "STORE_CREDIT"} onChange={() => setRefundMethod(p => ({ ...p, [order.orderItemId]: "STORE_CREDIT" }))} /> Store Credit
                           </label>
-                          <label style={{ marginLeft: 12 }}>
+                          <label className="refund-label-spacing">
                             <input type="radio" name={`refund-${order.orderItemId}`} value="ORIGINAL_PAYMENT" checked={refundMethod[order.orderItemId] === "ORIGINAL_PAYMENT"} onChange={() => setRefundMethod(p => ({ ...p, [order.orderItemId]: "ORIGINAL_PAYMENT" }))} /> Original Payment
                           </label>
                         </div>
@@ -293,14 +295,14 @@ export default function MyOrders() {
                       <button className="track-btn" onClick={() => setOpenReturnBox(p => ({ ...p, [order.orderItemId]: true }))}>Request Return</button>
                     )}
 
-                    <div className="rating-section" style={{ marginTop: "10px" }}>
+                    <div className="rating-section">
                       {order.isRated ? (
                         <span className="rated-pill">✓ Rated</span>
                       ) : openRating[order.orderItemId] ? (
                         <div className="order-rating">
                           <div>
                             {[1, 2, 3, 4, 5].map(star => (
-                              <FaStar key={star} size={18} style={{ cursor: "pointer", marginRight: 4 }} color={(ratings[order.orderItemId] || 0) >= star ? "#facc15" : "#d1d5db"} onClick={() => setRatings(p => ({ ...p, [order.orderItemId]: star }))} />
+                              <FaStar key={star} size={18} className="rating-star-icon" style={{ color: (ratings[order.orderItemId] || 0) >= star ? "#facc15" : "#d1d5db" }} onClick={() => setRatings(p => ({ ...p, [order.orderItemId]: star }))} />
                             ))}
                           </div>
                           <textarea className="order-review" placeholder="Write a review..." value={reviews[order.orderItemId] || ""} onChange={(e) => setReviews(p => ({ ...p, [order.orderItemId]: e.target.value }))} />

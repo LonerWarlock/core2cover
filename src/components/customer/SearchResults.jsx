@@ -26,7 +26,7 @@ const SearchResults = () => {
       });
       return;
     }
-    
+
     setLoading(true);
     // Relative path used by axios instance
     api.get("/products/search", { params: { q: searchQuery } })
@@ -44,16 +44,16 @@ const SearchResults = () => {
     return {
       // 1. Top Rated: Rating of 4.5 or higher
       topRated: results.filter(p => Number(p.avgRating) >= 4.5),
-      
+
       // 2. Premium: Price above ₹15,000
       premium: results.filter(p => Number(p.price) >= 15000),
-      
+
       // 3. New Arrivals: Recent additions
       newArrivals: [...results].sort((a, b) => b.id - a.id).slice(0, 4),
-      
+
       // 4. Others: Results not meeting top criteria
-      others: results.filter(p => 
-        Number(p.avgRating) < 4.5 && 
+      others: results.filter(p =>
+        Number(p.avgRating) < 4.5 &&
         Number(p.price) < 15000
       )
     };
@@ -63,36 +63,25 @@ const SearchResults = () => {
     if (list.length === 0) return null;
     return (
       <div className="portfolio-section" style={{ marginTop: '50px', textAlign: 'left' }}>
-        <h2 style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '15px', 
-          fontSize: '2rem', 
-          color: '#606E52', 
+        <h2 style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '15px',
+          fontSize: '2rem',
+          color: '#606E52',
           fontFamily: '"Playfair Display", serif',
           fontWeight: '500'
         }}>
-           {icon} {title}
+          {icon} {title}
         </h2>
         <div className="product-grid">
           {list.map((product) => (
             <ProductCard
               key={product.id}
-              id={product.id}
-              sellerId={product.sellerId}
+              {...product} // This spreads all fields including unit, conversionFactor, unitsPerTrip
               title={product.name}
-              category={product.category}
-              price={product.price}
-              description={product.description}
-              images={product.images || []}
               seller={product.sellerName || product.seller}
-              origin={product.location}
-              avgRating={product.avgRating || 0}
-              ratingCount={product.ratingCount || 0}
-              shippingChargeType={product.shippingChargeType}
-              shippingCharge={product.shippingCharge}
-              installationAvailable={product.installationAvailable}
-              installationCharge={product.installationCharge}
+              origin={product.location || (product.sellerBusiness ? `${product.sellerBusiness.city}, ${product.sellerBusiness.state}` : "Verified")}
             />
           ))}
         </div>
@@ -124,8 +113,8 @@ const SearchResults = () => {
         ) : (
           <>
             {/* Displaying categorized search results */}
-            {renderSection("Top Rated Matches", <FaStar style={{color: '#facc15'}}/>, categorizedData.topRated)}
-            {renderSection("Premium Finds", <FaGem style={{color: '#91A56E'}}/>, categorizedData.premium)}
+            {renderSection("Top Rated Matches", <FaStar style={{ color: '#facc15' }} />, categorizedData.topRated)}
+            {renderSection("Premium Finds", <FaGem style={{ color: '#91A56E' }} />, categorizedData.premium)}
             {renderSection("Recent Additions", <FaRegClock />, categorizedData.newArrivals)}
             {renderSection("Browse All Results", <FaLayerGroup />, categorizedData.others)}
           </>

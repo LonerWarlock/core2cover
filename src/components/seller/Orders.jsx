@@ -8,6 +8,7 @@ import {
   updateSellerOrderStatus,
 } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
+import { FaTruckLoading, FaRulerCombined, FaUser, FaClock } from "react-icons/fa";
 
 const SellerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -22,13 +23,19 @@ const SellerOrders = () => {
   };
 
   /* =========================
-      Normalizers
+      Normalizers (Updated for Logistics)
   ========================= */
   const normalizeOrder = (o) => {
     const orderItemId = o.orderItemId ?? o.id ?? o.order_item_id ?? null;
     const status = o.status ?? o.orderStatus ?? o.order_status ?? "pending";
     const material = o.material ?? o.materialName ?? o.productName ?? o.name ?? "Item";
-    const quantity = o.quantity ?? o.trips ?? o.qty ?? 1;
+    
+    // Quantity represents the number of Units (Sheets/Pcs)
+    const quantity = o.quantity ?? o.qty ?? 1;
+    // Trips represents the logistics requirement calculated at checkout
+    const trips = o.trips ?? 1;
+    const unit = o.unit || "pcs";
+    
     const customer = o.customer ?? o.customerName ?? o.userName ?? o.customer_email ?? "-";
     const time = o.time ?? o.createdAt ?? o.created_at ?? o.orderTime ?? null;
     const siteLocation = o.siteLocation ?? o.site_location ?? o.deliveryAddress ?? "";
@@ -39,6 +46,8 @@ const SellerOrders = () => {
       _status: status,
       _material: material,
       _quantity: quantity,
+      _trips: trips,
+      _unit: unit,
       _customer: customer,
       _time: time,
       _siteLocation: siteLocation,
@@ -125,15 +134,16 @@ const SellerOrders = () => {
   };
 
   const deliverAllOrders = async () => {
-    const confirmed = orders.filter((o) => o._status === "confirmed");
+    const confirmed = orders.filter((o) => o._status === "confirmed")
+                            .concat(orders.filter(o => o._status === "out_for_delivery"));
     if (confirmed.length === 0) return;
-    if (!window.confirm(`Mark all ${confirmed.length} confirmed orders as delivered?`)) return;
+    if (!window.confirm(`Mark all active orders as delivered?`)) return;
 
     setDeliveringAll(true);
     const prev = orders;
 
     setOrders((prevList) =>
-      prevList.map((o) => (o._status === "confirmed" ? { ...o, _status: "fulfilled" } : o))
+      prevList.map((o) => (["confirmed", "out_for_delivery"].includes(o._status) ? { ...o, _status: "fulfilled" } : o))
     );
 
     try {
@@ -167,7 +177,7 @@ const SellerOrders = () => {
   };
 
   const hasPendingOrders = orders.some((o) => o._status === "pending");
-  const hasConfirmedOrders = orders.some((o) => o._status === "confirmed");
+  const hasConfirmedOrders = orders.some((o) => ["confirmed", "out_for_delivery"].includes(o._status));
 
   return (
     <div className="orders-layout">
@@ -208,11 +218,18 @@ const SellerOrders = () => {
               <li key={order._orderItemId ?? order.id} className={`order-item ${order._status}`}>
                 <div className="order-top">
                   <div className="order-header">
-                    <strong>{order._material}</strong> <span>Quantity - {order._quantity}</span>
+                    <div className="header-main">
+                        <strong>{order._material}</strong>
+                        <span className="unit-badge">{order._unit}</span>
+                    </div>
+                    <div className="logistics-summary">
+                        <span className="log-item"><FaRulerCombined /> Qty: {order._quantity}</span>
+                        <span className="log-item"><FaTruckLoading /> Trips: {order._trips}</span>
+                    </div>
                   </div>
                   <div className="order-meta">
-                    <span className="meta-item">Customer: <strong>{order._customer}</strong></span>
-                    <span className="meta-item">Placed: <strong>{order._time ? new Date(order._time).toLocaleString("en-IN") : "—"}</strong></span>
+                    <span className="meta-item"><FaUser /> <strong>{order._customer}</strong></span>
+                    <span className="meta-item"><FaClock /> <strong>{order._time ? new Date(order._time).toLocaleString("en-IN") : "—"}</strong></span>
                   </div>
                 </div>
 

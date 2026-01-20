@@ -12,7 +12,6 @@ export async function GET(request) {
         seller: {
           select: {
             name: true,
-            // Access delivery details through the 'delivery' relation
             delivery: {
               select: {
                 shippingChargeType: true,
@@ -21,9 +20,7 @@ export async function GET(request) {
                 installationCharge: true,
               }
             },
-            business: { 
-              select: { city: true, state: true } 
-            },
+            business: { select: { city: true, state: true } },
           },
         },
         ratings: { select: { stars: true } },
@@ -51,7 +48,12 @@ export async function GET(request) {
         sellerBusiness: p.seller?.business || null,
         avgRating: Number(avgRating.toFixed(1)),
         ratingCount: count,
-        // Pull fields from the nested delivery object
+        
+        // NEW RAW MATERIAL LOGISTICS
+        unit: p.unit || "pcs",
+        unitsPerTrip: p.unitsPerTrip || 1,
+        conversionFactor: p.conversionFactor || 1,
+
         shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
         shippingCharge: p.seller?.delivery?.shippingCharge || 0,
         installationAvailable: p.seller?.delivery?.installationAvailable || "no",

@@ -9,17 +9,22 @@ import MessageBox from "../ui/MessageBox";
 
 const SellerAddProduct = () => {
   const router = useRouter();
-  
+
   const [sellerId, setSellerId] = useState(null);
-  const [mounted, setMounted] = useState(false); 
-  
+  const [mounted, setMounted] = useState(false);
+
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [finalPrice, setFinalPrice] = useState(0); // New state for final calculation
+  const [finalPrice, setFinalPrice] = useState(0);
   const [productType, setProductType] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [availability, setAvailability] = useState("available");
+
+  // LOGISTICS FIELDS
+  const [unit, setUnit] = useState("pcs");
+  const [unitsPerTrip, setUnitsPerTrip] = useState("");
+  const [conversionFactor, setConversionFactor] = useState("");
 
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -38,7 +43,7 @@ const SellerAddProduct = () => {
     else setSellerId(sid);
   }, [router]);
 
-  // Commission Calculation Logic
+  // Commission Calculation
   useEffect(() => {
     const basePrice = parseFloat(price);
     if (isNaN(basePrice) || basePrice <= 0) {
@@ -47,13 +52,9 @@ const SellerAddProduct = () => {
     }
 
     let commissionRate = 0;
-    if (basePrice < 10000) {
-      commissionRate = 0.07; // 7%
-    } else if (basePrice < 50000) {
-      commissionRate = 0.05; // 5%
-    } else {
-      commissionRate = 0.035; // 3.5%
-    }
+    if (basePrice < 10000) commissionRate = 0.07;
+    else if (basePrice < 50000) commissionRate = 0.05;
+    else commissionRate = 0.035;
 
     const calculated = basePrice + (basePrice * commissionRate);
     setFinalPrice(calculated.toFixed(2));
@@ -82,18 +83,30 @@ const SellerAddProduct = () => {
     e.preventDefault();
     if (!name.trim()) return triggerMsg("Product name is required.", "error");
     if (images.length < 1) return triggerMsg("Upload at least 1 image.", "error");
-    if (parseFloat(finalPrice) <= 0) return triggerMsg("Valid price is required.", "error");
+    if (productType === "material") {
+    if (!unitsPerTrip || parseFloat(unitsPerTrip) <= 0) {
+      return triggerMsg("Please specify units per delivery trip.", "error");
+    }
+    if ((unit === "sheet" || unit === "pcs") && (!conversionFactor || parseFloat(conversionFactor) <= 0)) {
+      return triggerMsg(`Please specify Sq. Ft per ${unit}.`, "error");
+    }
+  }
 
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("sellerId", sellerId);
       formData.append("name", name);
-      formData.append("price", finalPrice); // Send the final price (base + commission) to backend
+      formData.append("price", finalPrice);
       formData.append("productType", productType);
       formData.append("category", category);
       formData.append("description", description);
       formData.append("availability", availability);
+
+      // LOGISTICS DATA
+      formData.append("unit", productType === "material" ? unit : "pcs");
+      formData.append("unitsPerTrip", productType === "material" ? unitsPerTrip : 1);
+      formData.append("conversionFactor", productType === "material" ? conversionFactor : 1);
 
       images.forEach((img) => formData.append("images", img));
       if (video) formData.append("video", video);
@@ -102,9 +115,18 @@ const SellerAddProduct = () => {
       triggerMsg("Product listed successfully! ");
 
       // Reset form
-      setName(""); setPrice(""); setProductType(""); setCategory("");
-      setDescription(""); setImages([]); setImagePreviews([]);
-      setVideo(null); setVideoPreview(null);
+      setName("");
+      setPrice("");
+      setProductType("");
+      setCategory("");
+      setDescription("");
+      setImages([]);
+      setImagePreviews([]);
+      setVideo(null);
+      setVideoPreview(null);
+      setUnit("pcs");
+      setUnitsPerTrip("");     // Reset to string "1"
+      setConversionFactor("");  // Reset to string "1"
     } catch (err) {
       triggerMsg("Server error while adding product", "error");
     } finally {
@@ -115,27 +137,33 @@ const SellerAddProduct = () => {
   if (!mounted) return null;
 
   return (
-    <div className="sma-root" suppressHydrationWarning>
+    <div className="sma-root">
       {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
       <Sidebar />
       <main className="sma-main">
-        <form className="sma-card" onSubmit={handleSubmit} suppressHydrationWarning>
+        <form className="sma-card" onSubmit={handleSubmit}>
           <h2 className="sma-title">➕ Add New Product</h2>
           <div className="sma-grid">
             <label className="sma-field"><span>Product Name *</span>
-              <input className="sma-input" value={name} onChange={(e) => setName(e.target.value)} required suppressHydrationWarning />
+              <input className="sma-input" value={name} onChange={(e) => setName(e.target.value)} required />
             </label>
-            
+
             <label className="sma-field"><span>Your Price (₹) *</span>
-              <input type="number" className="sma-input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Amount you receive" required suppressHydrationWarning />
+              <input type="number" className="sma-input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Amount you receive" required />
             </label>
 
             <label className="sma-field"><span>Final Listing Price (incl. Commision)</span>
-              <input type="text" className="sma-input" value={`₹ ${finalPrice}`} readOnly style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed", fontWeight: "bold", color: "#606E52" }} suppressHydrationWarning />
+              {/* FIXED: Combined className into one attribute */}
+              <input
+                type="text"
+                className="sma-input sma-readonly"
+                value={`₹ ${finalPrice}`}
+                readOnly
+              />
             </label>
 
             <label className="sma-field"><span>Product Type *</span>
-              <select className="sma-input" value={productType} onChange={(e) => { setProductType(e.target.value); setCategory(""); }} required suppressHydrationWarning>
+              <select className="sma-input" value={productType} onChange={(e) => { setProductType(e.target.value); setCategory(""); }} required>
                 <option value="">Select</option>
                 <option value="finished">Finished Interior Product</option>
                 <option value="material">Interior Material</option>
@@ -143,11 +171,43 @@ const SellerAddProduct = () => {
             </label>
 
             <label className="sma-field"><span>Category *</span>
-              <select className="sma-input" value={category} onChange={(e) => setCategory(e.target.value)} disabled={!productType} required suppressHydrationWarning>
+              <select className="sma-input" value={category} onChange={(e) => setCategory(e.target.value)} disabled={!productType} required>
                 <option value="">Select</option>
                 {productType && productCategories[productType].map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </label>
+
+            {productType === "material" && (
+              <>
+                <label className="sma-field"><span>Measurement Unit *</span>
+                  <select className="sma-input" value={unit} onChange={(e) => setUnit(e.target.value)}>
+                    <option value="pcs">Pieces (Pcs)</option>
+                    <option value="sqft">Square Foot (Sq. Ft)</option>
+                    <option value="sheet">Sheets</option>
+                    <option value="metre">Metres (m)</option>
+                    <option value="litre">Litres (L)</option>
+                  </select>
+                </label>
+
+                {(unit === "sheet" || unit === "pcs") && (
+                  <label className="sma-field">
+                    <span>Sq. Ft per {unit === "sheet" ? "Sheet" : "Piece"} *</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="sma-input"
+                      value={conversionFactor}
+                      onChange={(e) => setConversionFactor(e.target.value)}
+                      placeholder="e.g. 32 for an 8x4 sheet"
+                    />
+                  </label>
+                )}
+
+                <label className="sma-field"><span>Units per Delivery Trip *</span>
+                  <input type="number" className="sma-input" value={unitsPerTrip} onChange={(e) => setUnitsPerTrip(e.target.value)} min="1" placeholder="Max units in one vehicle" required />
+                </label>
+              </>
+            )}
 
             <label className="sma-field sma-full"><span>Detailed Description</span>
               <textarea className="sma-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Talk about the materials, dimensions, and warranty..." />
@@ -163,7 +223,7 @@ const SellerAddProduct = () => {
               {videoPreview && <video src={videoPreview} controls className="sma-preview" />}
             </label>
           </div>
-          <button type="submit" className="sma-btn sma-btn--primary" disabled={submitting} suppressHydrationWarning>
+          <button type="submit" className="sma-btn sma-btn--primary" disabled={submitting}>
             {submitting ? "Finalising Upload..." : "Add Product to Store"}
           </button>
         </form>

@@ -285,3 +285,98 @@
   }
 }
 
+/* =========================================
+   SELLER ORDERS - LOGISTICS & BADGE STYLES
+   ========================================= */
+
+/* Header alignment for Name and Unit */
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.unit-badge {
+  background: #f0f2f5;
+  color: #64748b;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid #e2e8f0;
+}
+
+/* Logistics Breakdown (Qty & Trips) */
+.logistics-summary {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #475569;
+  background: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.log-item svg {
+  color: #606E52; /* Core2Cover Primary Green */
+  font-size: 0.9rem;
+}
+
+/* Order Item Status Variations */
+.order-item.out_for_delivery {
+  border-left: 5px solid #3b82f6; /* Blue for shipping */
+}
+
+.status-label.out_for_delivery {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.order-item.fulfilled {
+  border-left: 5px solid #22c55e; /* Green for delivered */
+  opacity: 0.9;
+}
+
+.status-label.fulfilled {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* Action Button Enhancements */
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge.fulfilled { background: #dcfce7; color: #166534; }
+.badge.rejected { background: #fee2e2; color: #991b1b; }
+
+/* Responsive Grid for Logistics */
+@media (max-width: 600px) {
+  .logistics-summary {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .header-main {
+    flex-wrap: wrap;
+  }
+}
