@@ -27,8 +27,8 @@ const Navbar = () => {
   const { data: session, status } = useSession();
   const [profileOpen, setProfileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [localUser, setLocalUser] = useState(null); 
-  
+  const [localUser, setLocalUser] = useState(null);
+
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -40,8 +40,9 @@ const Navbar = () => {
 
   const searchQuery = searchParams.get("search") || "";
 
-  const rawMaterialSuggestions = ["Plywood","Plywood Near Me","Laminates", "Laminates near me", "Paints near me", "Hardware", "Glass & Mirrors","Glass & Mirrors Near Me", "Tiles", "Flooring", "Adhesives", "Electricals", "Plumbing", "Decorative Items"];
+  const rawMaterialSuggestions = ["Plywood", "Plywood Near Me", "Laminates", "Laminates near me", "Paints near me", "Hardware", "Glass & Mirrors", "Glass & Mirrors Near Me", "Tiles", "Flooring", "Adhesives", "Electricals", "Plumbing", "Decorative Items"];
   const designerSuggestions = ["Interior Designer", "Kitchen Designer", "Product Designer", "Architect", "3D Visualizer"];
+  const readymadeSuggestions = ["Furniture","Lights","Lighting","Decor Items","Sofa", "Dining Table", "Beds", "Wardrobes", "Office Chairs", "Coffee Tables", "Curtains", "Chandeliers", "Carpets", "Study Tables", "Bookshelves"];
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -53,7 +54,7 @@ const Navbar = () => {
     } else {
       setLocalUser(null);
     }
-  }, [pathname]); 
+  }, [pathname]);
 
   const isUserAuthenticated = status === "authenticated" || !!localUser;
   const displayUser = session?.user || localUser;
@@ -87,8 +88,17 @@ const Navbar = () => {
     setSearchValue(value);
 
     if (value.trim().length > 0) {
-      const pool = isDesignerSection ? designerSuggestions : rawMaterialSuggestions;
-      const filtered = pool.filter(item => 
+      // UPDATED LOGIC: Determine pool based on current section
+      let pool = [];
+      if (isDesignerSection) {
+        pool = designerSuggestions;
+      } else if (isRawMaterialsPage) {
+        pool = rawMaterialSuggestions;
+      } else {
+        pool = readymadeSuggestions; // Default for Readymade Products
+      }
+
+      const filtered = pool.filter(item =>
         item.toLowerCase().includes(value.toLowerCase())
       );
       setSuggestions(filtered);
@@ -167,7 +177,7 @@ const Navbar = () => {
                   <span className="nav-icon-link">About</span>
                 </div>
               </Link>
-              
+
               <Link href="/designers" className="nav-link-wrapper">
                 <div className="ico">
                   <FaUserGraduate className="info-icon-themed" />
@@ -198,8 +208,8 @@ const Navbar = () => {
                 {profileOpen && isUserAuthenticated && (
                   <div className="profile-popover shadow-reveal">
                     {/* CLOSE BUTTON */}
-                    <button 
-                      className="pop-close-btn" 
+                    <button
+                      className="pop-close-btn"
                       onClick={() => setProfileOpen(false)}
                       aria-label="Close profile menu"
                     >
