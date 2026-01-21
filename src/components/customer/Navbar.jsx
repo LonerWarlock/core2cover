@@ -11,7 +11,8 @@ import {
   FaSignOutAlt,
   FaStore,
   FaPalette,
-  FaUserCircle
+  FaUserCircle,
+  FaUserGraduate
 } from "react-icons/fa";
 import { IoMdInformationCircle } from "react-icons/io";
 import "./Navbar.css";
