@@ -304,7 +304,7 @@
 .search-suggestions {
     position: absolute;
     top: calc(100% + 12px);
-    left: 20px; /* Aligned with input text */
+    left: 20px; 
     width: calc(100% - 40px);
     background: #ffffff;
     border-radius: 15px;
@@ -313,7 +313,10 @@
     padding: 8px 0;
     z-index: 1000;
     border: 1px solid rgba(96, 110, 82, 0.1);
-    overflow: hidden;
+    max-height: 300px;        
+    overflow-y: auto;          
+    overflow-x: hidden;       
+    
     animation: fadeInDown 0.25s ease-out;
 }
 
