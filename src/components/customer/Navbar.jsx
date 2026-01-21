@@ -12,7 +12,8 @@ import {
   FaStore,
   FaPalette,
   FaUserCircle,
-  FaUserGraduate
+  FaUserGraduate,
+  FaTimes // Added for the close button
 } from "react-icons/fa";
 import { IoMdInformationCircle } from "react-icons/io";
 import "./Navbar.css";
@@ -27,13 +28,20 @@ const Navbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [localUser, setLocalUser] = useState(null); 
-  const dropdownRef = useRef(null);
+  
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
+  const dropdownRef = useRef(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
   const searchQuery = searchParams.get("search") || "";
+
+  const rawMaterialSuggestions = ["Plywood","Plywood Near Me","Laminates", "Laminates near me", "Paints near me", "Hardware", "Glass & Mirrors","Glass & Mirrors Near Me", "Tiles", "Flooring", "Adhesives", "Electricals", "Plumbing", "Decorative Items"];
+  const designerSuggestions = ["Interior Designer", "Kitchen Designer", "Product Designer", "Architect", "3D Visualizer"];
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -50,20 +58,11 @@ const Navbar = () => {
   const isUserAuthenticated = status === "authenticated" || !!localUser;
   const displayUser = session?.user || localUser;
 
-  // Identifying the current section
   const isDesignerSection = pathname.includes("/designers") || pathname.includes("/designer_info");
-  
-  // Logic to identify if we are on the Raw Materials page (assuming based on search params or path)
   const isRawMaterialsPage = searchParams.get("page") === "Raw Materials";
-  
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
-  
-  const currentPageTitle = isDesignerSection 
-    ? "Professional Designers" 
-    : isRawMaterialsPage 
-      ? "Raw Materials" 
-      : "Readymade Products";
+  const currentPageTitle = isDesignerSection ? "Professional Designers" : isRawMaterialsPage ? "Raw Materials" : "Readymade Products";
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -76,28 +75,35 @@ const Navbar = () => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setProfileOpen(false);
+        setShowSuggestions(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* =========================================
-      UPDATED: CONDITIONAL "NEAR ME" LOGIC
-  ========================================= */
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    let query = formData.get("search")?.toString().trim();
-    if (!query) return;
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
 
+    if (value.trim().length > 0) {
+      const pool = isDesignerSection ? designerSuggestions : rawMaterialSuggestions;
+      const filtered = pool.filter(item => 
+        item.toLowerCase().includes(value.toLowerCase())
+      );
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const performSearch = (query) => {
     const lowerQuery = query.toLowerCase();
     const hasNearMe = lowerQuery.includes("near me");
 
-    // ONLY trigger Geolocation if "near me" is typed AND we are in the Raw Materials context
     if (hasNearMe && isRawMaterialsPage) {
       const cleanQuery = lowerQuery.replace("near me", "").trim();
-      
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -105,19 +111,25 @@ const Navbar = () => {
             router.push(`/searchresults?search=${encodeURIComponent(cleanQuery)}&lat=${latitude}&lng=${longitude}&nearby=true&page=Raw%20Materials`);
           },
           (error) => {
-            console.error("Location error", error);
             router.push(`/searchresults?search=${encodeURIComponent(query)}&page=Raw%20Materials`);
           }
         );
-      } else {
-        router.push(`/searchresults?search=${encodeURIComponent(query)}&page=Raw%20Materials`);
       }
     } else {
-      // Normal search for Designers or Finished Products (even if they type 'near me')
+      let finalQuery = query;
+      if (isDesignerSection) {
+        finalQuery = query.replace(/\bdesigners?\b/gi, "").trim() || "Interior";
+      }
       const targetPath = isDesignerSection ? "/designers" : "/searchresults";
       const pageParam = isRawMaterialsPage ? "&page=Raw%20Materials" : "";
-      router.push(`${targetPath}?search=${encodeURIComponent(query)}${pageParam}`);
+      router.push(`${targetPath}?search=${encodeURIComponent(finalQuery)}${pageParam}`);
     }
+    setShowSuggestions(false);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (searchValue.trim()) performSearch(searchValue);
   };
 
   const handleProfileToggle = () => {
@@ -185,6 +197,15 @@ const Navbar = () => {
 
                 {profileOpen && isUserAuthenticated && (
                   <div className="profile-popover shadow-reveal">
+                    {/* CLOSE BUTTON */}
+                    <button 
+                      className="pop-close-btn" 
+                      onClick={() => setProfileOpen(false)}
+                      aria-label="Close profile menu"
+                    >
+                      <FaTimes />
+                    </button>
+
                     <div className="popover-header">
                       <p className="pop-name">{displayUser?.name || "User"}</p>
                       <p className="pop-email">{displayUser?.email}</p>
@@ -220,19 +241,33 @@ const Navbar = () => {
 
       {!isHomePage && !isContactPage && (
         <div className="search-container">
-          <form onSubmit={handleSearch} className="search_form">
-            <input
-              name="search"
-              className="search_input"
-              type="text"
-              placeholder={`Search ${currentPageTitle}...`}
-              defaultValue={searchQuery}
-              key={searchQuery}
-            />
-            <button type="submit" className="search_button">
-              <FaSearch />
-            </button>
-          </form>
+          <div className="search-wrapper" ref={dropdownRef}>
+            <form onSubmit={handleFormSubmit} className="search_form">
+              <input
+                name="search"
+                className="search_input"
+                type="text"
+                placeholder={`Search ${currentPageTitle}...`}
+                value={searchValue}
+                onChange={handleInputChange}
+                autoComplete="off"
+              />
+              <button type="submit" className="search_button">
+                <FaSearch />
+              </button>
+            </form>
+
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="search-suggestions">
+                {suggestions.map((s, i) => (
+                  <li key={i} onClick={() => { setSearchValue(s); performSearch(s); }}>
+                    <FaSearch className="suggestion-icon" />
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </>
