@@ -1,3 +1,23 @@
-body{
+/* src/app/globals.css */
+
+/* Reset all links to stop being blue */
+a, 
+a:visited, 
+a:hover, 
+a:active {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+/* Force specific fix for the Brand text */
+.brand, 
+.brand-bold, 
+.nav-logo-link {
+    color: #333333 !important; /* Use your --green-dark or black */
+    text-decoration: none !important;
+}
+
+body {
     margin: 0%;
+    color: #333333;
 }

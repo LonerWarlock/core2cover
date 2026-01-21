@@ -24,7 +24,7 @@ export async function POST(request) {
     // 3. Generate a JWT Token for the Customer
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || "your_secret_key", // Ensure this is in your .env
+      process.env.NEXTAUTH_SECRET, // Ensure this is in your .env
       { expiresIn: "7d" }
     );
 

@@ -10,7 +10,6 @@ import MyOrders from "./MyOrders";
 import MyHiredDesigners from "./MyHiredDesigners";
 import { getUserByEmail, updateUserProfile } from "../../api/user";
 import { getClientHiredDesigners } from "../../api/designer";
-import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
 import MessageBox from "../ui/MessageBox";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 
@@ -38,7 +37,6 @@ const UserProfile = () => {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [designers, setDesigners] = useState([]);
 
   const effectiveEmail = useMemo(() => {
     if (status === "authenticated") return session?.user?.email;
@@ -105,14 +103,18 @@ const UserProfile = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (status === "authenticated") {
-      signOut({ redirect: true, callbackUrl: "/login" });
-    } else {
-      localStorage.clear();
-      router.push("/login");
-    }
-  };
+const handleLogout = async () => {
+  // 1. Clear manual login data
+  localStorage.removeItem("token");
+  localStorage.removeItem("userEmail");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("userName");
+  localStorage.removeItem("sellerId");
+  localStorage.removeItem("designerId");
+
+  // 2. Clear NextAuth session (Google)
+  await signOut({ callbackUrl: "/login" });
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;

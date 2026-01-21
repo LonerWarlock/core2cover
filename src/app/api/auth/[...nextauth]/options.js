@@ -4,6 +4,10 @@ import prisma from "@/lib/prisma";
 
 export const authOptions = {
     adapter: PrismaAdapter(prisma),
+    secret: process.env.NEXTAUTH_SECRET,
+    session: {
+        strategy: "jwt", // Use JWT for both Google and Credentials
+    },
     debug: true,
     providers: [
         GoogleProvider({
@@ -19,12 +23,8 @@ export const authOptions = {
             },
         }),
     ],
-    session: {
-        strategy: "jwt",
-    },
     callbacks: {
-        async jwt({ token, user, trigger, session }) {
-            console.log("JWT Callback - Token:", token);
+        async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
                 token.email = user.email;

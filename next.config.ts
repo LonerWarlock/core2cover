@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "lh3.googleusercontent.com", // ADD THIS LINE for Google Images
+      },
+      {
+        protocol: "https",
         hostname: "res.cloudinary.com",
         pathname: "/**", // Authorises all paths under the Cloudinary domain
       },

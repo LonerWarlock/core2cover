@@ -343,6 +343,39 @@
   object-fit: cover;
 }
 
+/* src/components/customer/Navbar.css */
+
+.nav-logo-link,
+.nav-icon-link,
+.nav-logo-wrap {
+  color: #333; /* Or your preferred brand color */
+  text-decoration: none;
+}
+
+/* Ensure the color doesn't change to blue/purple after clicking */
+.nav-logo-link:visited,
+.nav-icon-link:visited {
+  color: #333;
+}
+
+/* Ensure the BrandBold component specifically stays dark */
+.brand-bold {
+  color: #000; /* Force black if it's appearing blue */
+}
+
+.nav-user-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: opacity 0.2s;
+}
+
+.nav-user-icon-wrap:hover {
+  opacity: 0.8;
+}
+
 /* The Pop-out Box */
 .profile-popover {
   position: absolute;
@@ -464,4 +497,32 @@
   .nav-icons-desktop {
     gap: 15px;
   }
+}
+
+/* src/components/customer/Navbar.css */
+
+/* Target the logo and brand text specifically */
+.nav-logo-link, 
+.nav-logo-link *, 
+.brand, 
+.brand-bold {
+  color: #1a1a1a !important; /* Forces a dark grey/black */
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+/* Override browser 'visited' and 'active' blue/purple colors */
+.nav-logo-link:visited,
+.nav-logo-link:active,
+.nav-logo-link:hover,
+.nav-icon-link:visited,
+.nav-icon-link:active {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Ensure the desktop navigation links are also dark */
+.nav-icon-link {
+  color: #333 !important;
+  text-decoration: none !important;
 }

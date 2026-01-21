@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react"; // Added NextAuth hooks
-import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa"; // Added FaGoogle icon
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // Added FaGoogle icon
 import { customerLogin } from "../../api/auth"; //
 import "./Login.css"; //
 
@@ -19,10 +19,16 @@ export default function Login() {
 
   // Redirect to home if user is already authenticated via Google
   useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/userprofile");
-    }
-  }, [status, router]);
+  if (status === "authenticated" && session?.user) {
+    // If logged in via Google, sync the data to localStorage 
+    // so the rest of your app doesn't "malfunction"
+    localStorage.setItem("userEmail", session.user.email);
+    localStorage.setItem("userName", session.user.name);
+    localStorage.setItem("userId", session.user.id);
+    
+    router.push("/userprofile");
+  }
+}, [status, session, router]);
 
   const isEmailValid = (val) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
@@ -143,6 +149,7 @@ export default function Login() {
         </form>
 
         <div className="login-footer">
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
           Don't have an account? <Link href="/signup">Sign Up</Link>
         </div>
       </div>

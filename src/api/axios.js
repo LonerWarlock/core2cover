@@ -10,13 +10,18 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const userEmail = localStorage.getItem("userEmail");
+      //const userEmail = localStorage.getItem("userEmail");
       const sellerId = localStorage.getItem("sellerId");
       const designerId = localStorage.getItem("designerId");
 
-      if (userEmail) config.headers["x-user-email"] = userEmail;
+      //if (userEmail) config.headers["x-user-email"] = userEmail;
       if (sellerId) config.headers["x-seller-id"] = sellerId;
       if (designerId) config.headers["x-designer-id"] = designerId;
+      
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
     }
     return config;
   },
