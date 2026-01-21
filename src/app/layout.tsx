@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+"use client"; // Required to use usePathname
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
+import { usePathname } from "next/navigation"; // Import hook to detect current route
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,23 +15,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Core2Cover",
-  description: "Bespoke interior products and raw materials.",
-  icons: {
-    icon: "/icon.png?v=4",
-    apple: "/icon.png?v=4",
-  },
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname(); // Get current URL path
+  const isHome = pathname === "/"; // Check if it is the home page
+
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
+      <body 
+        className={`${geistSans.variable} ${geistMono.variable} antialiased ${isHome ? "no-scroll" : ""}`} 
+        suppressHydrationWarning={true}
+      >
         <NextAuthProvider>
           {children}
         </NextAuthProvider>

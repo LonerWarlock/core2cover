@@ -308,3 +308,15 @@
         gap: 10px;
     }
 }
+
+/* src/components/customer/UserProfile.css */
+
+.tab-content-area {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-soft);
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden; /* Prevents loader from spilling out */
+}

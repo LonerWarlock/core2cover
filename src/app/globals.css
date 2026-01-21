@@ -17,7 +17,13 @@ a:active {
     text-decoration: none !important;
 }
 
+.no-scroll {
+  overflow: hidden !important; /* Disables scrolling */
+  height: 100vh !important;    /* Locks height to one screen */
+  width: 100vw;
+  position: fixed;             /* Prevents mobile elastic scrolling */
+}
+
 body {
-    margin: 0%;
-    color: #333333;
+  margin: 0;
 }

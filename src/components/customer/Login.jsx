@@ -3,18 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react"; // Added NextAuth hooks
-<<<<<<< HEAD
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Added FaGoogle icon
-import { customerLogin } from "../../api/auth"; //
-import "./Login.css"; //
-=======
-import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa"; // Added FaGoogle icon
+import { signIn, useSession } from "next-auth/react";
+// Consolidate all react-icons into ONE import statement
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 import { customerLogin } from "../../api/auth"; 
-import "./Login.css"; 
+import "./Login.css";
 // 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
->>>>>>> 1fa2bd410a5b0a100710c5fc8b855fd1f0fc3afc
 
 export default function Login() {
   const [email, setEmail] = useState("");

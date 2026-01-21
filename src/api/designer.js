@@ -67,9 +67,9 @@ export const hireDesigner = (designerId, data) => {
 };
 
 //  FIX: Add getClientHiredDesigners
-export const getClientHiredDesigners = ({ userId }) => {
+export const getClientHiredDesigners = () => {
   // Pass userId as a query param or in body depending on your API
-  return api.get(`/client/hired-designers?userId=${userId}`);
+  return api.get(`/client/hired-designers`);
 };
 
 export const getDesignerEditProfile = async (designerId) => {

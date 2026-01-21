@@ -828,3 +828,34 @@
         height: 48px; /* Slightly larger tap target for thumbs */
     }
 }
+
+/* src/components/customer/MyOrders.css */
+
+.orders-page-container {
+    position: relative; /* This traps the absolute-positioned loader */
+    min-height: 400px;
+    width: 100%;
+}
+
+.tab-loader-overlay {
+    position: absolute; /* Changed from fixed to absolute */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.7); /* Light white instead of heavy blur */
+    backdrop-filter: blur(4px); /* Soft blur only on the tab area */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+}
+
+/* Ensure the spinner itself doesn't use fixed positioning internally */
+.tab-loader-overlay > div {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+}

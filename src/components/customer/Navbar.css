@@ -1,45 +1,35 @@
 /* ======================================================
-   ROOT VARIABLES
+   ROOT VARIABLES & THEME
 ====================================================== */
 :root {
   --green-dark: #606E52;
   --green-mid: #91A56E;
   --green-light: #C0CCA4;
-
   --white: #ffffff;
   --bg-soft: #f9fbf7;
-
-  --text-dark: #333333;
+  --text-dark: #1a1a1a;
   --text-muted: #8f8b84;
-
   --brand-font: "CaviarDreams", sans-serif;
   --ui-font: "Helvetica", "Arial", sans-serif;
-
   --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.08);
   --transition: all 0.3s ease;
-
-  --nav-height: 72px;
+  --nav-height: 80px;
 }
 
 /* ======================================================
-   FONTS
+   GLOBAL RESET (Kills the Blue Links)
 ====================================================== */
-@font-face {
-  font-family: "CaviarDreams";
-  src: url("/fonts/CaviarDreams.ttf") format("truetype");
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "CaviarDreams";
-  src: url("/fonts/CaviarDreams_Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-display: swap;
+.navbar a, 
+.navbar a:visited, 
+.navbar a:active,
+.navbar a:hover {
+  color: inherit !important;
+  text-decoration: none !important;
+  outline: none !important;
 }
 
 /* ======================================================
-   NAVBAR
+   NAVBAR LAYOUT
 ====================================================== */
 .navbar {
   position: sticky;
@@ -64,17 +54,11 @@
 }
 
 /* ======================================================
-   LOGO / BRAND
+   LOGO & BRANDING
 ====================================================== */
-.nav-left {
-  display: flex;
-  align-items: center;
-}
-
 .nav-logo-link {
   display: flex;
   align-items: center;
-  gap: 12px;
   cursor: pointer;
 }
 
@@ -87,18 +71,17 @@
 .brand {
   font-family: var(--brand-font);
   font-size: 1.25rem;
-  color: var(--green-dark);
+  color: var(--green-dark) !important;
   line-height: 1;
-  text-decoration: none;
-  border-bottom: none;
 }
 
 .brand-bold {
   font-weight: 700;
+  color: var(--text-dark) !important;
 }
 
 /* ======================================================
-   RIGHT SIDE ICONS
+   NAVIGATION ICONS (STACKED VERTICALLY)
 ====================================================== */
 .nav-right {
   display: flex;
@@ -108,115 +91,125 @@
 .nav-icons-desktop {
   display: flex;
   align-items: center;
-  gap: 22px;
-  margin-right: 18px;
+  gap: 28px;
+}
+
+/* THE STACKER: This puts icon on top and text on bottom */
+.ico {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px; 
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.info-icon-themed {
+  font-size: 1.4rem;
+  color: var(--green-dark);
 }
 
 .nav-icon-link {
-  text-decoration: none !important;
-  color: var(--text-dark);
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  transition: var(--transition);
-}
-
-.nav-icon-link:hover {
-  color: var(--green-dark);
-}
-
-/* ======================================================
-   HAMBURGER
-====================================================== */
-.hamburger {
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--green-dark);
-  z-index: 1100;
-}
-
-/* ======================================================
-   DRAWER MENU
-====================================================== */
-.nav-links {
-  position: fixed;
-  top: var(--nav-height);
-  right: -100%;
-  width: 300px;
-  height: calc(100vh - var(--nav-height));
-  background: var(--white);
-  display: flex;
-  justify-content: center;
-  transition: right 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
-  z-index: 1000;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  flex-direction: column;
-}
-
-.nav-links.open {
-  right: 0;
-}
-
-/* ======================================================
-   DRAWER CTA GROUP (FIXES UGLY LOOK)
-====================================================== */
-.drawer-cta {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #e8eddc;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-}
-
-
-/* ======================================================
-   CTA BUTTONS
-====================================================== */
-.seller-btn {
-  width: 100%;
-  max-width: 260px;
-  padding: 14px 18px;
-  border-radius: 14px;
-  font-size: 0.95rem;
+  color: var(--text-dark) !important;
+  font-size: 0.7rem !important;
   font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  border: 1.5px solid var(--green-light);
-  background: var(--green-dark);
-
-  color: var(--white);
-
-  transition: var(--transition);
-  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
-.seller-btn:hover {
-  background: var(--green-mid);
-  color: var(--white);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(96, 110, 82, 0.2);
+.ico:hover .info-icon-themed,
+.ico:hover .nav-icon-link {
+  color: var(--green-mid) !important;
 }
 
-.seller-btn.primary {
-  background: var(--green-dark);
-  color: var(--white);
-  border-color: var(--green-dark);
-  margin-top: 10px;
+/* ======================================================
+   PROFILE TRIGGER (No text)
+====================================================== */
+.profile-dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.drawer-cta {
-  gap: 36px;
-  /* INCREASE gap */
+.nav-profile-trigger {
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
-.seller-btn.primary:hover {
-  background: var(--green-mid);
+.nav-profile-trigger .ico {
+  gap: 0; /* Remove gap since there's no text */
+}
+
+.nav-profile-trigger .info-icon-themed {
+  font-size: 1.8rem; /* Slightly larger since there is no text label */
+}
+
+.nav-user-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e8eddc;
+}
+
+/* ======================================================
+   POPOVER MENU
+====================================================== */
+.profile-popover {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 240px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #eef0ee;
+  z-index: 1000;
+  padding: 10px 0;
+}
+
+.popover-header {
+  padding: 10px 20px;
+  border-bottom: 1px solid #f0f2f0;
+}
+
+.pop-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.pop-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.pop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: var(--text-dark) !important;
+  font-size: 0.9rem;
+}
+
+.pop-item:hover {
+  background: #f4f6f1;
+  color: var(--green-dark) !important;
+}
+
+.pop-signout {
+  width: 100%;
+  padding: 12px 20px;
+  color: #d0021b !important;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
 }
 
 /* ======================================================
@@ -226,28 +219,21 @@
   width: 100%;
   background: #fdfdfd;
   border-bottom: 1px solid #e8eddc;
-  padding: 14px 0;
+  padding: 12px 0;
   display: flex;
   justify-content: center;
 }
 
 .search_form {
   width: 90%;
-  max-width: 520px;
-  height: 44px;
+  max-width: 500px;
+  height: 40px;
   background: #f1f5e8;
   border-radius: 50px;
-  padding: 0 18px;
+  padding: 0 15px;
   display: flex;
   align-items: center;
   border: 1px solid #dbe6c6;
-  transition: var(--transition);
-}
-
-.search_form:focus-within {
-  background: var(--white);
-  border-color: var(--green-dark);
-  box-shadow: 0 4px 12px rgba(96, 110, 82, 0.15);
 }
 
 .search_input {
@@ -255,7 +241,7 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-dark);
 }
 
@@ -264,17 +250,14 @@
   border: none;
   cursor: pointer;
   color: var(--green-dark);
-  display: flex;
-  align-items: center;
 }
 
 /* ======================================================
    RESPONSIVE
 ====================================================== */
 @media (max-width: 860px) {
-
-  .brand {
-    font-size: 1.1rem;
+  .nav-icons-desktop {
+    gap: 18px;
   }
 }
 
@@ -282,303 +265,4 @@
   .brand {
     display: none;
   }
-
-  .search_form {
-    width: 95%;
-  }
-}
-
-/* ======================================================
-   DRAWER NAV LINKS (MOBILE ONLY)
-====================================================== */
-.drawer-link {
-  width: 100%;
-  padding: 16px 24px;
-}
-
-.drawer-link a {
-  display: block;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-dark);
-  transition: var(--transition);
-}
-
-.drawer-link a:hover {
-  color: var(--green-dark);
-}
-
-/* Container for dropdown positioning */
-.profile-dropdown-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-/* The Bubble Button (Initials or Image) */
-.nav-profile-trigger {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #005bb7;
-  /* Deep blue from your image */
-  color: white;
-  font-weight: bold;
-  transition: transform 0.2s ease;
-  border: 2px solid transparent;
-}
-
-.nav-profile-trigger:hover {
-  transform: scale(1.05);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.nav-user-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* src/components/customer/Navbar.css */
-
-.nav-logo-link,
-.nav-icon-link,
-.nav-logo-wrap {
-  color: #333; /* Or your preferred brand color */
-  text-decoration: none;
-}
-
-/* Ensure the color doesn't change to blue/purple after clicking */
-.nav-logo-link:visited,
-.nav-icon-link:visited {
-  color: #333;
-}
-
-/* Ensure the BrandBold component specifically stays dark */
-.brand-bold {
-  color: #000; /* Force black if it's appearing blue */
-}
-
-.nav-user-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: opacity 0.2s;
-}
-
-.nav-user-icon-wrap:hover {
-  opacity: 0.8;
-}
-
-/* The Pop-out Box */
-.profile-popover {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  width: 260px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  border: 1px solid #eef0ee;
-  z-index: 1000;
-  padding: 15px 0;
-  animation: slideDown 0.2s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.popover-header {
-  padding: 0 20px 15px;
-  border-bottom: 1px solid #f0f2f0;
-}
-
-.pop-name {
-  font-weight: 700;
-  font-size: 1rem;
-  color: #2f332b;
-  margin: 0;
-}
-
-.pop-email {
-  font-size: 0.85rem;
-  color: #7a7f75;
-  margin: 4px 0 0;
-}
-
-.popover-body {
-  padding: 10px 0;
-}
-
-.pop-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  text-decoration: none;
-  color: #444;
-  font-size: 0.9rem;
-  transition: background 0.2s;
-}
-
-.pop-item:hover {
-  background: #f4f6f1;
-  color: #4f5e44;
-}
-
-.popover-footer {
-  padding-top: 10px;
-  border-top: 1px solid #f0f2f0;
-}
-
-.pop-signout {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: none;
-  border: none;
-  color: #d0021b;
-  /* Red logout as in image */
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.pop-signout:hover {
-  background: #fff5f5;
-}
-
-/* ======================================================
-   RESPONSIVE UPDATES: KEEPING DESKTOP LINKS VISIBLE
-====================================================== */
-
-@media (max-width: 860px) {
-
-  /* Ensure the desktop icon container stays visible */
-  .nav-icons-desktop {
-    display: flex !important;
-    gap: 12px;
-    /* Reduce gap to fit more items */
-    margin-right: 10px;
-  }
-
-  /* Shrink text slightly to fit the screen */
-  .nav-icon-link {
-    font-size: 0.8rem;
-    white-space: nowrap;
-  }
-
-  /* Make the profile bubble slightly smaller for mobile balance */
-  .nav-profile-trigger {
-    width: 28px;
-    height: 28px;
-    font-size: 0.8rem;
-  }
-
-  /* Adjust Popover to be more compact on mobile */
-  .profile-popover {
-    width: 240px;
-    right: -10px;
-    /* Offset slightly to prevent hugging the edge */
-  }
-}
-
-@media (max-width: 600px) {
-  /* For very small screens, hide text but keep the icons */
-
-
-  /* Ensure the Profile Bubble and Cart remain visible */
-  .nav-icons-desktop {
-    gap: 15px;
-  }
-}
-
-<<<<<<< HEAD
-/* src/components/customer/Navbar.css */
-
-/* Target the logo and brand text specifically */
-.nav-logo-link, 
-.nav-logo-link *, 
-.brand, 
-.brand-bold {
-  color: #1a1a1a !important; /* Forces a dark grey/black */
-  text-decoration: none !important;
-  border-bottom: none !important;
-}
-
-/* Override browser 'visited' and 'active' blue/purple colors */
-.nav-logo-link:visited,
-.nav-logo-link:active,
-.nav-logo-link:hover,
-.nav-icon-link:visited,
-.nav-icon-link:active {
-  color: inherit !important;
-  text-decoration: none !important;
-}
-
-/* Ensure the desktop navigation links are also dark */
-.nav-icon-link {
-  color: #333 !important;
-  text-decoration: none !important;
-=======
-/* Container for the icon and text */
-.ico {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px; /* Spacing between the 'i' icon and the text */
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-/* Specific styling for the IoMdInformationCircle */
-.info-icon-themed {
-    font-size: 1.2rem; /* Matches the visual weight of FaShoppingCart */
-    color: var(--olive); /* Uses your root theme color */
-    transition: transform var(--transition), color var(--transition);
-}
-
-/* Hover effects for the whole group */
-.ico:hover .info-icon-themed {
-    color: var(--sage); /* Switches to lighter sage on hover */
-    transform: translateY(-2px); /* Subtle lift matching your other buttons */
-}
-
-.ico:hover .nav-icon-link {
-    color: var(--sage);
-}
-
-/* Ensure the link doesn't have standard browser underlining */
-.nav-icon-link {
-    text-decoration: none;
-    color: var(--dark-gray);
-    font-weight: 500;
-    font-size: 0.95rem;
-}
-
-/* Add this if not already present to ensure layout stability */
-@media (max-width: 768px) {
-    .nav-icons-desktop .ico:has(a[href="/cart"]) {
-        display: none;
-    }
->>>>>>> 1fa2bd410a5b0a100710c5fc8b855fd1f0fc3afc
 }

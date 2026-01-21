@@ -12,7 +12,6 @@ import { getUserByEmail, updateUserProfile } from "../../api/user";
 import { getClientHiredDesigners } from "../../api/designer";
 import MessageBox from "../ui/MessageBox";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const libraries = ["places", "maps"];
@@ -22,7 +21,10 @@ const UserProfile = () => {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("orders");
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
-  
+
+  // FIX: Added missing designers state
+  const [designers, setDesigners] = useState([]);
+
   // Google Maps Loader
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
@@ -40,6 +42,7 @@ const UserProfile = () => {
 
   const [isEditing, setIsEditing] = useState(false);
 
+  // FIX: Added SSR safety checks for window/localStorage
   const effectiveEmail = useMemo(() => {
     if (status === "authenticated") return session?.user?.email;
     if (typeof window !== "undefined") return localStorage.getItem("userEmail");
@@ -66,29 +69,38 @@ const UserProfile = () => {
 
     const loadData = async () => {
       try {
+        // 1. Check if we have an email before calling
+        if (!effectiveEmail) return;
+
         const [userRes, designersRes] = await Promise.all([
           getUserByEmail(effectiveEmail),
-          getClientHiredDesigners({ userId: effectiveUserId }),
+          getClientHiredDesigners(), // Call without parameters as updated in Step 1
         ]);
 
-        const userData = userRes.data || userRes;
-        
+        // Axios responses wrap data in a 'data' property
+        const userData = userRes.data;
+        const designersData = designersRes.data;
+
         setUser({
-          name: userData.name || "",
-          email: userData.email || "",
-          phone: userData.phone || "",
-          address: userData.address || "",
+          name: userData?.name || "",
+          email: userData?.email || "",
+          phone: userData?.phone || "",
+          address: userData?.address || "",
         });
 
-        // Automatically prompt Google users to complete profile if data is missing
-        if (status === "authenticated" && (!userData.phone || !userData.address)) {
+        // Handle the designers list safely
+        setDesigners(Array.isArray(designersData) ? designersData : []);
+
+        if (
+          status === "authenticated" &&
+          (!userData?.phone || !userData?.address)
+        ) {
           setIsEditing(true);
           triggerMsg("Please complete your profile details.", "info");
         }
-
-        setDesigners(Array.isArray(designersRes.data) ? designersRes.data : []);
       } catch (err) {
-        console.error("Failed to load profile data", err);
+        console.error("Critical Load Error:", err);
+        triggerMsg("Failed to load profile data. Please try again.", "error");
       }
     };
 
@@ -105,18 +117,17 @@ const UserProfile = () => {
     }
   };
 
-const handleLogout = async () => {
-  // 1. Clear manual login data
-  localStorage.removeItem("token");
-  localStorage.removeItem("userEmail");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("userName");
-  localStorage.removeItem("sellerId");
-  localStorage.removeItem("designerId");
-
-  // 2. Clear NextAuth session (Google)
-  await signOut({ callbackUrl: "/login" });
-};
+  const handleLogout = async () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("sellerId");
+      localStorage.removeItem("designerId");
+    }
+    await signOut({ callbackUrl: "/login" });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,27 +163,30 @@ const handleLogout = async () => {
         router.refresh();
       }
     } catch (err) {
-      triggerMsg(err.response?.data?.message || "Failed to update profile", "error");
+      triggerMsg(
+        err.response?.data?.message || "Failed to update profile",
+        "error",
+      );
     }
   };
 
-  // 2. APPLY THE LOADING SPINNER DURING SESSION LOADING
-  if (status === "loading") return <LoadingSpinner message="Securing your profile..." />;
+  if (status === "loading")
+    return <LoadingSpinner message="Securing your profile..." />;
 
   return (
     <>
       <Navbar />
       {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
       )}
       <div className="profile-page-wrapper">
-          <button onClick={() => router.back()} className="back-button">
-            ← Back
-          </button>
+        <button onClick={() => router.back()} className="back-button">
+          ← Back
+        </button>
         <div className="profile-header-section">
           <h1 className="main-profile-title">My Account</h1>
         </div>
@@ -198,18 +212,33 @@ const handleLogout = async () => {
                   <h3>Complete Your Profile</h3>
                   <div className="input-group">
                     <label>Name</label>
-                    <input type="text" name="name" value={user.name || ""} onChange={handleChange} className="up-profile-input" />
+                    <input
+                      type="text"
+                      name="name"
+                      value={user.name || ""}
+                      onChange={handleChange}
+                      className="up-profile-input"
+                    />
                   </div>
                   <div className="input-group">
                     <label>Phone Number</label>
-                    <input type="text" name="phone" value={user.phone || ""} onChange={handleChange} className="up-profile-input" placeholder="+91 00000 00000" />
+                    <input
+                      type="text"
+                      name="phone"
+                      value={user.phone || ""}
+                      onChange={handleChange}
+                      className="up-profile-input"
+                      placeholder="+91 00000 00000"
+                    />
                   </div>
-                  
+
                   <div className="input-group">
                     <label>Address (Your Location)</label>
                     {isLoaded ? (
                       <Autocomplete
-                        onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                        onLoad={(autocomplete) =>
+                          (autocompleteRef.current = autocomplete)
+                        }
                         onPlaceChanged={handlePlaceSelect}
                       >
                         <input
@@ -234,9 +263,19 @@ const handleLogout = async () => {
                   </div>
 
                   <div className="edit-actions">
-                    <button onClick={handleSave} className="up-profile-button up-save">Save Profile</button>
+                    <button
+                      onClick={handleSave}
+                      className="up-profile-button up-save"
+                    >
+                      Save Profile
+                    </button>
                     {user.phone && user.address && (
-                       <button onClick={() => setIsEditing(false)} className="up-profile-button cancel">Cancel</button>
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="up-profile-button cancel"
+                      >
+                        Cancel
+                      </button>
                     )}
                   </div>
                 </div>
@@ -245,17 +284,35 @@ const handleLogout = async () => {
                   <div className="user-info-display">
                     <h2>
                       {session?.user?.name || user.name || "User"}{" "}
-                      {status === "authenticated" && <span className="verified-badge">✓</span>}
+                      {status === "authenticated" && (
+                        <span className="verified-badge">✓</span>
+                      )}
                     </h2>
-                    <p className="user-email">{session?.user?.email || user.email}</p>
+                    <p className="user-email">
+                      {session?.user?.email || user.email}
+                    </p>
                     <div className="contact-info">
-                      <p><strong>Phone:</strong> {user.phone || "—"}</p>
-                      <p><strong>Address:</strong> {user.address || "—"}</p>
+                      <p>
+                        <strong>Phone:</strong> {user.phone || "—"}
+                      </p>
+                      <p>
+                        <strong>Address:</strong> {user.address || "—"}
+                      </p>
                     </div>
                   </div>
                   <div className="profile-actions">
-                    <button onClick={() => setIsEditing(true)} className="profile-button edit">Edit Profile</button>
-                    <button onClick={handleLogout} className="profile-button logout">Logout</button>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="profile-button edit"
+                    >
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="profile-button logout"
+                    >
+                      Logout
+                    </button>
                   </div>
                 </>
               )}
@@ -264,12 +321,27 @@ const handleLogout = async () => {
         </div>
 
         <div className="profile-tabs-container">
-          <button className={`tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>My Orders</button>
-          <button className={`tab-btn ${activeTab === "designers" ? "active" : ""}`} onClick={() => setActiveTab("designers")}>Hired Designers</button>
+          <button
+            className={`tab-btn ${activeTab === "orders" ? "active" : ""}`}
+            onClick={() => setActiveTab("orders")}
+          >
+            My Orders
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "designers" ? "active" : ""}`}
+            onClick={() => setActiveTab("designers")}
+          >
+            Hired Designers
+          </button>
         </div>
 
         <div className="tab-content-area">
-          {activeTab === "orders" ? <MyOrders /> : <MyHiredDesigners />}
+          {/* If we are loading data, show the spinner ONLY here */}
+          {activeTab === "orders" ? (
+            <MyOrders />
+          ) : (
+            <MyHiredDesigners designers={designers} />
+          )}
         </div>
       </div>
     </>

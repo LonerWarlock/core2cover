@@ -52,9 +52,15 @@ const getFinalOrderStatus = (orderStatus, returnInfo) => {
       return { text: "Return Requested", className: "status-return-requested" };
     case "APPROVED":
       if (returnInfo.refundStatus === "COMPLETED")
-        return { text: "Refund Completed", className: "status-refund-completed" };
+        return {
+          text: "Refund Completed",
+          className: "status-refund-completed",
+        };
       return {
-        text: returnInfo.refundMethod === "STORE_CREDIT" ? "Returned (Store Credit)" : "Refund Processing",
+        text:
+          returnInfo.refundMethod === "STORE_CREDIT"
+            ? "Returned (Store Credit)"
+            : "Refund Processing",
         className: "status-returned",
       };
     case "REJECTED":
@@ -120,18 +126,21 @@ export default function MyOrders() {
       .then((res) => {
         const arr = res.data.returns || [];
         const map = {};
-        arr.forEach((r) => { map[r.orderItemId] = r; });
+        arr.forEach((r) => {
+          map[r.orderItemId] = r;
+        });
         setReturnsMap(map);
       })
-      .catch(() => { });
+      .catch(() => {});
 
     getUserCredit()
       .then((res) => setCredit(res.data.credit || 0))
-      .catch(() => { });
+      .catch(() => {});
   }, [userEmail]);
 
   const canCancelOrder = (order) => {
-    if (order.orderStatus !== "confirmed" && order.orderStatus !== "pending") return false;
+    if (order.orderStatus !== "confirmed" && order.orderStatus !== "pending")
+      return false;
     const orderDate = new Date(order.createdAt);
     const diffDays = (Date.now() - orderDate.getTime()) / MS_IN_DAY;
     return diffDays <= RETURN_LIMIT_DAYS;
@@ -142,7 +151,9 @@ export default function MyOrders() {
     try {
       await cancelOrder(orderId);
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, orderStatus: "rejected" } : o))
+        prev.map((o) =>
+          o.id === orderId ? { ...o, orderStatus: "rejected" } : o,
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -161,16 +172,21 @@ export default function MyOrders() {
         stars,
         comment,
         userEmail,
-        productId: order.materialId 
+        productId: order.materialId,
       });
 
       setOrders((prev) =>
-        prev.map((o) => (o.orderItemId === orderItemId ? { ...o, isRated: true } : o))
+        prev.map((o) =>
+          o.orderItemId === orderItemId ? { ...o, isRated: true } : o,
+        ),
       );
       setOpenRating((p) => ({ ...p, [orderItemId]: false }));
     } catch (err) {
       console.error("Rating Error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to submit rating. Please ensure item is delivered.");
+      alert(
+        err.response?.data?.message ||
+          "Failed to submit rating. Please ensure item is delivered.",
+      );
     }
   };
 
@@ -202,23 +218,28 @@ export default function MyOrders() {
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) =>
-      (o.productName || "").toLowerCase().includes(query.toLowerCase())
+      (o.productName || "").toLowerCase().includes(query.toLowerCase()),
     );
   }, [orders, query]);
 
   return (
-    <div className="orders-page">
-      {/* 2. LOADING SPINNER FOR INITIAL DATA LOAD */}
-      {loadingOrders && <LoadingSpinner message="Retrieving your orders..." />}
+    <div className="orders-page-container">
+      {/* 1. WRAP THE SPINNER IN A LOCAL CONTAINER */}
+      {loadingOrders && (
+        <div className="tab-loader-overlay">
+          <LoadingSpinner message="Retrieving your orders..." />
+        </div>
+      )}
 
-      {/* 3. LOADING SPINNER FOR RETURN REQUESTS */}
-      {returnLoading && <LoadingSpinner message="Processing return request..." />}
+      {returnLoading && (
+        <div className="tab-loader-overlay">
+          <LoadingSpinner message="Processing return request..." />
+        </div>
+      )}
 
       <header className="orders-header-row">
         <h2 className="orders-title">Your Orders</h2>
-        <div className="credit-badge">
-          Store Credit: ₹{credit}
-        </div>
+        <div className="credit-badge">Store Credit: ₹{credit}</div>
       </header>
 
       <input
@@ -233,103 +254,250 @@ export default function MyOrders() {
           <div className="empty-orders-text">
             No orders found for {userEmail}.
           </div>
-        ) : filteredOrders.map((order) => {
-          const returnInfo = returnsMap[order.orderItemId];
-          const statusMeta = getFinalOrderStatus(order.orderStatus, returnInfo);
-          const isDelivered = order.orderStatus === "fulfilled";
-          const derivedStatus = deriveReturnStatus(returnInfo);
+        ) : (
+          filteredOrders.map((order) => {
+            const returnInfo = returnsMap[order.orderItemId];
+            const statusMeta = getFinalOrderStatus(
+              order.orderStatus,
+              returnInfo,
+            );
+            const isDelivered = order.orderStatus === "fulfilled";
+            const derivedStatus = deriveReturnStatus(returnInfo);
 
-          const imgSrc = order.imageUrl
-            ? order.imageUrl.startsWith("http") ? order.imageUrl : `/${order.imageUrl}`
-            : sample.src || sample;
+            const imgSrc = order.imageUrl
+              ? order.imageUrl.startsWith("http")
+                ? order.imageUrl
+                : `/${order.imageUrl}`
+              : sample.src || sample;
 
-          return (
-            <article key={order.orderItemId} className="order-card">
-              <Image src={imgSrc} className="order-img" alt={order.productName || "Product"} width={100} height={100} style={{ objectFit: "cover" }} />
-              <div className="order-info">
-                <div className="order-header">
-                  <h3 className="order-name">{order.productName}</h3>
-                  <span className={`order-status ${statusMeta.className}`}>
-                    {statusMeta.text}
-                  </span>
-                </div>
-
-                <div className="order-meta">
-                  <p><strong>Order ID:</strong> {order.id}</p>
-                  <p><strong>Seller:</strong> {order.sellerName}</p>
-                  
-                  <div className="order-logistics-row">
-                    <span className="log-detail"><FaRulerCombined /> {order.quantity} {order.unit || 'units'}</span>
-                    <span className="log-detail"><FaTruckLoading /> {order.totalTrips || 1} Trip(s)</span>
+            return (
+              <article key={order.orderItemId} className="order-card">
+                <Image
+                  src={imgSrc}
+                  className="order-img"
+                  alt={order.productName || "Product"}
+                  width={100}
+                  height={100}
+                  style={{ objectFit: "cover" }}
+                />
+                <div className="order-info">
+                  <div className="order-header">
+                    <h3 className="order-name">{order.productName}</h3>
+                    <span className={`order-status ${statusMeta.className}`}>
+                      {statusMeta.text}
+                    </span>
                   </div>
 
-                  <p><strong>Total:</strong> ₹{order.totalAmount}</p>
-                </div>
+                  <div className="order-meta">
+                    <p>
+                      <strong>Order ID:</strong> {order.id}
+                    </p>
+                    <p>
+                      <strong>Seller:</strong> {order.sellerName}
+                    </p>
 
-                {canCancelOrder(order) && (
-                  <button className="cancel-btn" onClick={() => handleCancelOrder(order.id)}>Cancel Order</button>
-                )}
+                    <div className="order-logistics-row">
+                      <span className="log-detail">
+                        <FaRulerCombined /> {order.quantity}{" "}
+                        {order.unit || "units"}
+                      </span>
+                      <span className="log-detail">
+                        <FaTruckLoading /> {order.totalTrips || 1} Trip(s)
+                      </span>
+                    </div>
 
-                {isDelivered && (
-                  <section className="order-actions">
-                    {returnInfo ? (
-                      <div className="rated-pill">
-                        {derivedStatus === "REQUESTED" && (
-                          <span className="return-pending">Return requested <GiSandsOfTime /></span>
-                        )}
-                        {derivedStatus === "APPROVED" && (
-                          <span className="return-approved">Return approved</span>
-                        )}
-                        {derivedStatus === "REJECTED" && (
-                          <span className="return-rejected">Return rejected</span>
-                        )}
-                      </div>
-                    ) : openReturnBox[order.orderItemId] ? (
-                      <div className="order-rating">
-                        <select className="order-review" value={returnReason[order.orderItemId] || ""} onChange={(e) => setReturnReason(p => ({ ...p, [order.orderItemId]: e.target.value }))}>
-                          <option value="">Select return reason</option>
-                          {RETURN_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                        <div className="refund-method">
-                          <label>
-                            <input type="radio" name={`refund-${order.orderItemId}`} value="STORE_CREDIT" checked={refundMethod[order.orderItemId] === "STORE_CREDIT"} onChange={() => setRefundMethod(p => ({ ...p, [order.orderItemId]: "STORE_CREDIT" }))} /> Store Credit
-                          </label>
-                          <label className="refund-label-spacing">
-                            <input type="radio" name={`refund-${order.orderItemId}`} value="ORIGINAL_PAYMENT" checked={refundMethod[order.orderItemId] === "ORIGINAL_PAYMENT"} onChange={() => setRefundMethod(p => ({ ...p, [order.orderItemId]: "ORIGINAL_PAYMENT" }))} /> Original Payment
-                          </label>
+                    <p>
+                      <strong>Total:</strong> ₹{order.totalAmount}
+                    </p>
+                  </div>
+
+                  {canCancelOrder(order) && (
+                    <button
+                      className="cancel-btn"
+                      onClick={() => handleCancelOrder(order.id)}
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+
+                  {isDelivered && (
+                    <section className="order-actions">
+                      {returnInfo ? (
+                        <div className="rated-pill">
+                          {derivedStatus === "REQUESTED" && (
+                            <span className="return-pending">
+                              Return requested <GiSandsOfTime />
+                            </span>
+                          )}
+                          {derivedStatus === "APPROVED" && (
+                            <span className="return-approved">
+                              Return approved
+                            </span>
+                          )}
+                          {derivedStatus === "REJECTED" && (
+                            <span className="return-rejected">
+                              Return rejected
+                            </span>
+                          )}
                         </div>
-                        <input type="file" multiple accept="image/*" className="order-review" onChange={(e) => setReturnImages(p => ({ ...p, [order.orderItemId]: Array.from(e.target.files) }))} />
-                        <button className="track-btn" disabled={returnLoading === order.orderItemId} onClick={() => handleReturnSubmit(order)}>
-                          {returnLoading === order.orderItemId ? "Submitting..." : "Confirm Return"}
-                        </button>
-                      </div>
-                    ) : (
-                      <button className="track-btn" onClick={() => setOpenReturnBox(p => ({ ...p, [order.orderItemId]: true }))}>Request Return</button>
-                    )}
-
-                    <div className="rating-section">
-                      {order.isRated ? (
-                        <span className="rated-pill">✓ Rated</span>
-                      ) : openRating[order.orderItemId] ? (
+                      ) : openReturnBox[order.orderItemId] ? (
                         <div className="order-rating">
-                          <div>
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <FaStar key={star} size={18} className="rating-star-icon" style={{ color: (ratings[order.orderItemId] || 0) >= star ? "#facc15" : "#d1d5db" }} onClick={() => setRatings(p => ({ ...p, [order.orderItemId]: star }))} />
+                          <select
+                            className="order-review"
+                            value={returnReason[order.orderItemId] || ""}
+                            onChange={(e) =>
+                              setReturnReason((p) => ({
+                                ...p,
+                                [order.orderItemId]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Select return reason</option>
+                            {RETURN_REASONS.map((r) => (
+                              <option key={r} value={r}>
+                                {r}
+                              </option>
                             ))}
+                          </select>
+                          <div className="refund-method">
+                            <label>
+                              <input
+                                type="radio"
+                                name={`refund-${order.orderItemId}`}
+                                value="STORE_CREDIT"
+                                checked={
+                                  refundMethod[order.orderItemId] ===
+                                  "STORE_CREDIT"
+                                }
+                                onChange={() =>
+                                  setRefundMethod((p) => ({
+                                    ...p,
+                                    [order.orderItemId]: "STORE_CREDIT",
+                                  }))
+                                }
+                              />{" "}
+                              Store Credit
+                            </label>
+                            <label className="refund-label-spacing">
+                              <input
+                                type="radio"
+                                name={`refund-${order.orderItemId}`}
+                                value="ORIGINAL_PAYMENT"
+                                checked={
+                                  refundMethod[order.orderItemId] ===
+                                  "ORIGINAL_PAYMENT"
+                                }
+                                onChange={() =>
+                                  setRefundMethod((p) => ({
+                                    ...p,
+                                    [order.orderItemId]: "ORIGINAL_PAYMENT",
+                                  }))
+                                }
+                              />{" "}
+                              Original Payment
+                            </label>
                           </div>
-                          <textarea className="order-review" placeholder="Write a review..." value={reviews[order.orderItemId] || ""} onChange={(e) => setReviews(p => ({ ...p, [order.orderItemId]: e.target.value }))} />
-                          <button className="track-btn" onClick={() => submitRating(order)}>Submit Review</button>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="order-review"
+                            onChange={(e) =>
+                              setReturnImages((p) => ({
+                                ...p,
+                                [order.orderItemId]: Array.from(e.target.files),
+                              }))
+                            }
+                          />
+                          <button
+                            className="track-btn"
+                            disabled={returnLoading === order.orderItemId}
+                            onClick={() => handleReturnSubmit(order)}
+                          >
+                            {returnLoading === order.orderItemId
+                              ? "Submitting..."
+                              : "Confirm Return"}
+                          </button>
                         </div>
                       ) : (
-                        <button className="rate-btn" onClick={() => setOpenRating(p => ({ ...p, [order.orderItemId]: true }))}>Rate Order</button>
+                        <button
+                          className="track-btn"
+                          onClick={() =>
+                            setOpenReturnBox((p) => ({
+                              ...p,
+                              [order.orderItemId]: true,
+                            }))
+                          }
+                        >
+                          Request Return
+                        </button>
                       )}
-                    </div>
-                  </section>
-                )}
-              </div>
-            </article>
-          );
-        })}
+
+                      <div className="rating-section">
+                        {order.isRated ? (
+                          <span className="rated-pill">✓ Rated</span>
+                        ) : openRating[order.orderItemId] ? (
+                          <div className="order-rating">
+                            <div>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <FaStar
+                                  key={star}
+                                  size={18}
+                                  className="rating-star-icon"
+                                  style={{
+                                    color:
+                                      (ratings[order.orderItemId] || 0) >= star
+                                        ? "#facc15"
+                                        : "#d1d5db",
+                                  }}
+                                  onClick={() =>
+                                    setRatings((p) => ({
+                                      ...p,
+                                      [order.orderItemId]: star,
+                                    }))
+                                  }
+                                />
+                              ))}
+                            </div>
+                            <textarea
+                              className="order-review"
+                              placeholder="Write a review..."
+                              value={reviews[order.orderItemId] || ""}
+                              onChange={(e) =>
+                                setReviews((p) => ({
+                                  ...p,
+                                  [order.orderItemId]: e.target.value,
+                                }))
+                              }
+                            />
+                            <button
+                              className="track-btn"
+                              onClick={() => submitRating(order)}
+                            >
+                              Submit Review
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="rate-btn"
+                            onClick={() =>
+                              setOpenRating((p) => ({
+                                ...p,
+                                [order.orderItemId]: true,
+                              }))
+                            }
+                          >
+                            Rate Order
+                          </button>
+                        )}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              </article>
+            );
+          })
+        )}
       </div>
       <p className="end-text">End of list</p>
     </div>
