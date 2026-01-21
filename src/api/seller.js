@@ -18,12 +18,11 @@ export const addSellerProduct = async (formData) => {
 };
 
 // Update an existing product (PUT /api/seller/products/[id])
-// Match this to: src/app/api/seller/products/[id]/route.js
 export const updateSellerProduct = (productId, formData) => {
   return api.put(`/product/${productId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-};
+};  
 
 // Delete a product (DELETE /api/seller/products/[id])
 export const deleteSellerProduct = (productId) => {

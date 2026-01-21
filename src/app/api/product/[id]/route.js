@@ -68,38 +68,87 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const { id } = await params; // This is the PRODUCT ID
+    const { id } = await params;
+    const productId = Number(id);
+    
+    if (isNaN(productId)) {
+      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+    }
+
     const formData = await request.formData();
 
+    // 1. Extract Basic Fields
+    const name = formData.get("name");
+    const category = formData.get("category");
+    const productType = formData.get("productType")?.toString(); 
+    const price = formData.get("price");
+    const description = formData.get("description");
+    const availability = formData.get("availability");
+    
+    // 2. Extract Logistics Fields
+    const unit = formData.get("unit");
+    const rawUnitsPerTrip = formData.get("unitsPerTrip");
+    const rawConversionFactor = formData.get("conversionFactor");
+
+    // 3. Handle Image parsing
     const existingImagesRaw = formData.get("existingImages");
     let keptImages = existingImagesRaw ? JSON.parse(existingImagesRaw) : [];
-
-    // Media Uploads
+    
     const newFiles = formData.getAll("images");
     let newImageUrls = [];
     if (newFiles.length > 0) {
       const results = await Promise.all(
-        newFiles.map(file => uploadToCloudinary(file, "coretocover/products/images"))
+        newFiles.filter(file => file instanceof File && file.size > 0)
+                .map(file => uploadToCloudinary(file, "coretocover/products/images"))
       );
       newImageUrls = results.map(r => r.secure_url);
     }
 
+    // 4. Construct strictly typed Update Data
+    const updateData = {
+      name: name?.toString().trim(),
+      category: category?.toString().trim(),
+      productType: productType,
+      price: price ? parseFloat(price.toString()) : 0, 
+      description: description?.toString().trim() || null,
+      availability: availability?.toString(),
+      images: [...keptImages, ...newImageUrls],
+    };
+
+    // 5. Force numeric conversion for Logistics
+    // Note: Use the exact string "material" or "Raw Material" as stored in your DB
+    if (productType === "material" || productType === "Raw Material") {
+      updateData.unit = unit?.toString() || "pcs";
+      
+      // CRITICAL FIX: Convert strings to Int/Float for Prisma
+      if (rawUnitsPerTrip) {
+        updateData.unitsPerTrip = parseInt(rawUnitsPerTrip.toString());
+      }
+      if (rawConversionFactor) {
+        updateData.conversionFactor = parseFloat(rawConversionFactor.toString());
+      }
+    } else {
+      // Defaults for non-material products
+      updateData.unit = "pcs";
+      updateData.unitsPerTrip = 1;
+      updateData.conversionFactor = 1.0;
+    }
+
     const updatedProduct = await prisma.product.update({
-      where: { id: Number(id) },
-      data: {
-        name: formData.get("name"),
-        price: Number(formData.get("price")),
-        category: formData.get("category"),
-        description: formData.get("description"),
-        availability: formData.get("availability"),
-        images: [...keptImages, ...newImageUrls],
-      },
+      where: { id: productId },
+      data: updateData,
     });
 
-    return NextResponse.json({ message: "Product updated", product: updatedProduct });
+    return NextResponse.json({ 
+      message: "Product updated successfully", 
+      product: updatedProduct 
+    });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ message: "Update failed" }, { status: 500 });
+    console.error("UPDATE ERROR:", err);
+    return NextResponse.json({ 
+      message: "Update failed", 
+      error: err.message 
+    }, { status: 500 });
   }
 }
 

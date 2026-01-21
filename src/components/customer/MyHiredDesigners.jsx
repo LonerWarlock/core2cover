@@ -8,7 +8,9 @@ import { FaStar } from "react-icons/fa";
 import api from "../../api/axios";
 import { rateDesigner } from "../../api/designer";
 import Image from "next/image";
-import MessageBox from "../ui/MessageBox"; // Import your custom MessageBox
+import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const MyHiredDesigners = () => {
   const { data: session, status } = useSession();
@@ -18,6 +20,8 @@ const MyHiredDesigners = () => {
   const [showRating, setShowRating] = useState(false);
   const [selected, setSelected] = useState(null);
   const [ratingForm, setRatingForm] = useState({ stars: 5, review: "" });
+  // NEW STATE FOR SUBMISSION LOADING
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // MessageBox State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
@@ -31,7 +35,6 @@ const MyHiredDesigners = () => {
     try {
       setLoading(true);
       setError("");
-      // Using session-based fetching for Jerry Frostwick
       const res = await api.get("/client/hired-designers");
       setDesigners(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
@@ -53,13 +56,14 @@ const MyHiredDesigners = () => {
     e.preventDefault();
     if (!selected) return;
     try {
+      // 2. SHOW SPINNER DURING SUBMISSION
+      setIsSubmitting(true);
       await rateDesigner(selected.designerId, {
         hireRequestId: selected.id,
         stars: ratingForm.stars,
         review: ratingForm.review,
       });
       
-      // Replaced alert with MessageBox trigger
       triggerMsg("Thank you for rating the designer!", "success");
       
       setShowRating(false);
@@ -67,8 +71,9 @@ const MyHiredDesigners = () => {
       setRatingForm({ stars: 5, review: "" });
       fetchHiredDesigners();
     } catch (err) {
-      // Replaced alert with MessageBox error trigger
       triggerMsg(err.response?.data?.message || "Failed to submit rating", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -88,13 +93,16 @@ const MyHiredDesigners = () => {
     </div>
   );
 
-  if (status === "loading") return <p className="loading-text">Verifying session...</p>;
+  // 3. APPLY THE LOADING SPINNER DURING INITIAL FETCH OR SESSION VERIFICATION
+  if (status === "loading" || loading) return <LoadingSpinner message="Retrieving hired experts..." />;
+  
   if (status === "unauthenticated") return <div style={{ padding: 60, textAlign: "center" }}><h2>Please login to view your designers</h2></div>;
-  if (loading) return <p className="loading-text">Loading hired designers...</p>;
 
   return (
     <section className="hired-designers-page">
-      {/* MessageBox UI Component */}
+      {/* 4. SHOW SPINNER DURING RATING SUBMISSION */}
+      {isSubmitting && <LoadingSpinner message="Submitting your feedback..." />}
+
       {msg.show && (
         <MessageBox 
           message={msg.text} 

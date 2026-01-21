@@ -12,6 +12,8 @@ import {
 } from "../../api/auth";
 import "./SellerSignup.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerSignup = () => {
   const Brand = ({ children }) => <span className="brand">{children}</span>;
@@ -121,172 +123,180 @@ const SellerSignup = () => {
   };
 
   return (
-    <div className="signup-container">
-      <div className="signup-card">
-        <Image
-          src={CoreToCoverLogo}
-          alt="CoreToCover"
-          className="brand-logo"
-          width={200}
-          height={100}
-        />
-        <h2>Create Seller Account</h2>
-        <p className="subtitle">Start selling on <Brand>Core2Cover</Brand></p>
+    <>
+      {/* 2. APPLY THE LOADING SPINNERS FOR DIFFERENT STATES */}
+      {sendingOtp && <LoadingSpinner message="Sending verification code..." />}
+      {verifyingOtp && <LoadingSpinner message="Verifying your email..." />}
+      {loading && <LoadingSpinner message="Creating your seller account..." />}
 
-        <form onSubmit={handleSubmit}>
-          {/* Full Name */}
-          <div className="input-group">
-            <label>Full Name</label>
-            <input
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
+      <div className="signup-container">
+        <div className="signup-card">
+          <Image
+            src={CoreToCoverLogo}
+            alt="CoreToCover"
+            className="brand-logo"
+            width={200}
+            height={100}
+          />
+          <h2>Create Seller Account</h2>
+          <p className="subtitle">Start selling on <Brand>Core2Cover</Brand></p>
 
-          {/* Email */}
-          <div className="input-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Phone */}
-          <div className="input-group">
-            <label>Phone</label>
-            <input
-              name="phone"
-              placeholder="Phone"
-              value={form.phone}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* OTP Section */}
-          <div className="otp-actions">
-            <button
-              className="otp-btn"
-              type="button"
-              onClick={sendOtp}
-              disabled={otpSent || sendingOtp || emailVerified}
-            >
-              {otpSent ? "OTP Sent" : sendingOtp ? "Sending..." : "Send OTP"}
-            </button>
-
-            {otpSent && !emailVerified && (
-              <>
-                <input
-                  className="otp-btn primary"
-                  placeholder="Enter OTP"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\s/g, ""))}
-                />
-                <button
-                  className="otp-btn"
-                  type="button"
-                  onClick={verifyOtp}
-                  disabled={verifyingOtp}
-                >
-                  {verifyingOtp ? "Verifying..." : "Verify OTP"}
-                </button>
-              </>
-            )}
-
-            {emailVerified && (
-              <span style={{ color: "green", marginLeft: 8 }}>Verified ✓</span>
-            )}
-          </div>
-
-          {/* Hidden until verified: Passwords, Terms, Submit */}
-          <div
-            className={`reveal ${emailVerified ? "show" : ""}`}
-            aria-hidden={!emailVerified}
-          >
-            {/* Password */}
-            <div className="input-group password-group">
-              <label>Password</label>
-              <div className="password-wrapper">
-                <input
-                  ref={passwordRef}
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="input-group password-group">
-              <label>Confirm Password</label>
-              <div className="password-wrapper">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                >
-                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
-
-            {/* Terms */}
-            <label className="terms">
+          <form onSubmit={handleSubmit}>
+            {/* Full Name */}
+            <div className="input-group">
+              <label>Full Name</label>
               <input
-                type="checkbox"
-                name="terms"
-                checked={form.terms}
+                name="name"
+                placeholder="Full Name"
+                value={form.name}
                 onChange={handleChange}
+                required
               />
-              I agree to the <Link href="/terms">Terms & Conditions</Link>
-            </label>
+            </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              className="signup-btn"
-              disabled={loading}
+            {/* Email */}
+            <div className="input-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                disabled={emailVerified}
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="input-group">
+              <label>Phone</label>
+              <input
+                name="phone"
+                placeholder="Phone"
+                value={form.phone}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            {/* OTP Section */}
+            <div className="otp-actions">
+              <button
+                className="otp-btn"
+                type="button"
+                onClick={sendOtp}
+                disabled={otpSent || sendingOtp || emailVerified}
+              >
+                {emailVerified ? "Email Verified" : otpSent ? "OTP Sent" : sendingOtp ? "Sending..." : "Send OTP"}
+              </button>
+
+              {otpSent && !emailVerified && (
+                <>
+                  <input
+                    className="otp-btn primary"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\s/g, ""))}
+                  />
+                  <button
+                    className="otp-btn"
+                    type="button"
+                    onClick={verifyOtp}
+                    disabled={verifyingOtp}
+                  >
+                    {verifyingOtp ? "Verifying..." : "Verify OTP"}
+                  </button>
+                </>
+              )}
+
+              {emailVerified && (
+                <span style={{ color: "green", marginLeft: 8 }}>Verified ✓</span>
+              )}
+            </div>
+
+            {/* Hidden until verified: Passwords, Terms, Submit */}
+            <div
+              className={`reveal ${emailVerified ? "show" : ""}`}
+              aria-hidden={!emailVerified}
             >
-              {loading ? "Creating..." : "Continue"}
-            </button>
+              {/* Password */}
+              <div className="input-group password-group">
+                <label>Password</label>
+                <div className="password-wrapper">
+                  <input
+                    ref={passwordRef}
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={handleChange}
+                    required={emailVerified}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
 
-            {/* Login */}
-            <p className="login-link">
-              Already have an account?{" "}
-              <Link href="/sellerlogin">Login</Link>
-            </p>
-          </div>
-        </form>
+              {/* Confirm Password */}
+              <div className="input-group password-group">
+                <label>Confirm Password</label>
+                <div className="password-wrapper">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required={emailVerified}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Terms */}
+              <label className="terms">
+                <input
+                  type="checkbox"
+                  name="terms"
+                  checked={form.terms}
+                  onChange={handleChange}
+                />
+                I agree to the <Link href="/terms">Terms & Conditions</Link>
+              </label>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="signup-btn"
+                disabled={loading || !emailVerified}
+              >
+                {loading ? "Creating..." : "Continue"}
+              </button>
+
+              {/* Login */}
+              <p className="login-link">
+                Already have an account?{" "}
+                <Link href="/sellerlogin">Login</Link>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -24,6 +24,8 @@ import api from "../../api/axios";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import MessageBox from "../ui/MessageBox";
 import { useRouter } from "next/navigation";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 
 const BrandBold = () => (
@@ -51,6 +53,9 @@ const DesignerWorkReceived = () => {
   const [clientRatingsModalOpen, setClientRatingsModalOpen] = useState(false);
   const [clientRatings, setClientRatings] = useState([]);
   const [ratingsLoading, setRatingsLoading] = useState(false);
+  
+  // Project Status Update Loading
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [designerId, setDesignerId] = useState(null);
 
@@ -89,6 +94,7 @@ const DesignerWorkReceived = () => {
 
   const updateStatus = async (jobId, newStatus) => {
     try {
+      setUpdatingStatus(true); // 2. TRIGGER LOADING FOR STATUS CHANGE
       await api.patch(`/designer/work-request/${jobId}/status`, { status: newStatus });
 
       setJobs((prev) =>
@@ -99,6 +105,8 @@ const DesignerWorkReceived = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Failed to update status";
       triggerMsg(errorMsg, "error");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -171,8 +179,15 @@ const DesignerWorkReceived = () => {
     });
   };
 
+  // 3. APPLY SPINNER DURING INITIAL FETCH
+  if (loading) return <LoadingSpinner message="Scanning for work requests..." />;
+
   return (
     <>
+      {/* 4. OVERLAY SPINNERS FOR ACTIONS */}
+      {updatingStatus && <LoadingSpinner message="Updating project records..." />}
+      {submitting && <LoadingSpinner message="Submitting client feedback..." />}
+
       {msg.show && (
         <MessageBox
           message={msg.text}
@@ -184,7 +199,6 @@ const DesignerWorkReceived = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
             <Link 
               href="/" 
               className="nav-logo-link" 
@@ -223,8 +237,7 @@ const DesignerWorkReceived = () => {
 
 
         <div className="c2c-dwrx-job-list">
-          {loading && <p style={{ padding: 20 }}>Loading work requests...</p>}
-          {!loading && jobs.length === 0 && <p style={{ padding: 20 }}>No work requests yet.</p>}
+          {jobs.length === 0 && <p style={{ padding: 20 }}>No work requests yet.</p>}
 
           {jobs.map((job) => (
             <div key={job.id} className="c2c-dwrx-job-card c2c-anim-reveal">
@@ -325,14 +338,7 @@ const DesignerWorkReceived = () => {
                 onClick={submitUserRating}
                 disabled={submitting}
               >
-                {submitting ? (
-                  <>
-                    <span className="button-spinner"></span>
-                    Saving...
-                  </>
-                ) : (
-                  "Submit Rating"
-                )}
+                {submitting ? "Saving..." : "Submit Rating"}
               </button>
             </div>
           </div>
@@ -348,7 +354,11 @@ const DesignerWorkReceived = () => {
               <button className="close-x" onClick={closeClientRatings}><FaTimes /></button>
             </div>
             <div className="reviews-scroll-area">
-              {ratingsLoading ? <p>Loading history...</p> : clientRatings.length === 0 ? <p>No history found for this client.</p> : (
+              {ratingsLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+                   <div className="premium-loader" style={{ width: '30px', height: '30px' }}></div>
+                </div>
+              ) : clientRatings.length === 0 ? <p>No history found for this client.</p> : (
                 clientRatings.map((r, i) => (
                   <div key={i} className="review-card-mini">
                     <div className="review-header"><strong>{r.stars} ★</strong> <span>{formatDate(r.createdAt)}</span></div>

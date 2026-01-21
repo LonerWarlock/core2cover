@@ -6,6 +6,8 @@ import "./SellerProfile.css";
 import Sidebar from "./Sidebar";
 import { getSellerProfile, updateSellerProfile } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerProfile = () => {
   const router = useRouter();
@@ -55,8 +57,6 @@ const SellerProfile = () => {
       setLoading(true);
       try {
         const res = await getSellerProfile(sellerId);
-        
-        // Ensure we are getting the data regardless of nested structure
         const data = res.data || res; 
 
         const profileData = {
@@ -67,8 +67,6 @@ const SellerProfile = () => {
         };
 
         setProfile(profileData);
-        
-        // Initialise form with current data
         setFormData({
           name: data.name || "",
           email: data.email || "",
@@ -127,112 +125,109 @@ const SellerProfile = () => {
     router.push("/sellerlogin");
   };
 
-  if (loading) {
-    return (
+  return (
+    <>
+      {/* 2. PLACED AT THE TOP LEVEL FOR MAXIMUM VISIBILITY */}
+      {loading && <LoadingSpinner message="Initialising Profile Details..." />}
+      {saving && <LoadingSpinner message="Updating your profile details..." />}
+
       <div className="bs-layout-root">
+        {msg.show && (
+          <MessageBox 
+            message={msg.text} 
+            type={msg.type} 
+            onClose={() => setMsg({ ...msg, show: false })} 
+          />
+        )}
         <Sidebar />
         <div className="bs-profile-shell">
-          <div className="loading-container">
-            <h2 className="loading-text">Initialising Profile Details...</h2>
-          </div>
+          <h1 className="bs-heading">Seller Account</h1>
+
+          {!loading && (
+            <>
+              {!isEditing ? (
+                <div className="bs-card profile-view-card business-reveal">
+                  <div className="profile-info-group">
+                    <div className="info-row">
+                      <span className="info-label">Business Name:</span>
+                      <span className="info-value">{profile.name}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Login Email:</span>
+                      <span className="info-value">{profile.email}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Contact Number:</span>
+                      <span className="info-value">{profile.phone}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Primary Location:</span>
+                      <span className="info-value">{profile.location}</span>
+                    </div>
+                  </div>
+
+                  <div className="profile-actions">
+                    <button className="bs-btn bs-btn--primary" onClick={() => setIsEditing(true)}>
+                      Edit Profile
+                    </button>
+                    <button className="bs-btn bs-btn--ghost" onClick={handleLogout}>
+                      Logout Account
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form
+                  className="bs-card bs-edit-form business-reveal"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSave();
+                  }}
+                >
+                  <div className="input-field">
+                    <label>Full Name / Business Name</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="input-field">
+                    <label>Email Address</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      disabled
+                      className="disabled-input"
+                    />
+                  </div>
+
+                  <div className="input-field">
+                    <label>Phone Number</label>
+                    <input
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-buttons">
+                    <button type="submit" className="bs-btn bs-btn--primary" disabled={saving}>
+                      {saving ? "Saving Changes..." : "Save Changes"}
+                    </button>
+                    <button type="button" className="bs-btn bs-btn--ghost" onClick={() => setIsEditing(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="bs-layout-root">
-      {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
-        />
-      )}
-      <Sidebar />
-      <div className="bs-profile-shell">
-        <h1 className="bs-heading">Seller Account</h1>
-
-        {!isEditing ? (
-          <div className="bs-card profile-view-card">
-            <div className="profile-info-group">
-              <div className="info-row">
-                <span className="info-label">Business Name:</span>
-                <span className="info-value">{profile.name}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Login Email:</span>
-                <span className="info-value">{profile.email}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Contact Number:</span>
-                <span className="info-value">{profile.phone}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Primary Location:</span>
-                <span className="info-value">{profile.location}</span>
-              </div>
-            </div>
-
-            <div className="profile-actions">
-              <button className="bs-btn bs-btn--primary" onClick={() => setIsEditing(true)}>
-                Edit Profile
-              </button>
-              <button className="bs-btn bs-btn--ghost" onClick={handleLogout}>
-                Logout Account
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form
-            className="bs-card bs-edit-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSave();
-            }}
-          >
-            <div className="input-field">
-              <label>Full Name / Business Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="input-field">
-              <label>Email Address</label>
-              <input
-                type="email"
-                value={formData.email}
-                disabled
-                className="disabled-input"
-              />
-            </div>
-
-            <div className="input-field">
-              <label>Phone Number</label>
-              <input
-                type="text"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-buttons">
-              <button type="submit" className="bs-btn bs-btn--primary" disabled={saving}>
-                {saving ? "Saving Changes..." : "Save Changes"}
-              </button>
-              <button type="button" className="bs-btn bs-btn--ghost" onClick={() => setIsEditing(false)}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+    </>
   );
 };
 

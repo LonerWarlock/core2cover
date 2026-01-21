@@ -13,6 +13,8 @@ import { getClientHiredDesigners } from "../../api/designer";
 import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
 import MessageBox from "../ui/MessageBox";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const libraries = ["places", "maps"];
 
@@ -152,7 +154,8 @@ const UserProfile = () => {
     }
   };
 
-  if (status === "loading") return <div className="loading">Loading...</div>;
+  // 2. APPLY THE LOADING SPINNER DURING SESSION LOADING
+  if (status === "loading") return <LoadingSpinner message="Securing your profile..." />;
 
   return (
     <>

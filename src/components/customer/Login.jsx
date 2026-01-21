@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react"; // Added NextAuth hooks
 import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa"; // Added FaGoogle icon
-import { customerLogin } from "../../api/auth"; //
-import "./Login.css"; //
+import { customerLogin } from "../../api/auth"; 
+import "./Login.css"; 
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,7 +16,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter(); //
+  const router = useRouter(); 
   const { data: session, status } = useSession(); // Retrieve NextAuth session status
 
   // Redirect to home if user is already authenticated via Google
@@ -46,7 +48,7 @@ export default function Login() {
       const data = response?.data ?? response;
 
       if (data?.token) {
-        localStorage.setItem("token", data.token); //
+        localStorage.setItem("token", data.token); 
       }
 
       if (data?.user) {
@@ -54,9 +56,9 @@ export default function Login() {
         localStorage.removeItem("userEmail");
         localStorage.removeItem("userName");
 
-        localStorage.setItem("userId", String(data.user.id ?? "")); //
-        localStorage.setItem("userEmail", data.user.email ?? ""); //
-        localStorage.setItem("userName", data.user.name ?? ""); //
+        localStorage.setItem("userId", String(data.user.id ?? "")); 
+        localStorage.setItem("userEmail", data.user.email ?? ""); 
+        localStorage.setItem("userName", data.user.name ?? ""); 
       }
 
       router.push("/");
@@ -71,8 +73,16 @@ export default function Login() {
     }
   };
 
+  // 2. SHOW SPINNER DURING SESSION LOADING OR LOGIN PROCESSING
+  if (status === "loading") {
+    return <LoadingSpinner message="Verifying session..." />;
+  }
+
   return (
     <div className="login-page">
+      {/* 3. SHOW SPINNER DURING MANUAL LOGIN OR REDIRECT */}
+      {loading && <LoadingSpinner message="Authenticating..." />}
+
       <div className="login-box">
         <div className="login-header">
           <h1 className="brand-heading">Core2Cover</h1>
@@ -118,8 +128,6 @@ export default function Login() {
             {loading ? "Logging in..." : "Log In"}
           </button>
 
-          {/* Divider for Social Login */}
-          {/* Add this after your Login button */}
           <div className="login-divider">
             <span>OR</span>
           </div>
@@ -127,7 +135,10 @@ export default function Login() {
           <button
             type="button"
             className="google-btn-premium"
-            onClick={() => signIn("google", { callbackUrl: "/" })}
+            onClick={() => {
+              setLoading(true); // Trigger loading state for Google Login
+              signIn("google", { callbackUrl: "/" });
+            }}
           >
             <div className="google-icon-wrapper">
               <svg viewBox="0 0 24 24">

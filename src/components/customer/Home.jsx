@@ -17,7 +17,8 @@ import Designer2 from "../../assets/images/Designer2.png";
 
 // Components
 import Footer from "./Footer";
-import Navbar from "./Navbar"; // Use the actual Navbar component
+import Navbar from "./Navbar"; 
+import LoadingSpinner from "../ui/LoadingSpinner"; // 1. IMPORT THE LOADING SPINNER
 import "./Home.css";
 
 // SLIDESHOW CARD COMPONENT
@@ -55,17 +56,26 @@ const Card = ({ images, title, onClick }) => {
 // MAIN HOME COMPONENT
 const Home = () => {
   const router = useRouter();
+  // 2. ADD LOADING STATE
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial loading for a smooth entrance
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 800); 
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
-      {/* Calling the Navbar component directly. 
-         This solves the 'handleProfileClick' error because that logic 
-         lives inside the Navbar component itself.
-      */}
       <Navbar />
 
+      {/* 3. APPLY THE LOADING SPINNER */}
+      {pageLoading && <LoadingSpinner message="Welcome to Core2Cover" />}
+
       {/* PAGE CONTENT */}
-      <div className="partition-page fade-in">
+      <div className={`partition-page ${!pageLoading ? "fade-in" : ""}`} style={{ visibility: pageLoading ? 'hidden' : 'visible' }}>
         <div className="partition-grid">
           {/* Card 1 */}
           <Card

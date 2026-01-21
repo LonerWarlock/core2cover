@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import "./BusinessDetails.css";
 import { createSellerBusinessDetails } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BusinessDetails = () => {
   const router = useRouter();
@@ -88,6 +90,9 @@ const BusinessDetails = () => {
 
   return (
     <div className="business-container">
+      {/* 2. APPLY THE LOADING SPINNER DURING SUBMISSION */}
+      {loading && <LoadingSpinner message="Finalising your business profile..." />}
+
       {msg.show && (
         <MessageBox 
           message={msg.text} 

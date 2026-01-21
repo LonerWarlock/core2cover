@@ -9,6 +9,8 @@ import {
 } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
 import { FaTruckLoading, FaRulerCombined, FaUser, FaClock } from "react-icons/fa";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -30,9 +32,7 @@ const SellerOrders = () => {
     const status = o.status ?? o.orderStatus ?? o.order_status ?? "pending";
     const material = o.material ?? o.materialName ?? o.productName ?? o.name ?? "Item";
     
-    // Quantity represents the number of Units (Sheets/Pcs)
     const quantity = o.quantity ?? o.qty ?? 1;
-    // Trips represents the logistics requirement calculated at checkout
     const trips = o.trips ?? 1;
     const unit = o.unit || "pcs";
     
@@ -68,6 +68,7 @@ const SellerOrders = () => {
 
     const loadOrders = async () => {
       try {
+        setLoading(true);
         const res = await getSellerOrders(sellerId);
         const data = Array.isArray(res.data) ? res.data : [];
         const normalized = data.map(normalizeOrder);
@@ -179,8 +180,20 @@ const SellerOrders = () => {
   const hasPendingOrders = orders.some((o) => o._status === "pending");
   const hasConfirmedOrders = orders.some((o) => ["confirmed", "out_for_delivery"].includes(o._status));
 
+  // 2. SHOW SPINNER DURING INITIAL FETCH
+  if (loading) return (
+    <div className="orders-layout">
+      <Sidebar />
+      <LoadingSpinner message="Loading customer orders..." />
+    </div>
+  );
+
   return (
     <div className="orders-layout">
+      {/* 3. SHOW SPINNER DURING BULK ACTIONS */}
+      {confirmingAll && <LoadingSpinner message="Accepting pending orders..." />}
+      {deliveringAll && <LoadingSpinner message="Updating delivery statuses..." />}
+
       {msg.show && (
         <MessageBox 
           message={msg.text} 
@@ -208,9 +221,7 @@ const SellerOrders = () => {
           </div>
         </div>
 
-        {loading ? (
-          <p>Loading orders...</p>
-        ) : orders.length === 0 ? (
+        {orders.length === 0 ? (
           <p className="no-orders">No orders received yet.</p>
         ) : (
           <ul className="orders-list">
@@ -242,7 +253,7 @@ const SellerOrders = () => {
                       <button type="button" className="site-button" onClick={() => openMaps(order._siteLocation)}>
                         📍 {order._siteLocation || "View location"}
                       </button>
-                      <button type="button" className="site-copy" onClick={() => copyLocation(order._siteLocation, order._orderItemId ?? order.id)}>
+                      <button type="button" className="site-button" style={{minWidth: '70px'}} onClick={() => copyLocation(order._siteLocation, order._orderItemId ?? order.id)}>
                         {order.copied ? "Copied" : "Copy"}
                       </button>
                     </div>

@@ -9,6 +9,8 @@ import "./SearchResults.css";
 import "./ProductListing.css"; // Reuse listing styles for sections
 import api from "../../api/axios";
 import { FaStar, FaGem, FaRegClock, FaLayerGroup, FaArrowLeft } from "react-icons/fa";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SearchResults = () => {
   const searchParams = useSearchParams();
@@ -92,6 +94,9 @@ const SearchResults = () => {
   return (
     <>
       <Navbar />
+      {/* 2. APPLY THE LOADING SPINNER */}
+      {loading && <LoadingSpinner message="Searching our collection..." />}
+
       <div className="products-section"> {/* Using premium container class */}
         <div className="listing-top-nav">
           <button className="back-btn" onClick={() => router.back()}>
@@ -105,7 +110,7 @@ const SearchResults = () => {
         </p>
 
         {loading ? (
-          <div style={{ padding: "100px", textAlign: 'center', color: "#6b7280" }}>
+          <div style={{ padding: "100px", textAlign: 'center', color: "#6b7280", opacity: 0 }}>
             Searching our collection...
           </div>
         ) : results.length === 0 ? (

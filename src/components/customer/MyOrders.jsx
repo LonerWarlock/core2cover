@@ -10,9 +10,11 @@ import { GiSandsOfTime } from "react-icons/gi";
 import { FaTruckLoading, FaRulerCombined } from "react-icons/fa";
 import { requestReturn, getUserReturns, getUserCredit } from "../../api/return";
 import Image from "next/image";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* =========================
-   STATUS HELPERS
+    STATUS HELPERS
 ========================= */
 const getOrderStatusMeta = (status) => {
   switch (status) {
@@ -73,6 +75,7 @@ const MS_IN_DAY = 1000 * 60 * 60 * 24;
 export default function MyOrders() {
   const [query, setQuery] = useState("");
   const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true); // NEW LOADING STATE FOR INITIAL FETCH
   const [ratings, setRatings] = useState({});
   const [reviews, setReviews] = useState({});
   const [openRating, setOpenRating] = useState({});
@@ -96,6 +99,7 @@ export default function MyOrders() {
 
   useEffect(() => {
     if (!userEmail) return;
+    setLoadingOrders(true);
     api
       .get(`/orders/user/${encodeURIComponent(userEmail)}`)
       .then((res) => {
@@ -104,6 +108,9 @@ export default function MyOrders() {
       .catch((err) => {
         console.error("Order Fetch Error:", err);
         setOrders([]);
+      })
+      .finally(() => {
+        setLoadingOrders(false);
       });
   }, [userEmail]);
 
@@ -201,6 +208,12 @@ export default function MyOrders() {
 
   return (
     <div className="orders-page">
+      {/* 2. LOADING SPINNER FOR INITIAL DATA LOAD */}
+      {loadingOrders && <LoadingSpinner message="Retrieving your orders..." />}
+
+      {/* 3. LOADING SPINNER FOR RETURN REQUESTS */}
+      {returnLoading && <LoadingSpinner message="Processing return request..." />}
+
       <header className="orders-header-row">
         <h2 className="orders-title">Your Orders</h2>
         <div className="credit-badge">
@@ -216,7 +229,7 @@ export default function MyOrders() {
       />
 
       <div className="orders-lists">
-        {filteredOrders.length === 0 ? (
+        {!loadingOrders && filteredOrders.length === 0 ? (
           <div className="empty-orders-text">
             No orders found for {userEmail}.
           </div>
@@ -245,7 +258,6 @@ export default function MyOrders() {
                   <p><strong>Order ID:</strong> {order.id}</p>
                   <p><strong>Seller:</strong> {order.sellerName}</p>
                   
-                  {/* Logistics Insight Row */}
                   <div className="order-logistics-row">
                     <span className="log-detail"><FaRulerCombined /> {order.quantity} {order.unit || 'units'}</span>
                     <span className="log-detail"><FaTruckLoading /> {order.totalTrips || 1} Trip(s)</span>

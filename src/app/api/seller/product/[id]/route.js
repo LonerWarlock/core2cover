@@ -32,56 +32,51 @@ export async function PUT(request, { params }) {
     const productId = Number(params.id);
     const formData = await request.formData();
 
+    // 1. Extract raw strings from form data
     const name = formData.get("name");
     const category = formData.get("category");
-    const productType = formData.get("productType");
+    const productType = formData.get("productType")?.toString(); // Ensure string
     const price = formData.get("price");
     const description = formData.get("description");
     const availability = formData.get("availability");
-    const existingImagesRaw = formData.get("existingImages");
     
-    // NEW RAW MATERIAL FIELDS
+    // LOGISTICS FIELDS
     const unit = formData.get("unit");
-    const unitsPerTrip = formData.get("unitsPerTrip");
-    const conversionFactor = formData.get("conversionFactor");
+    const rawUnitsPerTrip = formData.get("unitsPerTrip");
+    const rawConversionFactor = formData.get("conversionFactor");
 
-    if (!productType) {
-      return NextResponse.json({ message: "productType is required" }, { status: 400 });
-    }
-
+    // 2. Handle Image parsing
+    const existingImagesRaw = formData.get("existingImages");
     let keptImages = [];
     if (existingImagesRaw) {
-      try { keptImages = JSON.parse(existingImagesRaw); } 
-      catch (e) { keptImages = []; }
+      try { keptImages = JSON.parse(existingImagesRaw); } catch (e) { keptImages = []; }
     }
-
     const newImageFiles = formData.getAll("images");
     let newImageUrls = [];
-    if (newImageFiles && newImageFiles.length > 0) {
-      const validFiles = newImageFiles.filter((f) => f.size > 0);
-      const uploadPromises = validFiles.map((file) => uploadToCloudinary(file, "coretocover/products/images"));
-      const results = await Promise.all(uploadPromises);
+    if (newImageFiles.length > 0) {
+      const validFiles = newImageFiles.filter((f) => f instanceof File && f.size > 0);
+      const results = await Promise.all(validFiles.map((f) => uploadToCloudinary(f, "coretocover/products/images")));
       newImageUrls = results.map((r) => r.secure_url);
     }
 
-    const finalImages = [...keptImages, ...newImageUrls];
-
-    // Build the Update Object
+    // 3. Construct strictly typed Update Data
     const updateData = {
-      name: name?.trim(),
-      category: category?.trim(),
-      productType,
-      price: Number(price),
-      description: description?.trim() || null,
-      availability,
-      images: finalImages,
+      name: name?.toString().trim(),
+      category: category?.toString().trim(),
+      productType: productType,
+      price: parseFloat(price.toString()), // Cast to Float
+      description: description?.toString().trim() || null,
+      availability: availability?.toString(),
+      images: [...keptImages, ...newImageUrls],
     };
 
-    // Only apply raw material logic if the type matches
-    if (productType === "material") {
-      updateData.unit = unit || "pcs";
-      updateData.unitsPerTrip = unitsPerTrip ? parseInt(unitsPerTrip) : 1;
-      updateData.conversionFactor = conversionFactor ? parseFloat(conversionFactor) : 1.0;
+    // 4. Force numeric conversion for Logistics
+    // Check for both common variations of the type string to be safe
+    if (productType === "material" || productType === "Raw Material") {
+      updateData.unit = unit?.toString() || "pcs";
+      // Explicitly convert to Int and Float as required by schema.prisma
+      if (rawUnitsPerTrip) updateData.unitsPerTrip = parseInt(rawUnitsPerTrip.toString());
+      if (rawConversionFactor) updateData.conversionFactor = parseFloat(rawConversionFactor.toString());
     }
 
     const updatedProduct = await prisma.product.update({
@@ -89,13 +84,9 @@ export async function PUT(request, { params }) {
       data: updateData,
     });
 
-    return NextResponse.json({
-      message: "Product updated successfully",
-      product: updatedProduct,
-    });
-
+    return NextResponse.json({ message: "Product updated successfully", product: updatedProduct });
   } catch (err) {
-    console.error("UPDATE PRODUCT ERROR:", err);
-    return NextResponse.json({ message: "Update failed" }, { status: 500 });
+    console.error("UPDATE ERROR:", err);
+    return NextResponse.json({ message: "Update failed", error: err.message }, { status: 500 });
   }
 }

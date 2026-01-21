@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import "./DesignerPortfolio.css";
 import { saveDesignerPortfolio } from "../../api/designer";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DesignerPortfolio = () => {
   const router = useRouter();
@@ -20,7 +22,7 @@ const DesignerPortfolio = () => {
   const [error, setError] = useState("");
 
   /* =========================
-     GET DESIGNER ID (Browser Only)
+      GET DESIGNER ID (Browser Only)
   ========================= */
   useEffect(() => {
     const storedId = localStorage.getItem("designerId");
@@ -33,7 +35,7 @@ const DesignerPortfolio = () => {
   }, [router]);
 
   /* =========================
-     CHECK EMPTY STATE
+      CHECK EMPTY STATE
   ========================= */
   useEffect(() => {
     const empty = works.every(
@@ -45,7 +47,7 @@ const DesignerPortfolio = () => {
   }, [works]);
 
   /* =========================
-     ADD WORK
+      ADD WORK
   ========================= */
   const addWork = () => {
     if (works.length >= 5) return;
@@ -53,7 +55,7 @@ const DesignerPortfolio = () => {
   };
 
   /* =========================
-     IMAGE CHANGE
+      IMAGE CHANGE
   ========================= */
   const handleImageChange = (index, file) => {
     if (!file) return;
@@ -73,7 +75,7 @@ const DesignerPortfolio = () => {
   };
 
   /* =========================
-     DESCRIPTION CHANGE
+      DESCRIPTION CHANGE
   ========================= */
   const handleDescriptionChange = (index, value) => {
     setWorks((prev) => {
@@ -84,7 +86,7 @@ const DesignerPortfolio = () => {
   };
 
   /* =========================
-     SUBMIT PORTFOLIO
+      SUBMIT PORTFOLIO
   ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -126,7 +128,7 @@ const DesignerPortfolio = () => {
   };
 
   /* =========================
-     CLEANUP PREVIEWS
+      CLEANUP PREVIEWS
   ========================= */
   useEffect(() => {
     return () => {
@@ -134,79 +136,84 @@ const DesignerPortfolio = () => {
         if (w.preview) URL.revokeObjectURL(w.preview);
       });
     };
-  }, []); // Run on unmount
+  }, [works]); 
 
   return (
-    <div className="dp-page">
-      <div className="dp-box dp-reveal">
-        <h1 className="dp-title">Show Your Best Work</h1>
-        <p className="dp-subtitle">
-          Add 4–5 examples of your previous designs. <strong>(Optional)</strong>
-        </p>
+    <>
+      {/* 2. APPLY THE LOADING SPINNER DURING SUBMISSION */}
+      {loading && <LoadingSpinner message="Uploading your portfolio showcase..." />}
 
-        {error && <p className="dp-error">{error}</p>}
+      <div className="dp-page">
+        <div className="dp-box dp-reveal">
+          <h1 className="dp-title">Show Your Best Work</h1>
+          <p className="dp-subtitle">
+            Add 4–5 examples of your previous designs. <strong>(Optional)</strong>
+          </p>
 
-        <form onSubmit={handleSubmit} className="dp-form">
-          {works.map((item, index) => (
-            <div key={index} className="dp-work">
-              <div className="dp-image-upload">
-                {item.preview ? (
-                  <img
-                    src={item.preview}
-                    alt="Preview"
-                    className="dp-preview"
-                  />
-                ) : (
-                  <label className="dp-upload-placeholder">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleImageChange(index, e.target.files?.[0])
-                      }
+          {error && <p className="dp-error">{error}</p>}
+
+          <form onSubmit={handleSubmit} className="dp-form">
+            {works.map((item, index) => (
+              <div key={index} className="dp-work">
+                <div className="dp-image-upload">
+                  {item.preview ? (
+                    <img
+                      src={item.preview}
+                      alt="Preview"
+                      className="dp-preview"
                     />
-                    + Upload Image
-                  </label>
-                )}
+                  ) : (
+                    <label className="dp-upload-placeholder">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleImageChange(index, e.target.files?.[0])
+                        }
+                      />
+                      + Upload Image
+                    </label>
+                  )}
+                </div>
+
+                <textarea
+                  className="dp-description"
+                  placeholder="Write something about this work..."
+                  value={item.description}
+                  onChange={(e) =>
+                    handleDescriptionChange(index, e.target.value)
+                  }
+                />
               </div>
+            ))}
 
-              <textarea
-                className="dp-description"
-                placeholder="Write something about this work..."
-                value={item.description}
-                onChange={(e) =>
-                  handleDescriptionChange(index, e.target.value)
-                }
-              />
+            {works.length < 5 && (
+              <button type="button" className="dp-add-btn" onClick={addWork}>
+                + Add Another Work
+              </button>
+            )}
+
+            <div className="dp-actions">
+              <button
+                type="submit"
+                className={`dp-submit ${isFormEmpty ? "dp-disabled" : ""}`}
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save & Continue"}
+              </button>
+
+              <button
+                type="button"
+                className="dp-skip"
+                onClick={() => router.push("/designerdashboard")}
+              >
+                Skip for Now →
+              </button>
             </div>
-          ))}
-
-          {works.length < 5 && (
-            <button type="button" className="dp-add-btn" onClick={addWork}>
-              + Add Another Work
-            </button>
-          )}
-
-          <div className="dp-actions">
-            <button
-              type="submit"
-              className={`dp-submit ${isFormEmpty ? "dp-disabled" : ""}`}
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Save & Continue"}
-            </button>
-
-            <button
-              type="button"
-              className="dp-skip"
-              onClick={() => router.push("/designerdashboard")}
-            >
-              Skip for Now →
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

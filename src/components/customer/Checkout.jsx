@@ -19,8 +19,9 @@ import PhonePe from "../../assets/images/PhonePe.jpg";
 import { getUserCredit } from "../../api/return";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
+import LoadingSpinner from "../ui/LoadingSpinner";
 import sample from "../../assets/images/sample.jpg";
-import { FaArrowLeft, FaMapMarkerAlt, FaSearch, FaShoppingBag, FaTruckLoading, FaRulerCombined, FaTools } from "react-icons/fa";
+import { FaArrowLeft, FaMapMarkerAlt, FaSearch, FaShoppingBag, FaTruckLoading, FaRulerCombined, FaTools, FaWallet } from "react-icons/fa";
 
 // Google Maps Imports
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
@@ -64,16 +65,24 @@ export default function Checkout() {
 
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
-  /* ======================================================
-      TRIP-SENSITIVE QUANTITY UPDATE
-  ====================================================== */
-  const updateQty = (id, newQty) => {
-    if (newQty < 1) return;
+  const updateQty = (id, val) => {
+    // Allow empty string for backspacing
+    if (val === "") {
+      setItems((prev) =>
+        prev.map((it) => (it.materialId === id ? { ...it, quantity: "" } : it))
+      );
+      return;
+    }
+
+    const newQty = Number(val);
+    if (isNaN(newQty) || newQty < 0) return;
+
     setItems((prev) =>
       prev.map((it) => {
         if (it.materialId === id) {
           const capacity = Number(it.unitsPerTrip || 1);
-          const newTrips = Math.ceil(newQty / capacity);
+          // Ensure trips are calculated correctly even if qty is 0
+          const newTrips = newQty > 0 ? Math.ceil(newQty / capacity) : 1;
           return { ...it, quantity: newQty, trips: newTrips };
         }
         return it;
@@ -81,7 +90,19 @@ export default function Checkout() {
     );
   };
 
-  onPlaceChanged
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current !== null) {
+      const place = autocompleteRef.current.getPlace();
+      if (!place.geometry || !place.geometry.location) return;
+      const location = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+      setMarkerPosition(location);
+      setAddress(place.formatted_address || "");
+      if (mapRef.current) {
+        mapRef.current.panTo(location);
+        mapRef.current.setZoom(17);
+      }
+    }
+  };
 
   const onMapClick = useCallback((e) => {
     const lat = e.latLng.lat();
@@ -130,43 +151,40 @@ export default function Checkout() {
     getUserCredit().then((res) => setCredit(Number(res.data.credit || 0))).catch(() => setCredit(0));
   }, [session, status]);
 
-  /* ======================================================
-      SUMMARY CALCULATION (TRIP & INSTALLATION LOGIC)
-  ====================================================== */
   const computeSummary = useMemo(() => {
-    let subtotal = 0, deliveryCharge = 0, installationTotal = 0;
+    let subtotal = 0, rawDeliveryCharge = 0, installationTotal = 0;
 
     items.forEach((it) => {
       subtotal += (Number(it.amountPerTrip) * it.quantity);
-
-      // Delivery Logic: Skip if explicitly Free
       const isFreeShipping = it.shippingChargeType?.toLowerCase() === "free";
       if (!isFreeShipping) {
-        deliveryCharge += (Number(it.shippingCharge) * it.trips);
+        rawDeliveryCharge += (Number(it.shippingCharge) * it.trips);
       }
-
-      // STRICT Installation Charge Logic
       if (it.installationAvailable?.toLowerCase() === "yes") {
         installationTotal += (Number(it.installationCharge) * it.quantity);
       }
     });
 
-    let casaCharge = 0;
-    if (subtotal < 10000) casaCharge = 89;
-    else if (subtotal < 50000) casaCharge = 159;
-    else casaCharge = 219;
+    let platformCharge = 0;
+    if (subtotal < 10000) platformCharge = 89;
+    else if (subtotal <= 50000 && subtotal > 10000) platformCharge = 69;
+    else platformCharge = 59;
+
+    const deliveryWithPlatform = rawDeliveryCharge + platformCharge;
+    const finalTotal = subtotal + deliveryWithPlatform + installationTotal;
 
     return {
       subtotal,
-      deliveryCharge,
+      deliveryCharge: deliveryWithPlatform,
       installationTotal,
-      casaCharge,
-      grandTotal: subtotal + deliveryCharge + installationTotal + casaCharge
+      grandTotal: finalTotal
     };
   }, [items]);
 
   const handlePlaceOrder = async () => {
+    const hasInvalidQty = items.some(it => !it.quantity || Number(it.quantity) <= 0);
     if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
+    if (hasInvalidQty) return triggerMsg("Please enter valid quantities for all items.", "error");
     setLoading(true);
     try {
       const res = await api.post("/order/place", {
@@ -197,11 +215,12 @@ export default function Checkout() {
   };
 
   if (loadError) return <div className="error">Map error: {loadError.message}</div>;
-  if (!isLoaded) return <div className="loading-maps">Initialising Maps...</div>;
+  if (!isLoaded) return <LoadingSpinner message="Initialising Maps..." />;
 
   return (
     <>
       <Navbar />
+      {loading && <LoadingSpinner message="Processing your order..." />}
       {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
       <div className="checkout-nav-bar">
@@ -213,6 +232,7 @@ export default function Checkout() {
 
         <div className="checkout-grid">
           <section className="checkout-left">
+            {/* Items Card */}
             <div className="checkout-card">
               <h2><FaShoppingBag /> Review Items</h2>
               <div className="checkout-items-list">
@@ -221,7 +241,7 @@ export default function Checkout() {
                     <div className="checkout-item-img-container">
                       <Image
                         src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image}`) : sample}
-                        alt={item.name || "Product Image"} // Added required alt property
+                        alt={item.name || "Product"}
                         width={80}
                         height={80}
                         className="checkout-item-img"
@@ -231,19 +251,25 @@ export default function Checkout() {
                     <div className="checkout-item-details">
                       <h4 className="checkout-item-name">{item.name}</h4>
                       <p className="checkout-item-seller">Seller: {item.supplier || item.seller}</p>
-
                       <div className="checkout-logistics-info">
                         <span><FaRulerCombined /> {(item.quantity * item.conversionFactor).toFixed(0)} Sq. Ft</span>
                         <span><FaTruckLoading /> {item.trips} Trip(s)</span>
-                        {item.installationAvailable === "yes" && (
-                          <span className="installation-tag"><FaTools /> Installation Incl.</span>
-                        )}
+                        {item.installationAvailable === "yes" && <span className="installation-tag"><FaTools /> Installation Incl.</span>}
                       </div>
-
                       <div className="checkout-item-meta-row">
                         <div className="checkout-qty-controls">
                           <button onClick={() => updateQty(item.materialId, item.quantity - 1)}>-</button>
-                          <input type="number" value={item.quantity} readOnly />
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            min="1"
+                            onChange={(e) => updateQty(item.materialId, e.target.value)}
+                            onBlur={(e) => {
+                              if (!e.target.value || Number(e.target.value) <= 0) {
+                                updateQty(item.materialId, 1);
+                              }
+                            }}
+                          />
                           <button onClick={() => updateQty(item.materialId, item.quantity + 1)}>+</button>
                           <span className="checkout-unit-tag">{item.unit}</span>
                         </div>
@@ -255,6 +281,29 @@ export default function Checkout() {
               </div>
             </div>
 
+            {/* Store Credit Card */}
+            {credit > 0 && (
+              <div className="checkout-card credit-card">
+                <h2><FaWallet /> Store Credit</h2>
+                <div className="credit-info">
+                  <p>You have <strong>{formatINR(credit)}</strong> available in store credit.</p>
+                  {credit >= computeSummary.grandTotal ? (
+                    <label className="credit-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={useCreditForFullAmount}
+                        onChange={(e) => setUseCreditForFullAmount(e.target.checked)}
+                      />
+                      <span>Apply credit to pay for this order in full</span>
+                    </label>
+                  ) : (
+                    <p className="muted">Credit can only be applied if it covers the full order amount.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Contact Card */}
             <div className="checkout-card">
               <h2>Contact Information</h2>
               <div className="form-grid">
@@ -269,6 +318,7 @@ export default function Checkout() {
               </div>
             </div>
 
+            {/* Map Card */}
             <div className="checkout-card">
               <h2><FaMapMarkerAlt /> Delivery Location</h2>
               <div className="search-box-wrapper">
@@ -288,17 +338,20 @@ export default function Checkout() {
               </label>
             </div>
 
-            <div className="checkout-card">
-              <h2>Payment Method</h2>
-              <div className="payment-options">
-                {['cod', 'gpay', 'paytm', 'phonepe'].map(method => (
-                  <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
-                    <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} />
-                    <span>{method === 'cod' ? "Cash on Delivery" : method.toUpperCase()}</span>
-                  </button>
-                ))}
+            {/* Payment Card */}
+            {!useCreditForFullAmount && (
+              <div className="checkout-card">
+                <h2>Payment Method</h2>
+                <div className="payment-options">
+                  {['cod', 'gpay', 'paytm', 'phonepe'].map(method => (
+                    <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
+                      <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} />
+                      <span>{method === 'cod' ? "Cash on Delivery" : method.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </section>
 
           <aside className="checkout-right">
@@ -310,7 +363,7 @@ export default function Checkout() {
                   <span>{formatINR(computeSummary.subtotal)}</span>
                 </div>
                 <div className="summary-row">
-                  <span>Delivery ({items.reduce((acc, i) => acc + i.trips, 0)} trips)</span>
+                  <span>Delivery Charges</span>
                   <span>{formatINR(computeSummary.deliveryCharge)}</span>
                 </div>
                 {computeSummary.installationTotal > 0 && (
@@ -319,19 +372,21 @@ export default function Checkout() {
                     <span>{formatINR(computeSummary.installationTotal)}</span>
                   </div>
                 )}
-                <div className="summary-row">
-                  <span>Platform Charges</span>
-                  <span>{formatINR(computeSummary.casaCharge)}</span>
-                </div>
               </div>
               <hr className="summary-divider" />
+              {useCreditForFullAmount && (
+                <div className="summary-row credit-applied">
+                  <span>Credit Applied</span>
+                  <span style={{ color: '#606E52' }}>-{formatINR(computeSummary.grandTotal)}</span>
+                </div>
+              )}
               <div className="summary-row total">
                 <span>Total Amount</span>
-                <span>{formatINR(computeSummary.grandTotal)}</span>
+                <span>{useCreditForFullAmount ? formatINR(0) : formatINR(computeSummary.grandTotal)}</span>
               </div>
 
               <button className="place-order-btn" onClick={handlePlaceOrder} disabled={loading || items.length === 0}>
-                {loading ? "Processing Order..." : "Confirm & Place Order"}
+                {loading ? "Processing..." : "Confirm & Place Order"}
               </button>
               <p className="checkout-note">Secure encryption applied to all transactions.</p>
             </div>

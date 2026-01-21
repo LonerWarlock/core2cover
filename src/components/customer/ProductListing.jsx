@@ -7,6 +7,8 @@ import Footer from "./Footer";
 import "./ProductListing.css";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FaArrowLeft, FaStar, FaRegClock, FaGem, FaLayerGroup } from "react-icons/fa";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner"; 
 
 const ProductListing = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -103,6 +105,9 @@ const ProductListing = () => {
   return (
     <>
       <Navbar />
+      {/* 2. APPLY THE LOADING SPINNER FOR INITIAL LOAD */}
+      {loading && <LoadingSpinner message="Loading Core2Cover collection..." />}
+
       <section className="products-section">
         <div className="listing-top-nav">
           <button className="back-btn" onClick={() => router.back()}>
@@ -111,7 +116,7 @@ const ProductListing = () => {
         </div>
 
         <h2 className="products-title">{currentPageTitle}</h2>
-        <p className="products-subtitle">{currentPageDesc}</p>
+        <div className="products-subtitle">{currentPageDesc}</div>
 
         <div className="category-filter">
           {categories.map((cat) => (
@@ -125,11 +130,10 @@ const ProductListing = () => {
           ))}
         </div>
 
-        {loading ? (
-          <div style={{ padding: "100px", textAlign: 'center', color: "#6b7280" }}>Loading Core2Cover collection...</div>
-        ) : products.length === 0 ? (
+        {/* 3. CONDITIONAL RENDERING FOR PRODUCTS */}
+        {!loading && products.length === 0 ? (
           <div className="no-results">No items found in this category.</div>
-        ) : (
+        ) : !loading && (
           <>
             {renderSection("New Arrivals", <FaRegClock />, categorizedData.newArrivals)}
             {renderSection("Top Rated Picks", <FaStar style={{color: '#facc15'}}/>, categorizedData.topRated)}

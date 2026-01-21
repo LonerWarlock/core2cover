@@ -6,6 +6,8 @@ import Sidebar from "./Sidebar";
 import "./SellerDashboard.css";
 import { FaShoppingCart, FaRupeeSign } from "react-icons/fa";
 import { getSellerProfile, getSellerDashboard } from "../../api/seller";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerDashboard = () => {
   const router = useRouter();
@@ -31,7 +33,7 @@ const SellerDashboard = () => {
   }, [router]);
 
   /* =========================================
-      3. DATA FETCHING (Corrected Hook Placement)
+      3. DATA FETCHING (Hook Placement)
   ========================================= */
   useEffect(() => {
     // Only run if we have a sellerId
@@ -69,57 +71,53 @@ const SellerDashboard = () => {
   /* =========================================
       4. RENDER LOGIC
   ========================================= */
-  if (loading) {
-    return (
+  return (
+    <>
+      {/* 2. PLACED AT THE TOP LEVEL TO ENSURE MAXIMUM VISIBILITY */}
+      {loading && <LoadingSpinner message="Initialising Dashboard..." />}
+
       <div className="dashboard-wrapper">
         <Sidebar />
-        <div className="dashboard-main">
-          <div className="loading-container">
-            <h2 className="loading-text">Initialising Dashboard...</h2>
-          </div>
-        </div>
+
+        <main className="dashboard-main">
+          {/* Dashboard content only shows its full styling when loading is complete */}
+          {!loading && (
+            <>
+              <header className="dashboard-header">
+                <h1 className="dashboard-title">Welcome back, {sellerName}</h1>
+                <p className="dashboard-subtitle">Here is what is happening with your store today.</p>
+              </header>
+
+              <div className="dashboard-cards">
+                {/* Orders Card */}
+                <div className="dashboard-card">
+                  <div className="card-icon-bg">
+                    <FaShoppingCart className="dashboard-icon" />
+                  </div>
+                  <div className="card-content">
+                    <p className="dashboard-label">Orders Received</p>
+                    <h2 className="dashboard-value">{ordersCount}</h2>
+                  </div>
+                </div>
+
+                {/* Earnings Card */}
+                <div className="dashboard-card highlight">
+                  <div className="card-icon-bg">
+                    <FaRupeeSign className="dashboard-icon" />
+                  </div>
+                  <div className="card-content">
+                    <p className="dashboard-label">Total Earnings</p>
+                    <h2 className="dashboard-value">
+                      ₹{totalEarnings.toLocaleString('en-IN')}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </main>
       </div>
-    );
-  }
-
-  return (
-    <div className="dashboard-wrapper">
-      <Sidebar />
-
-      <main className="dashboard-main">
-        <header className="dashboard-header">
-          <h1 className="dashboard-title">Welcome back, {sellerName}</h1>
-          <p className="dashboard-subtitle">Here is what is happening with your store today.</p>
-        </header>
-
-        <div className="dashboard-cards">
-          {/* Orders Card */}
-          <div className="dashboard-card">
-            <div className="card-icon-bg">
-              <FaShoppingCart className="dashboard-icon" />
-            </div>
-            <div className="card-content">
-              <p className="dashboard-label">Orders Received</p>
-              <h2 className="dashboard-value">{ordersCount}</h2>
-            </div>
-          </div>
-
-          {/* Earnings Card */}
-          <div className="dashboard-card highlight">
-            <div className="card-icon-bg">
-              <FaRupeeSign className="dashboard-icon" />
-            </div>
-            <div className="card-content">
-              <p className="dashboard-label">Total Earnings</p>
-              <h2 className="dashboard-value">
-                ₹{totalEarnings.toLocaleString('en-IN')}
-              </h2>
-            </div>
-          </div>
-        </div>
-
-      </main>
-    </div>
+    </>
   );
 };
 

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import "./DesignerProfileSetup.css";
 import { useRouter } from "next/navigation";
 import { saveDesignerProfile } from "../../api/designer";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DesignerProfileSetup = () => {
   const router = useRouter();
@@ -24,7 +26,7 @@ const DesignerProfileSetup = () => {
   const [error, setError] = useState("");
 
   /* =========================
-     CLIENT-SIDE DATA FETCHING
+      CLIENT-SIDE DATA FETCHING
   ========================= */
   useEffect(() => {
     // 2. Access localStorage ONLY inside useEffect (Client-side)
@@ -42,7 +44,7 @@ const DesignerProfileSetup = () => {
   }, [router]);
 
   /* =========================
-     IMAGE UPLOAD
+      IMAGE UPLOAD
   ========================= */
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -61,14 +63,14 @@ const DesignerProfileSetup = () => {
   };
 
   /* =========================
-     HANDLE INPUT CHANGE
+      HANDLE INPUT CHANGE
   ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   /* =========================
-     SUBMIT PROFILE (API)
+      SUBMIT PROFILE (API)
   ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,94 +109,99 @@ const DesignerProfileSetup = () => {
   };
 
   return (
-    <div className="designer-setup-page">
-      <div className="designer-setup-card">
-        <h1 className="setup-title">Designer Profile Setup</h1>
-        <p className="setup-subtitle">
-          Tell us more about your design expertise to help customers find you.
-        </p>
+    <>
+      {/* 2. APPLY THE LOADING SPINNER DURING SUBMISSION */}
+      {loading && <LoadingSpinner message="Saving your professional profile..." />}
 
-        {error && <p className="form-error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+      <div className="designer-setup-page">
+        <div className="designer-setup-card">
+          <h1 className="setup-title">Designer Profile Setup</h1>
+          <p className="setup-subtitle">
+            Tell us more about your design expertise to help customers find you.
+          </p>
 
-        <form className="designer-form" onSubmit={handleSubmit}>
-          {/* Profile Image */}
-          <div className="field full">
-            <label className="input-label">Profile Image</label>
+          {error && <p className="form-error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
 
-            <div className="profile-upload-box">
-              {form.profilePreview ? (
-                <img
-                  src={form.profilePreview}
-                  alt="Preview"
-                  className="profile-preview"
+          <form className="designer-form" onSubmit={handleSubmit}>
+            {/* Profile Image */}
+            <div className="field full">
+              <label className="input-label">Profile Image</label>
+
+              <div className="profile-upload-box">
+                {form.profilePreview ? (
+                  <img
+                    src={form.profilePreview}
+                    alt="Preview"
+                    className="profile-preview"
+                  />
+                ) : (
+                  <div className="profile-placeholder">Upload Image</div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="profile-input"
                 />
-              ) : (
-                <div className="profile-placeholder">Upload Image</div>
-              )}
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="profile-input"
-              />
+              </div>
             </div>
-          </div>
 
-          <label className="input-label">Experience (in years)</label>
-          <input
-            type="number"
-            name="experience"
-            className="input-field"
-            value={form.experience}
-            onChange={handleChange}
-            required
-            min="0"
-          />
+            <label className="input-label">Experience (in years)</label>
+            <input
+              type="number"
+              name="experience"
+              className="input-field"
+              value={form.experience}
+              onChange={handleChange}
+              required
+              min="0"
+            />
 
-          <label className="input-label">Portfolio Link (Optional)</label>
-          <input
-            type="url"
-            name="portfolio"
-            className="input-field"
-            placeholder="Ex. https://portfolio.com"
-            value={form.portfolio}
-            onChange={handleChange}
-          />
+            <label className="input-label">Portfolio Link (Optional)</label>
+            <input
+              type="url"
+              name="portfolio"
+              className="input-field"
+              placeholder="Ex. https://portfolio.com"
+              value={form.portfolio}
+              onChange={handleChange}
+            />
 
-          <label className="input-label">Designer Type</label>
-          <select
-            className="input-field"
-            name="designerType"
-            value={form.designerType}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select type</option>
-            <option value="Architect">Architect</option>
-            <option value="Interior Designer">Interior Designer</option>
-            <option value="Product Designer">Product Designer</option>
-            <option value="Furniture Designer">Furniture Designer</option>
-            <option value="Lighting Designer">Lighting Designer</option>
-            <option value="3D Visualizer">3D Visualizer</option>
-          </select>
+            <label className="input-label">Designer Type</label>
+            <select
+              className="input-field"
+              name="designerType"
+              value={form.designerType}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select type</option>
+              <option value="Architect">Architect</option>
+              <option value="Interior Designer">Interior Designer</option>
+              <option value="Product Designer">Product Designer</option>
+              <option value="Furniture Designer">Furniture Designer</option>
+              <option value="Lighting Designer">Lighting Designer</option>
+              <option value="3D Visualizer">3D Visualizer</option>
+            </select>
 
-          <label className="input-label">Short Bio</label>
-          <textarea
-            name="bio"
-            className="input-field textarea"
-            value={form.bio}
-            onChange={handleChange}
-            required
-            placeholder="Briefly describe your style and approach..."
-          />
+            <label className="input-label">Short Bio</label>
+            <textarea
+              name="bio"
+              className="input-field textarea"
+              value={form.bio}
+              onChange={handleChange}
+              required
+              placeholder="Briefly describe your style and approach..."
+            />
 
-          <button className="setup-btn" type="submit" disabled={loading || !designerId}>
-            {loading ? "Saving..." : "Next"}
-          </button>
-        </form>
+            <button className="setup-btn" type="submit" disabled={loading || !designerId}>
+              {loading ? "Saving..." : "Next"}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

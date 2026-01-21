@@ -12,6 +12,8 @@ import { getDesignerBasic, updateDesignerAvailability } from "../../api/designer
 import Image from "next/image";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import MessageBox from "../ui/MessageBox"; 
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
@@ -20,6 +22,7 @@ const DesignerDashboard = () => {
   const [available, setAvailable] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerName, setDesignerName] = useState("Designer");
+  const [loading, setLoading] = useState(true); // Initial load state
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [designerId, setDesignerId] = useState(null);
 
@@ -40,6 +43,7 @@ const DesignerDashboard = () => {
   useEffect(() => {
     if (!designerId) return;
 
+    setLoading(true);
     getDesignerBasic(designerId)
       .then((data) => {
         setDesignerName(data.fullname?.trim() || "Designer");
@@ -50,7 +54,8 @@ const DesignerDashboard = () => {
           reviews: data.ratings || []
         });
       })
-      .catch((err) => console.error("Error fetching dashboard data:", err));
+      .catch((err) => console.error("Error fetching dashboard data:", err))
+      .finally(() => setLoading(false));
   }, [designerId]);
 
   const toggleAvailability = async () => {
@@ -74,8 +79,14 @@ const DesignerDashboard = () => {
     }
   };
 
+  // 2. SHOW SPINNER DURING INITIAL FETCH
+  if (loading) return <LoadingSpinner message="Opening designer console..." />;
+
   return (
     <>
+      {/* 3. SHOW SPINNER DURING AVAILABILITY TOGGLE */}
+      {loadingAvailability && <LoadingSpinner message="Updating status..." />}
+
       {msg.show && (
         <MessageBox 
           message={msg.text} 
@@ -86,7 +97,6 @@ const DesignerDashboard = () => {
 
       <header className="navbar">
         <div className="nav-container">
-          {/* LOGO WRAPPER - Updated for Drag & Drop support */}
           <div className="nav-left">
             <Link 
               href="/" 
@@ -188,7 +198,6 @@ const DesignerDashboard = () => {
           </div>
         </div>
 
-        {/* FULL FEEDBACK HISTORY SECTION */}
         <div className="dd-full-history dd-reveal dd-delay-5">
           <div className="history-header">
             <h3>Client Feedback History</h3>

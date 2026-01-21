@@ -16,6 +16,8 @@ import { hireDesigner } from "../../api/designer";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* ============================================================
     HELPERS
@@ -114,7 +116,6 @@ const DesignerInfoContent = () => {
   }, [session]);
 
   useEffect(() => {
-    // Check for touch capability once component mounts
     const checkTouch = () => {
       setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
     };
@@ -155,7 +156,6 @@ const DesignerInfoContent = () => {
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
   const handleHireChange = (e) => setHireForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  // ZOOM LOGIC (Scroll Wheel)
   const handleWheel = useCallback((e) => {
     e.preventDefault();
     const delta = e.deltaY * -0.002;
@@ -166,7 +166,6 @@ const DesignerInfoContent = () => {
     });
   }, []);
 
-  // PANNING LOGIC
   const handleMouseDown = (e) => {
     if (zoomLevel <= 1) return;
     setIsDragging(true);
@@ -180,7 +179,6 @@ const DesignerInfoContent = () => {
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // MOBILE TOUCH LOGIC (Pinch to zoom & Pan)
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {
       setIsDragging(true);
@@ -231,11 +229,15 @@ const DesignerInfoContent = () => {
     }
   };
 
-  if (loading || !designer) return <div className="loading-pad">Loading designer profile...</div>;
+  // 2. APPLY THE LOADING SPINNER DURING INITIAL FETCH
+  if (loading || !designer) return <LoadingSpinner message="Opening portfolio..." />;
 
   return (
     <>
       <div className="designer-info-page">
+        {/* 3. APPLY SPINNER DURING HIRE REQUEST SUBMISSION */}
+        {hireLoading && <LoadingSpinner message="Sending request to designer..." />}
+        
         {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
         <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
@@ -351,7 +353,7 @@ const DesignerInfoContent = () => {
 };
 
 const DesignerInfo = () => (
-  <Suspense fallback={<div>Loading Page...</div>}>
+  <Suspense fallback={<LoadingSpinner message="Preparing designer profile..." />}>
     <Navbar />
     <DesignerInfoContent />
   </Suspense>

@@ -7,6 +7,8 @@ import DesignerCard from "./DesignerCard";
 import Footer from "./Footer";
 import "./ProductListing.css";
 import { FaArrowLeft, FaMapMarkerAlt, FaTrophy, FaLayerGroup } from "react-icons/fa";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DesignersContent = () => {
   const [allDesigners, setAllDesigners] = useState([]);
@@ -60,9 +62,11 @@ const DesignersContent = () => {
     );
   };
 
+  // 2. APPLY THE LOADING SPINNER DURING INITIAL FETCH
   if (loading) return (
     <div className="products-section">
-      <p className="no-results">Finding professional designers...</p>
+      <LoadingSpinner message="Finding professional designers..." />
+      <p className="no-results" style={{ opacity: 0 }}>Finding professional designers...</p>
     </div>
   );
 
@@ -96,7 +100,12 @@ const DesignersContent = () => {
 const Designers = () => (
   <>
     <Navbar />
-    <Suspense fallback={<div className="products-section"><p className="no-results">Loading Designers...</p></div>}>
+    {/* 3. APPLY THE LOADING SPINNER TO SUSPENSE FALLBACK */}
+    <Suspense fallback={
+      <div className="products-section">
+        <LoadingSpinner message="Loading Designers..." />
+      </div>
+    }>
       <DesignersContent />
     </Suspense>
     <Footer />
