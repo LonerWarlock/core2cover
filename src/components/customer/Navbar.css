@@ -211,7 +211,8 @@
 }
 
 .drawer-cta {
-  gap: 36px; /* INCREASE gap */
+  gap: 36px;
+  /* INCREASE gap */
 }
 
 .seller-btn.primary:hover {
@@ -325,7 +326,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #005bb7; /* Deep blue from your image */
+  background: #005bb7;
+  /* Deep blue from your image */
   color: white;
   font-weight: bold;
   transition: transform 0.2s ease;
@@ -334,7 +336,7 @@
 
 .nav-profile-trigger:hover {
   transform: scale(1.05);
-  border-color: rgba(255,255,255,0.3);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .nav-user-avatar {
@@ -351,7 +353,7 @@
   width: 260px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   border: 1px solid #eef0ee;
   z-index: 1000;
   padding: 15px 0;
@@ -359,8 +361,15 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .popover-header {
@@ -414,7 +423,8 @@
   padding: 12px 20px;
   background: none;
   border: none;
-  color: #d0021b; /* Red logout as in image */
+  color: #d0021b;
+  /* Red logout as in image */
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -429,16 +439,18 @@
 ====================================================== */
 
 @media (max-width: 860px) {
+
   /* Ensure the desktop icon container stays visible */
   .nav-icons-desktop {
-    display: flex !important; 
-    gap: 12px; /* Reduce gap to fit more items */
+    display: flex !important;
+    gap: 12px;
+    /* Reduce gap to fit more items */
     margin-right: 10px;
   }
 
   /* Shrink text slightly to fit the screen */
   .nav-icon-link {
-    font-size: 0.8rem; 
+    font-size: 0.8rem;
     white-space: nowrap;
   }
 
@@ -452,16 +464,59 @@
   /* Adjust Popover to be more compact on mobile */
   .profile-popover {
     width: 240px;
-    right: -10px; /* Offset slightly to prevent hugging the edge */
+    right: -10px;
+    /* Offset slightly to prevent hugging the edge */
   }
 }
 
 @media (max-width: 600px) {
   /* For very small screens, hide text but keep the icons */
-  
+
 
   /* Ensure the Profile Bubble and Cart remain visible */
   .nav-icons-desktop {
     gap: 15px;
   }
+}
+
+/* Container for the icon and text */
+.ico {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px; /* Spacing between the 'i' icon and the text */
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+/* Specific styling for the IoMdInformationCircle */
+.info-icon-themed {
+    font-size: 1.2rem; /* Matches the visual weight of FaShoppingCart */
+    color: var(--olive); /* Uses your root theme color */
+    transition: transform var(--transition), color var(--transition);
+}
+
+/* Hover effects for the whole group */
+.ico:hover .info-icon-themed {
+    color: var(--sage); /* Switches to lighter sage on hover */
+    transform: translateY(-2px); /* Subtle lift matching your other buttons */
+}
+
+.ico:hover .nav-icon-link {
+    color: var(--sage);
+}
+
+/* Ensure the link doesn't have standard browser underlining */
+.nav-icon-link {
+    text-decoration: none;
+    color: var(--dark-gray);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Add this if not already present to ensure layout stability */
+@media (max-width: 768px) {
+    .nav-icons-desktop .ico:has(a[href="/cart"]) {
+        display: none;
+    }
 }

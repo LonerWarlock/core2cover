@@ -81,19 +81,7 @@ export default function Checkout() {
     );
   };
 
-  const onPlaceChanged = () => {
-    if (autocompleteRef.current !== null) {
-      const place = autocompleteRef.current.getPlace();
-      if (!place.geometry || !place.geometry.location) return;
-      const location = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
-      setMarkerPosition(location);
-      setAddress(place.formatted_address || "");
-      if (mapRef.current) {
-        mapRef.current.panTo(location);
-        mapRef.current.setZoom(17);
-      }
-    }
-  };
+  onPlaceChanged
 
   const onMapClick = useCallback((e) => {
     const lat = e.latLng.lat();

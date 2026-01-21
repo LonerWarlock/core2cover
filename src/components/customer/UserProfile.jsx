@@ -14,7 +14,7 @@ import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
 import MessageBox from "../ui/MessageBox";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 
-const libraries = ["places"];
+const libraries = ["places", "maps"];
 
 const UserProfile = () => {
   const router = useRouter();

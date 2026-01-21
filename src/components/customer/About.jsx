@@ -1,127 +1,127 @@
-/* src/components/customer/About.jsx */
-
 "use client";
 
 import React, { useEffect, useState } from "react";
-// Ensure Link is imported from next/link
-import Link from "next/link"; 
+import Link from "next/link";
 import "./About.css";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_2.png";
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import CoreToCoverTitle from "../../assets/logo/CoreToCover_1.png";
-// Alias Image to NextImage to avoid native DOM conflicts
+import Om from "../../assets/founders/om.jpg";
+import Soham from "../../assets/founders/soham.jpeg";
 import NextImage from "next/image";
+import { Github, Linkedin, Instagram, Mail } from "lucide-react";
+
+const founderData = [
+  {
+    name: "Om Karande",
+    role: "Co-Founder",
+    image: Om,
+    email: "omnileshkarande@gmail.com",
+    github: "https://github.com/Om280404",
+    linkedin: "https://www.linkedin.com/in/om-karande",
+    instagram: "https://www.instagram.com/om_karande_28/"
+  },
+  {
+    name: "Atharv Khot",
+    role: "Technical Operations",
+    image: "/atharv.jpg",
+    // email: "atharv@example.com", 
+    linkedin: "#",
+    instagram: "#"
+  },
+  {
+    name: "Soham Phatak",
+    role: "Co-Founder",
+    image: Soham,
+    email: "phataksoham2109@gmail.com",
+    github: "https://github.com/LonerWarlock",
+    linkedin: "https://www.linkedin.com/in/soham-phatak",
+    instagram: "https://www.instagram.com/sohamphatak21/"
+  }
+];
 
 export default function About() {
   const Brand = ({ children }) => <span className="brand">{children}</span>;
-  const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
+  const BrandTag = ({ children }) => <span className="brand_tag">{children}</span>;
+  const Brandbold = ({ children }) => (<span className="brand_bold">{children}</span>);
 
-  /* =========================
-     VIEWPORT DETECTION
-  ========================= */
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 900px)");
-
     const handleChange = (e) => setIsMobileOrTablet(e.matches);
-
     setIsMobileOrTablet(mediaQuery.matches);
     mediaQuery.addEventListener("change", handleChange);
-
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
+  /**
+   * Handles email interaction based on device type.
+   * Mobile: Default mailto (opens app)
+   * Desktop: Gmail Web (opens browser tab)
+   */
+  const handleEmailClick = (e, email) => {
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Windows Phone/i.test(
+      navigator.userAgent
+    );
+
+    if (!isMobileDevice) {
+      // Logic for Desktop/Laptop: Use Gmail Web
+      e.preventDefault();
+      const subject = encodeURIComponent("Contacting Core2Cover");
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}`;
+      window.open(gmailUrl, "_blank");
+    }
+    // Logic for Mobile: Do nothing, let the <a> tag handle mailto:
+  };
+
   return (
     <section className="about-page">
-      {/* =========================
-          HERO
-      ========================= */}
+      {/* HERO SECTION */}
       <header className="about-hero">
         <div className="about-hero-inner">
           <div className="hero-copy">
-            {/* ---------- TITLE ---------- */}
             {isMobileOrTablet ? (
-              /* MOBILE / TABLET: logo LEFT, text RIGHT (inline) */
               <p className="mobile-brand-text">
-                <img
-                  src={CoreToCoverTitle}
-                  alt="CoreToCover"
-                  className="inline-brand-logo"
-                />
+                <img src={CoreToCoverTitle} alt="CoreToCover" className="inline-brand-logo" />
                 A unified platform where customers can discover curated interior products,
                 source high-quality raw materials, and collaborate with skilled freelance
                 interior designers — all in one place.
               </p>
-
             ) : (
-              /* DESKTOP: keep original H1 + paragraph */
               <>
-                <h1 className="hero-title">
-                  <BrandBold>Core2Cover</BrandBold> — a premium marketplace for home interiors & materials
+                <h1 className="hero_title">
+                  <Brandbold>Core2Cover</Brandbold> — a premium marketplace for home interiors & materials
                 </h1>
-
                 <p className="hero-sub">
                   <Brand>Core2Cover</Brand> is a unified platform where customers can discover
                   curated interior products, source high-quality raw materials, and
-                  directly collaborate with skilled freelance interior designers —
-                  all in one place.
+                  directly collaborate with skilled freelance interior designers.
                 </p>
               </>
             )}
-
-
-            {/* ---------- CTAs ---------- */}
             <div className="hero-ctas">
-              <Link href="/" className="btn btn-primary">
-                Explore Marketplace
-              </Link>
-              <Link
-                href="/signup"
-                className="btn btn-ghost"
-                aria-label="Create an account"
-              >
-                Create an account
-              </Link>
+              <Link href="/" className="btn btn-primary">Explore Marketplace</Link>
+              <Link href="/signup" className="btn btn-ghost">Create an account</Link>
             </div>
           </div>
         </div>
-
-        {/* ---------- DESKTOP HERO LOGO ONLY ---------- */}
         {!isMobileOrTablet && (
-          <div className="hero-art" aria-hidden>
-            <NextImage src={CoreToCoverLogo} alt="CoreToCover logo" width={400} height={400} />
+          <div className="hero-art">
+            <NextImage src={CoreToCoverLogo} alt="Logo" width={400} height={400} />
+            <BrandTag>From Design To Finish - In One Place.</BrandTag>
           </div>
         )}
       </header>
 
-      {/* =========================
-          MAIN CONTENT
-      ========================= */}
       <main className="about-main">
-        {/* =========================
-            VISION
-        ========================= */}
+        {/* VISION SECTION */}
         <section className="about-story card">
           <div className="card-left">
             <h2>Our vision</h2>
-
-            <p>
-              <Brand>Core2Cover</Brand> was built to simplify how people plan,
-              purchase, and execute home interior projects. Instead of navigating
-              fragmented offline markets, customers get access to finished
-              interior products and essential raw materials — seamlessly, on one
-              platform.
-            </p>
-
-            <p>
-              Beyond commerce, <Brand>Core2Cover</Brand> enables direct
-              collaboration between customers and verified freelance interior
-              designers, supporting transparent communication, customization,
-              and professional project execution.
-            </p>
+            <p><Brand>Core2Cover</Brand> was built to simplify how people plan and execute home projects. Instead of navigating fragmented offline markets, customers get access to products and materials on one platform.</p>
+            <p>Beyond commerce, we enable direct collaboration between customers and verified designers.</p>
           </div>
-
-          <aside className="card-right stats" aria-hidden>
+          <aside className="card-right stats">
             <div className="stat">
               <div className="stat-num">Curated</div>
               <div className="stat-label">Interior Products</div>
@@ -137,100 +137,67 @@ export default function About() {
           </aside>
         </section>
 
-        {/* =========================
-            LEADERSHIP
-        ========================= */}
+        {/* LEADERSHIP SECTION */}
         <section className="about-founders card">
-          <div className="founders-hero">
+          <div className="founders-header">
             <h2>Leadership</h2>
-            <p className="muted">
-              A focused team building a trust-driven ecosystem for home interiors.
-            </p>
+            <p className="muted text-center">A focused team building a trust-driven ecosystem for home interiors.</p>
           </div>
 
-          <div className="founders-grid">
-            {/* FOUNDER */}
-            <div className="founder-feature">
-              <div className="founder-info">
-                <div className="founder-name">Om Karande</div>
-                <div className="founder-role">Founder & CEO</div>
-                <div className="founder-bio">
-                  Om leads the vision, product strategy, and frontend experience,
-                  shaping <Brand>Core2Cover</Brand> as a premium design-forward
-                  platform.
+          <div className="founders-new-grid">
+            {founderData.map((founder, index) => (
+              <div key={index} className="founder-card-modern">
+                <div className="founder-avatar-container">
+                  <NextImage
+                    src={founder.image}
+                    alt={founder.name}
+                    className="founder-img-circle"
+                    width={150}
+                    height={150}
+                  />
                 </div>
-              </div>
-            </div>
-
-            {/* CO-FOUNDERS */}
-            <div className="cofounders">
-              <h3 className="cofounders-title">Co-founders</h3>
-
-              <div className="founder-list">
-                <div className="founder">
-                  <div className="founder-info">
-                    <div className="founder-name">Atharv Khot</div>
-                    <div className="founder-role">Co-Founder & CTO</div>
-                    <div className="founder-bio">
-                      Atharv architects scalable backend systems and APIs
-                      powering <Brand>Core2Cover</Brand>.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="founder">
-                  <div className="founder-info">
-                    <div className="founder-name">Soham Phatak</div>
-                    <div className="founder-role">Co-Founder & VP</div>
-                    <div className="founder-bio">
-                      Soham oversees platform performance, reliability, and
-                      technical strategy.
-                    </div>
+                <div className="founder-content">
+                  <h3 className="founder-name-text">{founder.name}</h3>
+                  <p className="founder-role-text">{founder.role}</p>
+                  <div className="founder-socials">
+                    {founder.email && (
+                      <a
+                        href={`mailto:${founder.email}?subject=Contacting Core2Cover`}
+                        onClick={(e) => handleEmailClick(e, founder.email)}
+                        title={`Email ${founder.name}`}
+                        className="social-icon"
+                      >
+                        <Mail size={20} />
+                      </a>
+                    )}
+                    <a href={founder.github} target="_blank" rel="noreferrer" className="social-icon"><Github size={20} /></a>
+                    <a href={founder.linkedin} target="_blank" rel="noreferrer" className="social-icon"><Linkedin size={20} /></a>
+                    <a href={founder.instagram} target="_blank" rel="noreferrer" className="social-icon"><Instagram size={20} /></a>
                   </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        {/* =========================
-            VALUES
-        ========================= */}
+        {/* VALUES SECTION */}
         <section className="about-values card">
           <h2>What we stand for</h2>
           <ul className="values-list">
-            <li><strong>Curated quality:</strong> Premium products and materials selected for long-term value.</li>
-            <li><strong>Seller & designer empowerment:</strong> Fair tools and clear economics.</li>
+            <li><strong>Curated quality:</strong> Premium products selected for long-term value.</li>
+            <li><strong>Seller empowerment:</strong> Fair tools and clear economics.</li>
             <li><strong>Customer confidence:</strong> Transparent pricing and trusted professionals.</li>
-            <li><strong>Modular ecosystem:</strong> Products, materials, and services that work together.</li>
-            <li><strong>Trust by design:</strong> UX decisions that reduce friction.</li>
           </ul>
         </section>
 
-        {/* =========================
-            CTA
-        ========================= */}
+        {/* CTA SECTION */}
         <section className="about-cta-section card">
-          <h2 className="cta-title">
-            Build your space with <Brand>Core2Cover</Brand>
-          </h2>
-
-          <p className="cta-description">
-            Explore products, source materials, or collaborate with designers —
-            all from one platform.
-          </p>
-
+          <h2 className="cta-title">Build your space with <Brand>Core2Cover</Brand></h2>
           <div className="cta-actions">
-            <Link href="/signup" className="cta-button">
-              Get started
-            </Link>
+            <Link href="/signup" className="cta-button">Get started</Link>
           </div>
-
           <div className="cta-credits">
-            <p className="credits-title">Credits</p>
-            <p>Founder & CEO — Om Karande</p>
-            <p>Co-Founder & CTO — Atharv Khot</p>
-            <p>Co-Founder & VP — Soham Phatak</p>
+            <p className="credits-title">Platform Credits</p>
             <p>Design & Marketing Head — Prathamesh Mali</p>
             <p>CFO — Om Mali</p>
           </div>

@@ -30,7 +30,7 @@ export default function Footer() {
             <BrandBold>Core2Cover</BrandBold>
           </span>
           <p className="footer-tagline">
-            From design to finish, in one place
+            From Design To Finish - In One Place.
           </p>
         </div>
         {/* Right: Copyright */}

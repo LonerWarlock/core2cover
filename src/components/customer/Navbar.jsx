@@ -11,9 +11,10 @@ import {
   FaSignOutAlt,
   FaStore,
   FaPalette,
-  FaUserCircle
+  FaUserCircle,
+  FaUserGraduate
 } from "react-icons/fa";
-
+import { IoMdInformationCircle } from "react-icons/io";
 import "./Navbar.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 
@@ -25,6 +26,7 @@ const Navbar = () => {
   const { data: session, status } = useSession();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef(null);
 
   const router = useRouter();
@@ -35,6 +37,14 @@ const Navbar = () => {
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
   const currentPageTitle = isDesignerSection ? "Professional Designers" : "Readymade Products";
+
+  // Handle Responsive view detection
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const q = searchParams.get("search");
@@ -55,7 +65,7 @@ const Navbar = () => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (!query) return;
-    
+
     const targetPath = isDesignerSection ? "/designers" : "/searchresults";
     router.push(`${targetPath}?search=${encodeURIComponent(query)}`);
   };
@@ -71,8 +81,8 @@ const Navbar = () => {
   const getInitials = (name) => {
     if (!name) return "U";
     const parts = name.split(" ");
-    return parts.length > 1 
-      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
+    return parts.length > 1
+      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
       : name.substring(0, 2).toUpperCase();
   };
 
@@ -80,21 +90,20 @@ const Navbar = () => {
     <>
       <header className="navbar">
         <div className="nav-container">
-          {/* LOGO / BRAND SECTION - Updated for Drag & Drop support */}
           <div className="nav-left">
-            <Link 
-              href="/" 
-              className="nav-logo-link" 
+            <Link
+              href="/"
+              className="nav-logo-link"
               draggable="true"
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <span className="nav-logo-wrap">
-                <Image 
-                  src={CoreToCoverLogo} 
-                  alt="Logo" 
-                  width={50} 
-                  height={50} 
-                  priority 
+                <Image
+                  src={CoreToCoverLogo}
+                  alt="Logo"
+                  width={50}
+                  height={50}
+                  priority
                 />
                 <BrandBold>Core2Cover</BrandBold>
               </span>
@@ -103,24 +112,35 @@ const Navbar = () => {
 
           <div className="nav-right">
             <div className="nav-icons-desktop">
-              <Link href="/about" className="nav-icon-link">About Us</Link>
-              <Link href="/designers" className="nav-icon-link designers">Designers</Link>
-              <Link href="/cart" className="nav-icon-link">
-                <FaShoppingCart />
-              </Link>
-              
+              <div className="ico">
+                <IoMdInformationCircle className="info-icon-themed" />
+                <Link href="/about" className="nav-icon-link">About Us</Link>
+              </div>
+              <div className="ico">
+                <FaUserGraduate className="info-icon-themed" />
+                <Link href="/designers" className="nav-icon-link designers">Designers</Link>
+              </div>
+
+              {/* Only show Cart here if NOT on mobile */}
+              {!isMobile && (
+                <div className="ico">
+                  <FaShoppingCart className="info-icon-themed" />
+                  <Link href="/cart" className="nav-icon-link">Cart</Link>
+                </div>
+              )}
+
               <div className="profile-dropdown-container" ref={dropdownRef}>
                 <div className="nav-profile-trigger" onClick={handleProfileToggle}>
                   {session?.user?.image ? (
-                    <img 
-                      src={session.user.image} 
-                      alt="User" 
-                      className="nav-user-avatar" 
+                    <img
+                      src={session.user.image}
+                      alt="User"
+                      className="nav-user-avatar"
                     />
                   ) : (
                     <div className="nav-initials-text">
-                      {status === "authenticated" 
-                        ? getInitials(session.user.name) 
+                      {status === "authenticated"
+                        ? getInitials(session.user.name)
                         : "Om"}
                     </div>
                   )}
@@ -137,6 +157,14 @@ const Navbar = () => {
                       <Link href="/userprofile" className="pop-item" onClick={() => setProfileOpen(false)}>
                         <FaUserCircle /> My Account
                       </Link>
+
+                      {/* CART ADDED HERE FOR MOBILE VIEW */}
+                      {isMobile && (
+                        <Link href="/cart" className="pop-item" onClick={() => setProfileOpen(false)}>
+                          <FaShoppingCart /> My Cart
+                        </Link>
+                      )}
+
                       <Link href="/sellersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
                         <FaStore /> Become a Seller
                       </Link>

@@ -10,8 +10,8 @@
 
 /* Page Wrapper */
 .partition-page {
-  min-height: 75vh;
-  padding: 60px 6vw;
+  min-height: 71vh;
+  /* padding: 60px 6vw; */
   background: var(--bg-soft);
 
   display: flex;
