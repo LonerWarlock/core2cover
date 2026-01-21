@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import "./SellerBankDetails.css";
 import { saveSellerBankDetails } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerSignupBankDetails = () => {
   const router = useRouter();
@@ -50,7 +52,7 @@ const SellerSignupBankDetails = () => {
       await saveSellerBankDetails({
         sellerId: Number(sellerId),
         ...form,
-        // Send nulls for legacy bank fields if your backend requires them
+        // Send strings for legacy bank fields if backend requires them
         bankName: "UPI",
         accountNumber: "UPI",
         ifsc: "UPI",
@@ -66,46 +68,51 @@ const SellerSignupBankDetails = () => {
   };
 
   return (
-    <div className="bs-layout-root">
-      {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
-        />
-      )}
+    <>
+      {/* 2. APPLY THE LOADING SPINNER DURING SUBMISSION */}
+      {saving && <LoadingSpinner message="Completing your profile setup..." />}
 
-      <div className="bs-profile-shell">
-        <h1 className="bs-heading">Add Payment Details</h1>
-        <p className="bs-subheading">Enter your UPI ID to receive payments for your sales.</p>
+      <div className="bs-layout-root">
+        {msg.show && (
+          <MessageBox 
+            message={msg.text} 
+            type={msg.type} 
+            onClose={() => setMsg({ ...msg, show: false })} 
+          />
+        )}
 
-        <form className="bs-card bs-bank-form" onSubmit={handleSubmit}>
-          <div className="bs-input-group">
-            <label>Account Holder Name</label>
-            <input 
-              name="accountHolder" 
-              placeholder="Name as per Bank/UPI" 
-              onChange={handleChange} 
-              required 
-            />
-          </div>
+        <div className="bs-profile-shell">
+          <h1 className="bs-heading">Add Payment Details</h1>
+          <p className="bs-subheading">Enter your UPI ID to receive payments for your sales.</p>
 
-          <div className="bs-input-group">
-            <label>UPI ID</label>
-            <input 
-              name="upiId" 
-              placeholder="username@bank or mobile@upi" 
-              onChange={handleChange} 
-              required 
-            />
-          </div>
+          <form className="bs-card bs-bank-form" onSubmit={handleSubmit}>
+            <div className="bs-input-group">
+              <label>Account Holder Name</label>
+              <input 
+                name="accountHolder" 
+                placeholder="Name as per Bank/UPI" 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
 
-          <button className="bs-btn bs-btn--primary" disabled={saving}>
-            {saving ? "Finalising..." : "Finish Signup"}
-          </button>
-        </form>
+            <div className="bs-input-group">
+              <label>UPI ID</label>
+              <input 
+                name="upiId" 
+                placeholder="username@bank or mobile@upi" 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+
+            <button className="bs-btn bs-btn--primary" disabled={saving}>
+              {saving ? "Finalising..." : "Finish Signup"}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

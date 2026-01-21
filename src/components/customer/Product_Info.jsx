@@ -11,10 +11,12 @@ import api from "../../api/axios";
 import Image from "next/image";
 import { FaArrowLeft, FaShareAlt, FaTimes, FaPlay, FaPause, FaExpand, FaCompress, FaVolumeUp, FaVolumeMute, FaTruckLoading, FaRulerCombined } from "react-icons/fa";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* ---------------------------
     VideoPlayer — custom controls
-   --------------------------- */
+    --------------------------- */
 function VideoPlayer({ src, poster }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
@@ -144,7 +146,7 @@ function VideoPlayer({ src, poster }) {
 
 /* ---------------------------
     ZoomableImage — pan & pinch & wheel
-   --------------------------- */
+    --------------------------- */
 function ZoomableImage({ src, alt, className }) {
   const containerRef = useRef(null);
   const imgRef = useRef(null);
@@ -229,7 +231,7 @@ function ZoomableImage({ src, alt, className }) {
 
 /* ---------------------------
     Main ProductInfo
-   --------------------------- */
+    --------------------------- */
 const ProductInfo = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -241,6 +243,8 @@ const ProductInfo = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  // NEW STATE TO TRACK CHECKOUT PROCESSING
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
@@ -280,10 +284,18 @@ const ProductInfo = () => {
   const activeMedia = selectedMedia || (mediaList.length ? mediaList[0] : null);
 
   /* Logistics Calculations */
-  const tripCount = useMemo(() => Math.ceil(quantity / unitsPerTrip), [quantity, unitsPerTrip]);
-  const totalCoverage = useMemo(() => (quantity * conversionFactor).toFixed(2), [quantity, conversionFactor]);
+  const tripCount = useMemo(() => {
+    const q = Number(quantity) || 0;
+    if (q === 0) return 0;
+    return Math.ceil(q / unitsPerTrip);
+  }, [quantity, unitsPerTrip]);
+  const totalCoverage = useMemo(() => {
+    const q = Number(quantity) || 0;
+    return (q * conversionFactor).toFixed(2);
+  }, [quantity, conversionFactor]);
   const totalPrice = useMemo(() => {
-    const materialCost = quantity * price;
+    const q = Number(quantity) || 0;
+    const materialCost = q * price;
     const shippingCost = product?.shippingChargeType === "Paid" ? tripCount * product.shippingCharge : 0;
     return materialCost + shippingCost;
   }, [quantity, price, tripCount, product]);
@@ -291,6 +303,8 @@ const ProductInfo = () => {
   const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
+
+  const isInvalidQuantity = !quantity || Number(quantity) <= 0;
 
   useEffect(() => {
     if (!id) return;
@@ -302,9 +316,16 @@ const ProductInfo = () => {
   }, [id]);
 
   const handleBuyNow = () => {
+    if (isInvalidQuantity) {
+      triggerMsg("Please enter a valid quantity to proceed.", "error");
+      return;
+    }
+
     if (!product) return;
 
-    // Create the checkout item using fetched database values
+    // SHOW SPINNER WHILE PREPARING CHECKOUT
+    setIsProcessing(true);
+
     const checkoutItem = {
       materialId: product.id,
       supplierId: product.sellerId,
@@ -312,19 +333,15 @@ const ProductInfo = () => {
       supplier: resolvedSeller,
       amountPerTrip: Number(product.price),
       image: product.images?.[0] || "",
-
-      // FETCHED FROM DB
       unitsPerTrip: product.unitsPerTrip,
       shippingCharge: Number(product.shippingCharge),
       shippingChargeType: product.shippingChargeType || "Paid",
       installationAvailable: product.installationAvailable || "no",
       installationCharge: Number(product.installationCharge || 0),
-
-      quantity: quantity,
+      quantity: Number(quantity),
       unit: product.unit,
       conversionFactor: product.conversionFactor,
-      // Calculate initial trips for the checkout page
-      trips: Math.ceil(quantity / product.unitsPerTrip)
+      trips: tripCount
     };
 
     localStorage.setItem("singleCheckoutItem", JSON.stringify(checkoutItem));
@@ -332,6 +349,11 @@ const ProductInfo = () => {
   };
 
   const handleAddToCart = () => {
+    if (isInvalidQuantity) {
+      triggerMsg("Please enter a valid quantity.", "error");
+      return;
+    }
+
     if (!product) return;
     addToCart({
       materialId: id, supplierId: sellerId, name: title || product.name,
@@ -343,12 +365,23 @@ const ProductInfo = () => {
     triggerMsg(`${title} added to cart!`, "success");
   };
 
-  if (loading) return <><Navbar /><div className="pd-loading">Loading product details...</div></>;
+  // 2. SHOW LOADING CIRCLE FOR INITIAL FETCH
+  if (loading) return (
+    <>
+      <Navbar />
+      <LoadingSpinner message="Gathering product details..." />
+      <div className="pd-loading" style={{ opacity: 0 }}>Loading product details...</div>
+    </>
+  );
+
   if (!product) return <><Navbar /><div className="pd-not-found">Product not found</div></>;
 
   return (
     <>
       <Navbar />
+      {/* 3. SHOW LOADING CIRCLE IF PROCESSING CHECKOUT */}
+      {isProcessing && <LoadingSpinner message="Preparing your order..." />}
+      
       {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
       <div className="pd-container">
         <div className="pd-top-nav">
@@ -389,7 +422,14 @@ const ProductInfo = () => {
                     min="1"
                     className="pd-quantity-input"
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                        setQuantity("");
+                      } else {
+                        setQuantity(Number(val));
+                      }
+                    }}
                   />
                 </div>
                 <div className="pd-coverage-display">

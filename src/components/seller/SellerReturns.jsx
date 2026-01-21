@@ -10,6 +10,8 @@ import {
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
 import { FaTimes, FaExpand } from "react-icons/fa"; // Added icons for the Lightbox
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* =========================
    SAFE HELPERS
@@ -136,146 +138,157 @@ export default function SellerReturns() {
     }
   };
 
-  return (
+  // 2. SHOW SPINNER DURING INITIAL FETCH
+  if (loading) return (
     <div className="ms-root">
-      {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
-        />
-      )}
       <Sidebar />
+      <LoadingSpinner message="Retrieving return requests..." />
+    </div>
+  );
 
-      <div className="seller-returns-page">
-        <h2 className="page-title">Return Requests</h2>
+  return (
+    <>
+      {/* 3. SHOW SPINNER DURING ACTION PROCESSING */}
+      {loadingId && <LoadingSpinner message="Updating request status..." />}
 
-        {loading ? (
-          <p className="empty-text">Loading requests...</p>
-        ) : returns.length === 0 ? (
-          <p className="empty-text">No return requests found for your store.</p>
-        ) : (
-          <div className="returns-grid">
-            {returns.map((r) => {
-              const status = deriveReturnStatus(r);
+      <div className="ms-root">
+        {msg.show && (
+          <MessageBox 
+            message={msg.text} 
+            type={msg.type} 
+            onClose={() => setMsg({ ...msg, show: false })} 
+          />
+        )}
+        <Sidebar />
 
-              return (
-                <div key={r.id} className="return-card">
-                  <div className="card-header">
-                    <h3>{r.productName}</h3>
-                    <span className={`status-pill ${safeLower(status)}`}>
-                      {status.replace("_", " ")}
-                    </span>
-                  </div>
+        <div className="seller-returns-page">
+          <h2 className="page-title">Return Requests</h2>
 
-                  <div className="card-body">
-                    <p><strong>Customer:</strong> {r.user?.name || "N/A"}</p>
-                    <p><strong>Email:</strong> {r.user?.email || "N/A"}</p>
-                    <p><strong>Reason:</strong> {r.reason}</p>
+          {returns.length === 0 ? (
+            <p className="empty-text">No return requests found for your store.</p>
+          ) : (
+            <div className="returns-grid">
+              {returns.map((r) => {
+                const status = deriveReturnStatus(r);
 
-                    {r.images?.length > 0 && (
-                      <div className="return-images">
-                        {r.images.map((img, idx) => {
-                          const fullUrl = img.startsWith('http') ? img : `http://localhost:3000${img}`;
-                          return (
-                            <div 
-                              key={idx} 
-                              className="thumb-wrapper"
-                              onClick={() => setFullscreenImg(fullUrl)}
-                            >
-                              <img src={fullUrl} alt="Return proof" className="return-thumb" />
-                              <div className="thumb-overlay"><FaExpand /></div>
-                            </div>
-                          );
-                        })}
+                return (
+                  <div key={r.id} className="return-card business-reveal">
+                    <div className="card-header">
+                      <h3>{r.productName}</h3>
+                      <span className={`status-pill ${safeLower(status)}`}>
+                        {status.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="card-body">
+                      <p><strong>Customer:</strong> {r.user?.name || "N/A"}</p>
+                      <p><strong>Email:</strong> {r.user?.email || "N/A"}</p>
+                      <p><strong>Reason:</strong> {r.reason}</p>
+
+                      {r.images?.length > 0 && (
+                        <div className="return-images">
+                          {r.images.map((img, idx) => {
+                            const fullUrl = img.startsWith('http') ? img : `http://localhost:3000${img}`;
+                            return (
+                              <div 
+                                key={idx} 
+                                className="thumb-wrapper"
+                                onClick={() => setFullscreenImg(fullUrl)}
+                              >
+                                <img src={fullUrl} alt="Return proof" className="return-thumb" />
+                                <div className="thumb-overlay"><FaExpand /></div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <p><strong>Refund Amount:</strong> ₹{r.refundAmount || 0}</p>
+                      <p className="date">
+                        Requested on {new Date(r.requestedAt).toLocaleDateString('en-GB')}
+                      </p>
+                    </div>
+
+                    {status === "REQUESTED" && (
+                      <div className="card-actions dual">
+                        <button
+                          className="approve-btn"
+                          disabled={loadingId === r.id}
+                          onClick={() => openApproveModal(r.id)}
+                        >
+                          {loadingId === r.id ? "Processing..." : "Approve"}
+                        </button>
+
+                        <button
+                          className="reject-btn"
+                          onClick={() => openRejectModal(r.id)}
+                        >
+                          Reject
+                        </button>
                       </div>
                     )}
-
-                    <p><strong>Refund Amount:</strong> ₹{r.refundAmount || 0}</p>
-                    <p className="date">
-                      Requested on {new Date(r.requestedAt).toLocaleDateString('en-GB')}
-                    </p>
                   </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-                  {status === "REQUESTED" && (
-                    <div className="card-actions dual">
-                      <button
-                        className="approve-btn"
-                        disabled={loadingId === r.id}
-                        onClick={() => openApproveModal(r.id)}
-                      >
-                        {loadingId === r.id ? "Processing..." : "Approve"}
-                      </button>
+        {/* LIGHTBOX / FULLSCREEN VIEW */}
+        {fullscreenImg && (
+          <div className="lightbox-overlay" onClick={() => setFullscreenImg(null)}>
+            <button className="lightbox-close" onClick={() => setFullscreenImg(null)}>
+              <FaTimes />
+            </button>
+            <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+              <img src={fullscreenImg} alt="Return Evidence Fullscreen" />
+            </div>
+          </div>
+        )}
 
-                      <button
-                        className="reject-btn"
-                        onClick={() => openRejectModal(r.id)}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {/* APPROVE CONFIRMATION MODAL */}
+        {approveModalOpen && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <h3>Approve Return?</h3>
+              <p>Are you sure you want to approve this return request? This will be sent for admin finalisation.</p>
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={() => setApproveModalOpen(false)}>
+                  Cancel
+                </button>
+                <button className="confirm-reject-btn" style={{ background: "#6b7c5c" }} onClick={handleApprove}>
+                  Confirm Approval
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* REJECT MODAL */}
+        {rejectModalOpen && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <h3>Reject Return Request</h3>
+              <p>Please provide a reason for rejecting this return to the customer.</p>
+
+              <textarea
+                placeholder="e.g. Item returned in damaged condition..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={() => setRejectModalOpen(false)}>
+                  Cancel
+                </button>
+                <button className="confirm-reject-btn" onClick={handleReject}>
+                  Reject Return
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* LIGHTBOX / FULLSCREEN VIEW */}
-      {fullscreenImg && (
-        <div className="lightbox-overlay" onClick={() => setFullscreenImg(null)}>
-          <button className="lightbox-close" onClick={() => setFullscreenImg(null)}>
-            <FaTimes />
-          </button>
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img src={fullscreenImg} alt="Return Evidence Fullscreen" />
-          </div>
-        </div>
-      )}
-
-      {/* APPROVE CONFIRMATION MODAL */}
-      {approveModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Approve Return?</h3>
-            <p>Are you sure you want to approve this return request? This will be sent for admin finalisation.</p>
-            <div className="modal-actions">
-              <button className="cancel-btn" onClick={() => setApproveModalOpen(false)}>
-                Cancel
-              </button>
-              <button className="confirm-reject-btn" style={{ background: "#6b7c5c" }} onClick={handleApprove}>
-                Confirm Approval
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* REJECT MODAL */}
-      {rejectModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Reject Return Request</h3>
-            <p>Please provide a reason for rejecting this return to the customer.</p>
-
-            <textarea
-              placeholder="e.g. Item returned in damaged condition..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-            />
-
-            <div className="modal-actions">
-              <button className="cancel-btn" onClick={() => setRejectModalOpen(false)}>
-                Cancel
-              </button>
-              <button className="confirm-reject-btn" onClick={handleReject}>
-                Reject Return
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

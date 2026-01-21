@@ -14,6 +14,8 @@ import {
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 // 1. Import MessageBox
 import MessageBox from "../ui/MessageBox"; 
+// IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DesignerSignup = () => {
   const router = useRouter();
@@ -164,6 +166,11 @@ const DesignerSignup = () => {
 
   return (
     <>
+      {/* APPLY OVERLAY SPINNERS FOR VARIOUS PROCESSES */}
+      {sendingOtp && <LoadingSpinner message="Sending verification code..." />}
+      {verifyingOtp && <LoadingSpinner message="Verifying your email..." />}
+      {loading && <LoadingSpinner message="Creating your professional account..." />}
+
       {/* 4. Render MessageBox at the top level of the component */}
       {msg.show && (
         <MessageBox 

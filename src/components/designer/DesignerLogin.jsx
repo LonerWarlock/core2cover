@@ -6,6 +6,8 @@ import Link from "next/link";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./DesignerLogin.css";
 import { designerLogin } from "../../api/designer";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DesignerLogin = () => {
   const Brand = ({ children }) => <span className="brand">{children}</span>;
@@ -51,6 +53,9 @@ const DesignerLogin = () => {
 
   return (
     <div className="designer-login-page">
+      {/* 2. APPLY THE LOADING SPINNER DURING AUTHENTICATION */}
+      {loading && <LoadingSpinner message="Accessing workspace..." />}
+
       <div className="login-box login-reveal">
         <h1 className="login-logo">
           <Brand>Core2Cover</Brand>

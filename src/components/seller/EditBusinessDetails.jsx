@@ -9,6 +9,8 @@ import {
 } from "../../api/seller";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const EditBusinessDetails = () => {
     const router = useRouter();
@@ -38,13 +40,13 @@ const EditBusinessDetails = () => {
     useEffect(() => {
         if (!sellerId) return;
 
+        setLoading(true);
         getSellerBusinessDetails(sellerId)
             .then((res) => {
                 setBusiness(res.data);
             })
             .catch((err) => {
                 if (err.response?.status === 404) {
-                    // Redirect to create if not found, or stay to add new
                     router.push("/business_details");
                 } else {
                     triggerMsg("Failed to load business details", "error");
@@ -72,10 +74,12 @@ const EditBusinessDetails = () => {
         }
     };
 
+    // 2. APPLY THE LOADING SPINNER FOR INITIAL LOAD
     if (loading) return (
         <div className="sma-root">
             <Sidebar />
-            <div className="business_container">
+            <LoadingSpinner message="Retrieving business details..." />
+            <div className="business_container" style={{ opacity: 0 }}>
                 <p>Loading business details...</p>
             </div>
         </div>
@@ -85,6 +89,9 @@ const EditBusinessDetails = () => {
 
     return (
         <div className="sma-root">
+            {/* 3. APPLY THE LOADING SPINNER DURING UPDATE */}
+            {saving && <LoadingSpinner message="Updating your store profile..." />}
+
             {msg.show && (
                 <MessageBox 
                     message={msg.text} 
@@ -94,7 +101,7 @@ const EditBusinessDetails = () => {
             )}
             <Sidebar />
             <div className="business_container">
-                <div className="business-card">
+                <div className="business-card business-reveal">
                     <h2>Edit Business Details</h2>
                     <p>Update your store information at Core2Cover</p>
 

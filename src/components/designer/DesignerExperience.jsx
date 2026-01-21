@@ -15,7 +15,9 @@ import {
   FaArrowLeft,
 } from "react-icons/fa";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png"
-import api from "../../api/axios"; // Use your configured axios instance
+import api from "../../api/axios";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
@@ -23,7 +25,9 @@ const DesignerExperience = () => {
   const router = useRouter();
   const [works, setWorks] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true); // Initial fetch loading
   const [savingId, setSavingId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false); // Global delete loading
   const [designerId, setDesignerId] = useState(null);
 
   /* =========================
@@ -46,6 +50,7 @@ const DesignerExperience = () => {
   useEffect(() => {
     if (!designerId) return;
 
+    setLoading(true);
     api.get(`/designer/${designerId}/portfolio`)
       .then((res) => {
         const mapped = res.data.map(w => ({
@@ -55,7 +60,8 @@ const DesignerExperience = () => {
         }));
         setWorks(mapped);
       })
-      .catch(err => console.error("Fetch Portfolio Error:", err));
+      .catch(err => console.error("Fetch Portfolio Error:", err))
+      .finally(() => setLoading(false));
   }, [designerId]);
 
   const addWork = () => {
@@ -144,20 +150,29 @@ const DesignerExperience = () => {
     }
 
     try {
+      setIsDeleting(true);
       await api.delete(`/designer/portfolio/${id}`);
       setWorks((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
       console.error(err);
       alert("Failed to delete work");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  // 2. SHOW SPINNER DURING INITIAL FETCH
+  if (loading) return <LoadingSpinner message="Loading your portfolio..." />;
+
   return (
     <>
+      {/* 3. SHOW SPINNER DURING ACTION PROCESSING */}
+      {savingId && <LoadingSpinner message="Uploading masterpiece..." />}
+      {isDeleting && <LoadingSpinner message="Removing work item..." />}
+
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
             <Link 
               href="/" 
               className="nav-logo-link" 

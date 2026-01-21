@@ -13,6 +13,8 @@ import {
 } from "../../api/designer";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
@@ -37,7 +39,8 @@ const DesignerEditProfile = () => {
 
   const [profileImage, setProfileImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Set initial loading to true for fetch
+  const [isUpdating, setIsUpdating] = useState(false); // New state for form submission
   const [error, setError] = useState("");
 
   const triggerMsg = (text, type = "success") => {
@@ -64,6 +67,7 @@ const DesignerEditProfile = () => {
   useEffect(() => {
     if (!designerId) return;
 
+    setLoading(true);
     getDesignerEditProfile(designerId)
       .then((data) => {
         setForm({
@@ -84,6 +88,9 @@ const DesignerEditProfile = () => {
       .catch((err) => {
         console.error(err);
         triggerMsg("Failed to load profile details.", "error");
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [designerId]);
 
@@ -101,13 +108,13 @@ const DesignerEditProfile = () => {
 
   /* =========================
       SUBMIT UPDATE (API)
-  ======================== */
+  ======================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      setLoading(true);
+      setIsUpdating(true); // 2. SHOW SPINNER DURING UPDATE
 
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
@@ -130,12 +137,18 @@ const DesignerEditProfile = () => {
       console.error(err);
       triggerMsg(err.response?.data?.message || "Failed to update profile", "error");
     } finally {
-      setLoading(false);
+      setIsUpdating(false);
     }
   };
 
+  // 3. SHOW SPINNER FOR INITIAL DATA FETCH
+  if (loading) return <LoadingSpinner message="Opening profile settings..." />;
+
   return (
     <>
+      {/* 4. SHOW SPINNER FOR SUBMISSION */}
+      {isUpdating && <LoadingSpinner message="Updating your professional profile..." />}
+
       {msg.show && (
         <MessageBox
           message={msg.text}
@@ -147,7 +160,6 @@ const DesignerEditProfile = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            {/* LOGO WRAPPER - Updated for Drag & Drop support */}
             <Link 
               href="/" 
               className="nav-link nav-logo-link" 
@@ -298,8 +310,8 @@ const DesignerEditProfile = () => {
               />
             </div>
 
-            <button type="submit" className="dep-save-btn" disabled={loading}>
-              {loading ? "Saving Changes..." : "Save Changes"}
+            <button type="submit" className="dep-save-btn" disabled={isUpdating}>
+              {isUpdating ? "Saving Changes..." : "Save Changes"}
             </button>
           </form>
         </div>

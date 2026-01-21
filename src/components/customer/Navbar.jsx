@@ -11,9 +11,9 @@ import {
   FaSignOutAlt,
   FaStore,
   FaPalette,
-  FaUserCircle,
+  FaUserCircle
 } from "react-icons/fa";
-
+import { IoMdInformationCircle } from "react-icons/io";
 import "./Navbar.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 
@@ -25,9 +25,7 @@ const Navbar = () => {
   const { data: session, status } = useSession();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // New state to track manual login status
-  const [localUser, setLocalUser] = useState(null);
-  const [, startTransition] = useTransition();
+  const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef(null);
 
   const router = useRouter();
@@ -57,9 +55,15 @@ const Navbar = () => {
     pathname.includes("/designers") || pathname.includes("/designer_info");
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
-  const currentPageTitle = isDesignerSection
-    ? "Professional Designers"
-    : "Readymade Products";
+  const currentPageTitle = isDesignerSection ? "Professional Designers" : "Readymade Products";
+
+  // Handle Responsive view detection
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const q = searchParams.get("search");
@@ -93,19 +97,12 @@ const Navbar = () => {
     }
   };
 
-  // 2. Unified Logout Function
-  const handleSignOut = async () => {
-    // Clear manual login
-    localStorage.removeItem("token");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("sellerId");
-    localStorage.removeItem("designerId");
-    setLocalUser(null);
-
-    // Clear Google session
-    await signOut({ callbackUrl: "/login" });
+  const getInitials = (name) => {
+    if (!name) return "U";
+    const parts = name.split(" ");
+    return parts.length > 1
+      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+      : name.substring(0, 2).toUpperCase();
   };
 
 
@@ -135,36 +132,36 @@ const Navbar = () => {
 
           <div className="nav-right">
             <div className="nav-icons-desktop">
-              <Link href="/about" className="nav-icon-link">
-                About Us
-              </Link>
-              <Link href="/designers" className="nav-icon-link designers">
-                Designers
-              </Link>
-              <Link href="/cart" className="nav-icon-link">
-                <FaShoppingCart />
-              </Link>
+              <div className="ico">
+                <IoMdInformationCircle className="info-icon-themed" />
+                <Link href="/about" className="nav-icon-link">About Us</Link>
+              </div>
+              <div className="ico">
+                <FaUserGraduate className="info-icon-themed" />
+                <Link href="/designers" className="nav-icon-link designers">Designers</Link>
+              </div>
+
+              {/* Only show Cart here if NOT on mobile */}
+              {!isMobile && (
+                <div className="ico">
+                  <FaShoppingCart className="info-icon-themed" />
+                  <Link href="/cart" className="nav-icon-link">Cart</Link>
+                </div>
+              )}
 
               <div className="profile-dropdown-container" ref={dropdownRef}>
-                <div
-                  className="nav-profile-trigger"
-                  onClick={handleProfileToggle}
-                >
-                  {displayUser?.image ? (
-                    <Image
-                      src={displayUser.image}
-                      alt="User Profile"
+                <div className="nav-profile-trigger" onClick={handleProfileToggle}>
+                  {session?.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt="User"
                       className="nav-user-avatar"
-                      width={40}
-                      height={40}
-                      unoptimized={true}
                     />
                   ) : (
-                    <div className="nav-user-icon-wrap">
-                      <FaUserCircle
-                        size={30}
-                        color={isUserAuthenticated ? "#ffffff" : "#555"}
-                      />
+                    <div className="nav-initials-text">
+                      {status === "authenticated"
+                        ? getInitials(session.user.name)
+                        : "Om"}
                     </div>
                   )}
                 </div>
@@ -184,11 +181,15 @@ const Navbar = () => {
                       >
                         <FaUserCircle /> My Account
                       </Link>
-                      <Link
-                        href="/sellersignup"
-                        className="pop-item"
-                        onClick={() => setProfileOpen(false)}
-                      >
+
+                      {/* CART ADDED HERE FOR MOBILE VIEW */}
+                      {isMobile && (
+                        <Link href="/cart" className="pop-item" onClick={() => setProfileOpen(false)}>
+                          <FaShoppingCart /> My Cart
+                        </Link>
+                      )}
+
+                      <Link href="/sellersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
                         <FaStore /> Become a Seller
                       </Link>
                       <Link

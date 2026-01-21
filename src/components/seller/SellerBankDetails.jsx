@@ -6,6 +6,8 @@ import Sidebar from "./Sidebar";
 import "./SellerBankDetails.css";
 import { getSellerBankDetails, saveSellerBankDetails } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
+// 1. IMPORT THE LOADING SPINNER
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerBankDetails = () => {
   const router = useRouter();
@@ -38,6 +40,7 @@ const SellerBankDetails = () => {
     if (!sellerId) return;
     const loadDetails = async () => {
       try {
+        setLoading(true);
         const res = await getSellerBankDetails(sellerId);
         if (res.data) {
           setForm({
@@ -79,52 +82,58 @@ const SellerBankDetails = () => {
   };
 
   return (
-    <div className="ms-root">
-      {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
-        />
-      )}
-      
-      <Sidebar />
-      <div className="bs-layout-root">
-        <div className="bs-profile-shell">
-          <h1 className="bs-heading">Payment Settings</h1>
-          {loading ? (
-            <p>Loading…</p>
-          ) : (
-            <form className="bs-card bs-bank-form" onSubmit={handleSave}>
-              <div className="bs-input-group">
-                <label>Account Holder Name</label>
-                <input
-                  name="accountHolder"
-                  value={form.accountHolder}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+    <>
+      {/* 2. TOP LEVEL LOADERS FOR MAXIMUM VISIBILITY */}
+      {loading && <LoadingSpinner message="Retrieving payment settings..." />}
+      {saving && <LoadingSpinner message="Updating UPI records..." />}
 
-              <div className="bs-input-group">
-                <label>UPI ID</label>
-                <input
-                  name="upiId"
-                  value={form.upiId}
-                  onChange={handleChange}
-                  placeholder="example@okaxis"
-                  required
-                />
-              </div>
+      <div className="ms-root">
+        {msg.show && (
+          <MessageBox 
+            message={msg.text} 
+            type={msg.type} 
+            onClose={() => setMsg({ ...msg, show: false })} 
+          />
+        )}
+        
+        <Sidebar />
+        <div className="bs-layout-root">
+          <div className="bs-profile-shell">
+            <h1 className="bs-heading">Payment Settings</h1>
+            
+            {/* Form is hidden or dimmed while loading to prevent jumps */}
+            {!loading && (
+              <form className="bs-card bs-bank-form" onSubmit={handleSave}>
+                <div className="bs-input-group">
+                  <label>Account Holder Name</label>
+                  <input
+                    name="accountHolder"
+                    value={form.accountHolder}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-              <button className="bs-btn bs-btn--primary" disabled={saving}>
-                {saving ? "Updating..." : "Update UPI Details"}
-              </button>
-            </form>
-          )}
+                <div className="bs-input-group">
+                  <label>UPI ID</label>
+                  <input
+                    name="upiId"
+                    value={form.upiId}
+                    onChange={handleChange}
+                    placeholder="example@okaxis"
+                    required
+                  />
+                </div>
+
+                <button className="bs-btn bs-btn--primary" disabled={saving}>
+                  {saving ? "Updating..." : "Update UPI Details"}
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

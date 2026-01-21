@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
 import "./SellerProducts.css";
-import { FaBoxes, FaTruckLoading, FaRulerCombined, FaStar } from "react-icons/fa"; // Added FaStar for feedback section
+import { FaBoxes, FaTruckLoading, FaRulerCombined, FaStar } from "react-icons/fa"; 
 import { 
   getSellerProducts, 
   deleteSellerProduct,
@@ -120,16 +120,16 @@ const SellerProducts = () => {
     e.preventDefault();
     setIsUpdating(true);
     
-    const finalCalculatedPrice = calculateFinalPrice(editForm.price);
     const formData = new FormData();
     formData.append("name", editForm.name);
-    formData.append("price", finalCalculatedPrice); 
+    formData.append("price", editForm.price); 
     formData.append("category", editForm.category);
     formData.append("description", editForm.description);
     formData.append("availability", editForm.availability);
     formData.append("productType", editForm.productType);
     
-    if (editForm.productType === "material") {
+    // Ensure the productType logic here matches exactly what is stored in the DB
+    if (editForm.productType === "material" || editForm.productType === "Raw Material") {
       formData.append("unit", editForm.unit);
       formData.append("unitsPerTrip", editForm.unitsPerTrip);
       formData.append("conversionFactor", editForm.conversionFactor);
@@ -142,7 +142,7 @@ const SellerProducts = () => {
       await updateSellerProduct(editingProduct.id, formData);
       triggerMsg("Catalogue updated successfully!", "success");
       setEditingProduct(null);
-      fetchProducts(sellerId);
+      await fetchProducts(sellerId); 
     } catch (err) {
       triggerMsg("Failed to update the product.", "error");
     } finally {
@@ -161,14 +161,10 @@ const SellerProducts = () => {
     }
   };
 
-  /* FIXED VIEW REVIEWS WITH AUTO-SCROLL */
   const viewReviews = async (product) => {
     setSelectedProduct(product);
     setLoadingReviews(true);
-    
-    // Smooth scroll to top as soon as button is clicked
     window.scrollTo({ top: 0, behavior: "smooth" });
-
     try {
       const res = await getProductRatings(product.id);
       setRatingData({
@@ -190,7 +186,6 @@ const SellerProducts = () => {
       <main className="ms-main">
         <h1 className="ms-title">Inventory Catalogue</h1>
 
-        {/* EDIT PANEL */}
         {editingProduct && (
           <section className="ms-edit-panel">
             <h2 className="ms-edit-title">Edit Product: {editingProduct.name}</h2>
@@ -208,7 +203,7 @@ const SellerProducts = () => {
                 <input className="ms-input" value={`₹ ${calculateFinalPrice(editForm.price)}`} readOnly style={{ backgroundColor: "#f3f4f6", color: "#606E52", fontWeight: "bold" }} />
               </div>
               
-              {editForm.productType === "material" && (
+              {(editForm.productType === "material" || editForm.productType === "Raw Material") && (
                 <>
                   <div className="ms-field">
                     <label className="ms-label">Unit</label>
@@ -266,20 +261,6 @@ const SellerProducts = () => {
           </section>
         )}
 
-        {/* REVIEW PANEL */}
-        {selectedProduct && (
-          <section className="ms-reviews-panel">
-            <div className="ms-panel-header">
-              <h3>Customer Feedback: {selectedProduct.name}</h3>
-              <button onClick={() => setSelectedProduct(null)} className="ms-btn ms-btn--ghost">Close</button>
-            </div>
-            <div className="ms-review-summary">
-                <p>Average Rating: <FaStar color="#facc15" /> {ratingData.avgRating} / 5 ({ratingData.count} reviews)</p>
-            </div>
-            {/* You can map through ratingData.reviews here if needed */}
-          </section>
-        )}
-
         <section className="ms-grid">
           {loading ? <p>Loading catalogue...</p> : materials.map((m) => (
             <div key={m.id} className="ms-card">
@@ -304,7 +285,7 @@ const SellerProducts = () => {
                     <span>{m.unitsPerTrip || 1} {m.unit || 'pcs'} / trip</span>
                   </div>
                   
-                  {m.productType === "material" && (m.unit === "sheet" || m.unit === "pcs") && (
+                  {(m.productType === "material" || m.productType === "Raw Material") && (m.unit === "sheet" || m.unit === "pcs") && (
                     <div className="ms-info-item">
                       <FaRulerCombined title="Conversion Factor" />
                       <span>{m.conversionFactor || 1} sq. ft / {m.unit}</span>
