@@ -26,6 +26,10 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        {/* Manual favicon link */}
+        <link rel="icon" href="/icon.png" sizes="any" />
+      </head>
       <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased ${isHome ? "no-scroll" : ""}`} 
         suppressHydrationWarning={true}

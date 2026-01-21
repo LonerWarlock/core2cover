@@ -16,6 +16,20 @@
   --nav-height: 80px;
 }
 
+@font-face {
+  font-family: "CaviarDreams";
+  src: url("/fonts/CaviarDreams.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "CaviarDreams";
+  src: url("/fonts/CaviarDreams_Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* ======================================================
    GLOBAL RESET (Kills the Blue Links)
 ====================================================== */
@@ -77,7 +91,7 @@
 
 .brand-bold {
   font-weight: 700;
-  color: var(--text-dark) !important;
+  color: var(--green-dark) !important;
 }
 
 /* ======================================================

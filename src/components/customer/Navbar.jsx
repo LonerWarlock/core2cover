@@ -41,7 +41,6 @@ const Navbar = () => {
     const id = localStorage.getItem("userId");
 
     if (email) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalUser({ email, name, id });
     } else {
       setLocalUser(null);
@@ -51,10 +50,20 @@ const Navbar = () => {
   const isUserAuthenticated = status === "authenticated" || !!localUser;
   const displayUser = session?.user || localUser;
 
+  // Identifying the current section
   const isDesignerSection = pathname.includes("/designers") || pathname.includes("/designer_info");
+  
+  // Logic to identify if we are on the Raw Materials page (assuming based on search params or path)
+  const isRawMaterialsPage = searchParams.get("page") === "Raw Materials";
+  
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
-  const currentPageTitle = isDesignerSection ? "Professional Designers" : "Readymade Products";
+  
+  const currentPageTitle = isDesignerSection 
+    ? "Professional Designers" 
+    : isRawMaterialsPage 
+      ? "Raw Materials" 
+      : "Readymade Products";
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -73,14 +82,42 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  /* =========================================
+      UPDATED: CONDITIONAL "NEAR ME" LOGIC
+  ========================================= */
   const handleSearch = (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const query = formData.get("search")?.toString().trim();
+    let query = formData.get("search")?.toString().trim();
     if (!query) return;
 
-    const targetPath = isDesignerSection ? "/designers" : "/searchresults";
-    router.push(`${targetPath}?search=${encodeURIComponent(query)}`);
+    const lowerQuery = query.toLowerCase();
+    const hasNearMe = lowerQuery.includes("near me");
+
+    // ONLY trigger Geolocation if "near me" is typed AND we are in the Raw Materials context
+    if (hasNearMe && isRawMaterialsPage) {
+      const cleanQuery = lowerQuery.replace("near me", "").trim();
+      
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            router.push(`/searchresults?search=${encodeURIComponent(cleanQuery)}&lat=${latitude}&lng=${longitude}&nearby=true&page=Raw%20Materials`);
+          },
+          (error) => {
+            console.error("Location error", error);
+            router.push(`/searchresults?search=${encodeURIComponent(query)}&page=Raw%20Materials`);
+          }
+        );
+      } else {
+        router.push(`/searchresults?search=${encodeURIComponent(query)}&page=Raw%20Materials`);
+      }
+    } else {
+      // Normal search for Designers or Finished Products (even if they type 'near me')
+      const targetPath = isDesignerSection ? "/designers" : "/searchresults";
+      const pageParam = isRawMaterialsPage ? "&page=Raw%20Materials" : "";
+      router.push(`${targetPath}?search=${encodeURIComponent(query)}${pageParam}`);
+    }
   };
 
   const handleProfileToggle = () => {
@@ -104,13 +141,7 @@ const Navbar = () => {
           <div className="nav-left">
             <Link href="/" className="nav-logo-link">
               <span className="nav-logo-wrap">
-                <Image 
-                  src={CoreToCoverLogo} 
-                  alt="Logo" 
-                  width={50} 
-                  height={50} 
-                  priority 
-                />
+                <Image src={CoreToCoverLogo} alt="Logo" width={50} height={50} priority />
                 <BrandBold>Core2Cover</BrandBold>
               </span>
             </Link>
@@ -118,8 +149,6 @@ const Navbar = () => {
 
           <div className="nav-right">
             <div className="nav-icons-desktop">
-              
-              {/* ABOUT LINK */}
               <Link href="/about" className="nav-link-wrapper">
                 <div className="ico">
                   <IoMdInformationCircle className="info-icon-themed" />
@@ -127,7 +156,6 @@ const Navbar = () => {
                 </div>
               </Link>
               
-              {/* DESIGNERS LINK */}
               <Link href="/designers" className="nav-link-wrapper">
                 <div className="ico">
                   <FaUserGraduate className="info-icon-themed" />
@@ -135,7 +163,6 @@ const Navbar = () => {
                 </div>
               </Link>
 
-              {/* CART LINK - Desktop Only */}
               {!isMobile && (
                 <Link href="/cart" className="nav-link-wrapper">
                   <div className="ico">
@@ -145,19 +172,11 @@ const Navbar = () => {
                 </Link>
               )}
 
-              {/* PROFILE/LOGIN ICON */}
               <div className="profile-dropdown-container" ref={dropdownRef}>
                 <div className="nav-profile-trigger" onClick={handleProfileToggle}>
                   <div className="ico">
                     {displayUser?.image ? (
-                      <Image
-                        src={displayUser.image}
-                        alt="User"
-                        className="nav-user-avatar"
-                        width={35}
-                        height={35}
-                        unoptimized
-                      />
+                      <Image src={displayUser.image} alt="User" className="nav-user-avatar" width={35} height={35} unoptimized />
                     ) : (
                       <FaUserCircle className="info-icon-themed" />
                     )}
