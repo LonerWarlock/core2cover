@@ -6,7 +6,6 @@ import Sidebar from "./Sidebar";
 import "./SellerBankDetails.css";
 import { getSellerBankDetails, saveSellerBankDetails } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerBankDetails = () => {
@@ -21,17 +20,42 @@ const SellerBankDetails = () => {
     accountHolder: "",
   });
 
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      // Decodes the scrambled sellerId from storage
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const decodePayload = (payload) => {
+    try {
+      // Decodes backend payload if returned in scrambled format
+      const decodedString = atob(payload);
+      return JSON.parse(decodedString);
+    } catch (e) {
+      return null;
+    }
+  };
+
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedId = localStorage.getItem("sellerId");
-      if (!storedId) {
+      // Correctly retrieve the obfuscated ID to match your security standards
+      const sid = secureGetItem("sellerId");
+      if (!sid) {
         router.push("/sellerlogin");
       } else {
-        setSellerId(storedId);
+        setSellerId(sid);
       }
     }
   }, [router]);
@@ -42,14 +66,21 @@ const SellerBankDetails = () => {
       try {
         setLoading(true);
         const res = await getSellerBankDetails(sellerId);
-        if (res.data) {
+        
+        // Handle potential encrypted payload from backend
+        let data = res.data;
+        if (res.data?.payload) {
+          data = decodePayload(res.data.payload);
+        }
+
+        if (data) {
           setForm({
-            upiId: res.data.upiId || "",
-            accountHolder: res.data.accountHolder || "",
+            upiId: data.upiId || "",
+            accountHolder: data.accountHolder || "",
           });
         }
       } catch (err) {
-        console.log("No details found.");
+        console.log("No bank details found.");
       } finally {
         setLoading(false);
       }
@@ -66,6 +97,7 @@ const SellerBankDetails = () => {
     e.preventDefault();
     setSaving(true);
     try {
+      // Pass the decoded ID back to the backend for data matching
       await saveSellerBankDetails({
         sellerId: Number(sellerId),
         ...form,
@@ -83,7 +115,6 @@ const SellerBankDetails = () => {
 
   return (
     <>
-      {/* 2. TOP LEVEL LOADERS FOR MAXIMUM VISIBILITY */}
       {loading && <LoadingSpinner message="Retrieving payment settings..." />}
       {saving && <LoadingSpinner message="Updating UPI records..." />}
 
@@ -101,7 +132,6 @@ const SellerBankDetails = () => {
           <div className="bs-profile-shell">
             <h1 className="bs-heading">Payment Settings</h1>
             
-            {/* Form is hidden or dimmed while loading to prevent jumps */}
             {!loading && (
               <form className="bs-card bs-bank-form" onSubmit={handleSave}>
                 <div className="bs-input-group">

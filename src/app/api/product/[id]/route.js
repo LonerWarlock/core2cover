@@ -1,137 +1,133 @@
+// src/app/api/product/[id]/route.js
+
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+
+const encodeData = (data) => {
+  const jsonString = JSON.stringify(data);
+  return Buffer.from(jsonString).toString("base64");
+};
+
+// src/app/api/product/[id]/route.js
 
 export async function GET(request, { params }) {
   try {
     const resolvedParams = await params;
     const id = Number(resolvedParams.id);
 
-    if (isNaN(id)) return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
-
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
         seller: {
-          select: {
-            name: true,
-            business: { select: { city: true, state: true } },
+          include: {
+            business: true,
             delivery: true,
           },
         },
-        ratings: { select: { stars: true, comment: true } },
+        ratings: true,
       },
     });
 
     if (!product) return NextResponse.json(null, { status: 404 });
 
-    const total = product.ratings.reduce((s, r) => s + r.stars, 0);
-    const count = product.ratings.length;
-
-    return NextResponse.json({
+    // FIX: Include description and ensure consistent naming
+    const productData = {
       id: product.id,
       sellerId: product.sellerId,
-      title: product.name,
-      productType: product.productType,
-      seller: product.seller?.name || "Unknown Seller",
-      origin: product.seller?.business
-        ? `${product.seller.business.city}, ${product.seller.business.state}`
-        : "Not specified",
+      title: product.name, // Frontend expects 'title'
+      name: product.name,  // Fallback for logic checks
       price: product.price,
       images: product.images,
-      video: product.video,
-      description: product.description,
-      availability: product.availability,
-      avgRating: count ? total / count : 0,
-      ratingCount: count,
-
-      // LOGISTICS DATA FROM PRODUCT & SELLER MODELS
+      description: product.description || "No description provided.", // ADDED
+      productType: product.productType, // Used for calculation logic
       unit: product.unit ?? "pcs",
       unitsPerTrip: product.unitsPerTrip ?? 1,
       conversionFactor: product.conversionFactor ?? 1,
-
-      deliveryTimeMin: product.seller?.delivery?.deliveryTimeMin ?? null,
-      deliveryTimeMax: product.seller?.delivery?.deliveryTimeMax ?? null,
+      
+      // FIX: Ensure seller is passed in a way the frontend can resolve
+      seller: product.seller?.name || "Verified Seller", 
+      
       installationAvailable: product.seller?.delivery?.installationAvailable ?? "no",
       installationCharge: product.seller?.delivery?.installationCharge ?? 0,
-
-      // CRITICAL FIX: Ensure charge is fetched from Product first, then fallback to Seller
       shippingChargeType: product.seller?.delivery?.shippingChargeType ?? "Paid",
-      shippingCharge: (product.shippingCharge && product.shippingCharge > 0)
-        ? product.shippingCharge
-        : (product.seller?.delivery?.shippingCharge ?? 0),
+      shippingCharge: product.seller?.delivery?.shippingCharge ?? 0,
+    };
+
+    return NextResponse.json({
+      payload: encodeData(productData)
     });
   } catch (err) {
-    console.error("GET PRODUCT ERROR:", err);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
 
+/* ==========================================
+    PUT: Update Product & Logistics
+   ========================================== */
 export async function PUT(request, { params }) {
   try {
-    const { id } = await params;
-    const productId = Number(id);
-    
-    if (isNaN(productId)) {
-      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
-    }
+    const resolvedParams = await params;
+    const productId = Number(resolvedParams.id);
+
+    if (isNaN(productId)) return NextResponse.json({ message: "Invalid product ID" }, { status: 400 });
 
     const formData = await request.formData();
 
-    // 1. Extract Basic Fields
-    const name = formData.get("name");
-    const category = formData.get("category");
-    const productType = formData.get("productType")?.toString(); 
-    const price = formData.get("price");
-    const description = formData.get("description");
-    const availability = formData.get("availability");
-    
-    // 2. Extract Logistics Fields
-    const unit = formData.get("unit");
-    const rawUnitsPerTrip = formData.get("unitsPerTrip");
-    const rawConversionFactor = formData.get("conversionFactor");
+    const name = formData.get("name")?.toString().trim();
+    const category = formData.get("category")?.toString().trim();
+    const productType = formData.get("productType")?.toString();
+    const description = formData.get("description")?.toString().trim();
+    const availability = formData.get("availability")?.toString();
 
-    // 3. Handle Image parsing
     const existingImagesRaw = formData.get("existingImages");
-    let keptImages = existingImagesRaw ? JSON.parse(existingImagesRaw) : [];
-    
-    const newFiles = formData.getAll("images");
+    let keptImages = [];
+    try { keptImages = existingImagesRaw ? JSON.parse(existingImagesRaw) : []; } 
+    catch (e) { keptImages = []; }
+
+    const newImageFiles = formData.getAll("images");
     let newImageUrls = [];
-    if (newFiles.length > 0) {
+    if (newImageFiles.length > 0) {
+      const validFiles = newImageFiles.filter(f => f instanceof File && f.size > 0);
       const results = await Promise.all(
-        newFiles.filter(file => file instanceof File && file.size > 0)
-                .map(file => uploadToCloudinary(file, "coretocover/products/images"))
+        validFiles.map(f => uploadToCloudinary(f, "coretocover/products/images"))
       );
       newImageUrls = results.map(r => r.secure_url);
     }
 
-    // 4. Construct strictly typed Update Data
+    const newVideoFile = formData.get("video");
+    const existingVideo = formData.get("existingVideo");
+    let finalVideoUrl = existingVideo || null;
+
+    if (newVideoFile && newVideoFile instanceof File) {
+      const videoResult = await uploadToCloudinary(newVideoFile, "coretocover/products/videos");
+      finalVideoUrl = videoResult.secure_url;
+    }
+
+    const rawPrice = formData.get("price")?.toString();
+    const parsedPrice = parseFloat(rawPrice || "0");
+
     const updateData = {
-      name: name?.toString().trim(),
-      category: category?.toString().trim(),
-      productType: productType,
-      price: price ? parseFloat(price.toString()) : 0, 
-      description: description?.toString().trim() || null,
-      availability: availability?.toString(),
+      name: name || "Untitled Product",
+      category: category || "Uncategorized",
+      productType: productType || "finished",
+      price: isNaN(parsedPrice) ? 0 : parsedPrice,
+      description: description || null,
+      availability: availability || "available",
       images: [...keptImages, ...newImageUrls],
+      video: finalVideoUrl,
     };
 
-    // 5. Force numeric conversion for Logistics
-    // Note: Use the exact string "material" or "Raw Material" as stored in your DB
     if (productType === "material" || productType === "Raw Material") {
-      updateData.unit = unit?.toString() || "pcs";
-      
-      // CRITICAL FIX: Convert strings to Int/Float for Prisma
-      if (rawUnitsPerTrip) {
-        updateData.unitsPerTrip = parseInt(rawUnitsPerTrip.toString());
-      }
-      if (rawConversionFactor) {
-        updateData.conversionFactor = parseFloat(rawConversionFactor.toString());
-      }
-    } else {
-      // Defaults for non-material products
-      updateData.unit = "pcs";
-      updateData.unitsPerTrip = 1;
-      updateData.conversionFactor = 1.0;
+      const unit = formData.get("unit")?.toString() || "pcs";
+      const rawUPT = formData.get("unitsPerTrip")?.toString();
+      const rawCF = formData.get("conversionFactor")?.toString();
+
+      updateData.unit = unit;
+      const upt = parseInt(rawUPT || "1", 10);
+      const cf = parseFloat(rawCF || "1.0");
+
+      updateData.unitsPerTrip = isNaN(upt) ? 1 : upt;
+      updateData.conversionFactor = isNaN(cf) ? 1.0 : cf;
     }
 
     const updatedProduct = await prisma.product.update({
@@ -140,58 +136,49 @@ export async function PUT(request, { params }) {
     });
 
     return NextResponse.json({ 
-      message: "Product updated successfully", 
+      message: "Catalogue updated successfully", 
       product: updatedProduct 
     });
+
   } catch (err) {
-    console.error("UPDATE ERROR:", err);
-    return NextResponse.json({ 
-      message: "Update failed", 
-      error: err.message 
-    }, { status: 500 });
+    console.error("PRISMA CRITICAL UPDATE ERROR:", err);
+    return NextResponse.json({ message: "Update failed", error: err.message }, { status: 500 });
   }
 }
 
+/* ==========================================
+    DELETE: Remove Product
+   ========================================== */
 export async function DELETE(request, { params }) {
   try {
-    const { id } = await params;
-    await prisma.product.delete({ where: { id: Number(id) } });
+    const resolvedParams = await params;
+    const productId = Number(resolvedParams.id);
+    await prisma.product.delete({ where: { id: productId } });
     return NextResponse.json({ message: "Product deleted" });
-  } catch (err) {
-    return NextResponse.json({ message: "Delete failed" }, { status: 500 });
+  } catch (err) { 
+    console.error("DELETE ERROR:", err);
+    return NextResponse.json({ message: "Delete failed" }, { status: 500 }); 
   }
 }
 
+/* ==========================================
+    PATCH: Log Share Activity
+   ========================================== */
 export async function PATCH(request, { params }) {
   try {
     const resolvedParams = await params;
     const id = Number(resolvedParams.id);
+    if (isNaN(id)) return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
 
-    if (isNaN(id)) {
-      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
-    }
-
-    // Increment the shareCount atomically
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: {
-        shareCount: {
-          increment: 1,
-        },
-      },
-      select: {
-        id: true,
-        shareCount: true,
-      }
+      data: { shareCount: { increment: 1 } },
+      select: { id: true, shareCount: true }
     });
 
-    return NextResponse.json({
-      message: "Share logged",
-      shareCount: updatedProduct.shareCount
-    }, { status: 200 });
-
-  } catch (err) {
+    return NextResponse.json({ message: "Share logged", shareCount: updatedProduct.shareCount });
+  } catch (err) { 
     console.error("SHARE_LOG_ERROR:", err);
-    return NextResponse.json({ message: "Failed to log share" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to log share" }, { status: 500 }); 
   }
 }

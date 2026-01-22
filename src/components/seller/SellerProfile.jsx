@@ -6,7 +6,6 @@ import "./SellerProfile.css";
 import Sidebar from "./Sidebar";
 import { getSellerProfile, updateSellerProfile } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerProfile = () => {
@@ -31,6 +30,24 @@ const SellerProfile = () => {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
+  /* =========================================
+      ENCRYPTION HELPERS
+  ========================================= */
+  const secureSetItem = (key, value) => {
+    if (!value) return;
+    localStorage.setItem(key, btoa(String(value)));
+  };
+
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
@@ -39,7 +56,7 @@ const SellerProfile = () => {
       1. AUTH CHECK
   ========================= */
   useEffect(() => {
-    const sid = localStorage.getItem("sellerId");
+    const sid = secureGetItem("sellerId");
     if (!sid) {
       router.push("/sellerlogin");
     } else {
@@ -57,7 +74,11 @@ const SellerProfile = () => {
       setLoading(true);
       try {
         const res = await getSellerProfile(sellerId);
-        const data = res.data || res; 
+        
+        // Decode payload if backend is already sending encrypted data
+        const data = res.data?.payload 
+          ? JSON.parse(atob(res.data.payload)) 
+          : (res.data || res);
 
         const profileData = {
           name: data.name || "Not specified",
@@ -100,7 +121,9 @@ const SellerProfile = () => {
         phone: formData.phone,
       });
 
-      const updated = res.data?.seller || res.data || res;
+      const updated = res.data?.payload 
+        ? JSON.parse(atob(res.data.payload)) 
+        : (res.data?.seller || res.data || res);
       
       setProfile((prev) => ({
         ...prev,
@@ -108,26 +131,25 @@ const SellerProfile = () => {
         phone: updated.phone,
       }));
 
+      // Update the scrambled storage markers
+      secureSetItem("userName", updated.name);
+
       setIsEditing(false);
-      triggerMsg("Profile updated successfully ", "success");
+      triggerMsg("Profile updated successfully", "success");
     } catch (err) {
-      triggerMsg(
-        err?.response?.data?.message || "Failed to update profile",
-        "error"
-      );
+      triggerMsg(err?.response?.data?.message || "Failed to update profile", "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("sellerId");
+    localStorage.clear();
     router.push("/sellerlogin");
   };
 
   return (
     <>
-      {/* 2. PLACED AT THE TOP LEVEL FOR MAXIMUM VISIBILITY */}
       {loading && <LoadingSpinner message="Initialising Profile Details..." />}
       {saving && <LoadingSpinner message="Updating your profile details..." />}
 

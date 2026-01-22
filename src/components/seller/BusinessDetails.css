@@ -9,6 +9,7 @@
   --green-light: #c0cca4;
 
   --bg: linear-gradient(180deg, #f4f7ef, #e8efdc);
+  --background: linear-gradient(180deg, #f4f7ef, #e8efdc);
   --card-bg: #ffffff;
 
   --text-dark: #474747;
@@ -22,6 +23,7 @@
 
   font-family: "Helvetica", Arial, sans-serif;
 }
+
 
 /* =========================================
    PAGE CONTAINER
@@ -38,13 +40,21 @@
 
 .business_container{
   min-height: 100vh;
-  background: var(--bg);
+  /* background: var(--background); */
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   padding: 0px 32vw 0px;
 
+}
+
+.business_container {
+    background: transparent; /* Let the parent show through */
+}
+
+.business-reveal{
+  background: var(--background);
 }
 
 /* =========================================
@@ -314,3 +324,101 @@
   }
 }
 
+/* BusinessDetails.css additions */
+
+.business-container {
+    padding: 40px 20px;
+    background: #fdfdfd;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Section Title for Location */
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #4e5a44;
+    margin: 15px 0 10px 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 25px 0 15px 0;
+}
+
+/* Google Maps Search Input Styling */
+.map-search-input {
+    width: 90%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    margin-bottom: 5px;
+}
+
+.map-search-input:focus {
+    border-color: #4e5a44;
+    outline: none;
+    box-shadow: 0 0 8px rgba(78, 90, 68, 0.15);
+}
+
+/* Textarea for Full Address */
+textarea {
+    width: 90%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    background-color: #fafafa;
+}
+
+textarea:focus {
+    background-color: #fff;
+    border-color: #4e5a44;
+    outline: none;
+}
+
+/* Error/Info States */
+.error-msg {
+    color: #d93025;
+    background: #fce8e6;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    margin: 20px;
+}
+
+/* Loading State Opacity */
+.business_container[style*="opacity: 0"] {
+    pointer-events: none;
+}
+
+/* Ensure the Autocomplete dropdown stays on top of other elements */
+.pac-container {
+    z-index: 10000 !important;
+    border-radius: 0 0 8px 8px;
+    border-top: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    font-family: inherit;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .business-card {
+        padding: 20px;
+    }
+    
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}

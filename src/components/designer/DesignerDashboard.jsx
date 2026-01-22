@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "./DesignerDashboard.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,52 +12,98 @@ import { getDesignerBasic, updateDesignerAvailability } from "../../api/designer
 import Image from "next/image";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import MessageBox from "../ui/MessageBox"; 
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
 const DesignerDashboard = () => {
   const router = useRouter();
+  
+  // 1. All State declarations at the top
   const [available, setAvailable] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerName, setDesignerName] = useState("Designer");
-  const [loading, setLoading] = useState(true); // Initial load state
+  const [loading, setLoading] = useState(true); 
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [designerId, setDesignerId] = useState(null);
-
-  // Ratings & UI States
   const [ratingData, setRatingData] = useState({ avg: 0, total: 0, reviews: [] });
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = useCallback((key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const decodePayload = useCallback((payload) => {
+    try {
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      return null;
+    }
+  }, []);
 
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
 
+  /* =========================================
+      STABLE HOOKS (Fixed Dependency Sizes)
+  ========================================= */
+  
+  // Hook 1: Authentication & Identity Retrieval
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setDesignerId(localStorage.getItem("designerId"));
+    const sid = secureGetItem("designerId");
+    if (!sid) {
+      router.push("/designerlogin");
+    } else {
+      setDesignerId(sid);
     }
-  }, []);
+    // Dependency array is constant size
+  }, [router, secureGetItem]);
 
+  // Hook 2: Data Fetching
   useEffect(() => {
+    // Return early if no ID, but the hook itself still runs
     if (!designerId) return;
 
-    setLoading(true);
-    getDesignerBasic(designerId)
-      .then((data) => {
-        setDesignerName(data.fullname?.trim() || "Designer");
-        setAvailable(data.availability === "Available");
-        setRatingData({
-          avg: data.avgRating || 0,
-          total: data.totalRatings || 0,
-          reviews: data.ratings || []
-        });
-      })
-      .catch((err) => console.error("Error fetching dashboard data:", err))
-      .finally(() => setLoading(false));
-  }, [designerId]);
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+        const res = await getDesignerBasic(designerId);
+        
+        // Handle encrypted payload from backend if present
+        const data = res?.payload ? decodePayload(res.payload) : res;
 
+        setDesignerName(data?.fullname?.trim() || "Designer");
+        setAvailable(data?.availability === "Available");
+        setRatingData({
+          avg: data?.avgRating || 0,
+          total: data?.totalRatings || 0,
+          reviews: data?.ratings || []
+        });
+      } catch (err) {
+        console.error("Dashboard Fetch Error:", err);
+        triggerMsg("Failed to load dashboard details", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+    // Dependency array is constant size
+  }, [designerId, decodePayload]);
+
+  /* =========================================
+      EVENT HANDLERS
+  ========================================= */
   const toggleAvailability = async () => {
     if (!designerId) {
       triggerMsg("Session expired. Please login again.", "error");
@@ -72,19 +118,17 @@ const DesignerDashboard = () => {
       setAvailable(newStatus === "Available");
       triggerMsg(`You are now ${newStatus}`, "success");
     } catch (err) {
-      console.error("Failed to update availability:", err);
       triggerMsg(err.response?.data?.message || "Failed to update availability", "error");
     } finally {
       setLoadingAvailability(false);
     }
   };
 
-  // 2. SHOW SPINNER DURING INITIAL FETCH
+  // 2. Conditional render happens AFTER all hooks have been called
   if (loading) return <LoadingSpinner message="Opening designer console..." />;
 
   return (
     <>
-      {/* 3. SHOW SPINNER DURING AVAILABILITY TOGGLE */}
       {loadingAvailability && <LoadingSpinner message="Updating status..." />}
 
       {msg.show && (
@@ -98,21 +142,9 @@ const DesignerDashboard = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link 
-              href="/" 
-              className="nav-logo-link" 
-              draggable="true"
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
+            <Link href="/" className="nav-logo-link" style={{ textDecoration: 'none', color: 'inherit' }}>
               <span className="nav-logo-wrap">
-                <Image
-                  src={CoreToCoverLogo}
-                  alt="CoreToCover Logo"
-                  width={120}
-                  height={50}
-                  priority
-                  style={{ height: 'auto', width: '50px' }}
-                />
+                <Image src={CoreToCoverLogo} alt="Logo" width={120} height={50} priority style={{ height: 'auto', width: '50px' }} />
                 <BrandBold>Core2Cover</BrandBold>
               </span>
             </Link>
@@ -122,10 +154,9 @@ const DesignerDashboard = () => {
             <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <FaTimes /> : <FaBars />}
             </div>
-
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
               <li>
-                <Link href="/login" className="seller-btn" onClick={() => setMenuOpen(false)}>
+                <Link href="/login" className="seller-bttn" onClick={() => setMenuOpen(false)}>
                   Login as Customer
                 </Link>
               </li>
@@ -183,16 +214,8 @@ const DesignerDashboard = () => {
                   {available ? "Showing in search results" : "Currently hidden from search"}
                 </p>
               </div>
-              <button 
-                className="dd-toggle-btn" 
-                onClick={toggleAvailability} 
-                disabled={loadingAvailability}
-              >
-                {available ? (
-                  <FaToggleOn className="dd-toggle-icon dd-on" />
-                ) : (
-                  <FaToggleOff className="dd-toggle-icon dd-off" />
-                )}
+              <button className="dd-toggle-btn" onClick={toggleAvailability} disabled={loadingAvailability}>
+                {available ? <FaToggleOn className="dd-toggle-icon dd-on" /> : <FaToggleOff className="dd-toggle-icon dd-off" />}
               </button>
             </div>
           </div>
@@ -206,40 +229,27 @@ const DesignerDashboard = () => {
 
           {ratingData.reviews.length > 0 ? (
             <div className="history-list">
-              {ratingData.reviews.map((rev, index) => {
-                const displayName = rev.reviewerName || "Client";
-                
-                return (
-                  <div key={index} className="history-item">
-                    <div className="history-item-top">
-                      <div className="reviewer-info">
-                        <div className="reviewer-avatar">
-                          {displayName[0].toUpperCase()}
-                        </div>
-                        <div className="reviewer-details">
-                          <span className="name">{displayName}</span>
-                          <span className="date">
-                            {new Date(rev.createdAt).toLocaleDateString('en-GB', { 
-                              day: 'numeric', month: 'long', year: 'numeric' 
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="review-rating">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar 
-                            key={i} 
-                            className={i < rev.stars ? "star-active" : "star-inactive"} 
-                          />
-                        ))}
+              {ratingData.reviews.map((rev, index) => (
+                <div key={index} className="history-item">
+                  <div className="history-item-top">
+                    <div className="reviewer-info">
+                      <div className="reviewer-avatar">{(rev.reviewerName || "C")[0].toUpperCase()}</div>
+                      <div className="reviewer-details">
+                        <span className="name">{rev.reviewerName || "Client"}</span>
+                        <span className="date">{new Date(rev.createdAt).toLocaleDateString('en-GB')}</span>
                       </div>
                     </div>
-                    <div className="history-item-body">
-                      <p className="comment">"{rev.review || "The client didn't leave a written comment."}"</p>
+                    <div className="review-rating">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar key={i} className={i < rev.stars ? "star-active" : "star-inactive"} />
+                      ))}
                     </div>
                   </div>
-                );
-              })}
+                  <div className="history-item-body">
+                    <p className="comment">"{rev.review || "The client didn't leave a written comment."}"</p>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="no-history">

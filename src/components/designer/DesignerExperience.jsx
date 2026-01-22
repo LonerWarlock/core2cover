@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./DesignerExperience.css";
-import "./DesignerDashboard.css"
+import "./DesignerDashboard.css";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -14,9 +14,8 @@ import {
   FaSave,
   FaArrowLeft,
 } from "react-icons/fa";
-import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png"
+import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import api from "../../api/axios";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
@@ -25,45 +24,86 @@ const DesignerExperience = () => {
   const router = useRouter();
   const [works, setWorks] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true); // Initial fetch loading
+  const [loading, setLoading] = useState(true); 
   const [savingId, setSavingId] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false); // Global delete loading
+  const [isDeleting, setIsDeleting] = useState(false); 
   const [designerId, setDesignerId] = useState(null);
 
-  /* =========================
-      INITIALISE DESIGNER ID
-  ========================= */
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedId = localStorage.getItem("designerId");
-      if (storedId) {
-        setDesignerId(storedId);
-      } else {
-        router.push("/designersignup");
-      }
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = useCallback((key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      // Decodes the scrambled ID from the Application Tab
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
     }
-  }, [router]);
+  }, []);
 
-  /* =========================
-      FETCH PORTFOLIO
-  ========================= */
+  const decodePayload = useCallback((payload) => {
+    try {
+      // Decodes the backend portfolio payload
+      const decodedString = atob(payload);
+      return JSON.parse(decodedString);
+    } catch (e) {
+      console.error("Portfolio decryption failed:", e);
+      return null;
+    }
+  }, []);
+
+  /* =========================================
+      STABLE IDENTITY INITIALISATION
+  ========================================= */
+  useEffect(() => {
+    const sid = secureGetItem("designerId");
+    if (sid) {
+      setDesignerId(sid);
+    } else {
+      router.push("/designerlogin");
+    }
+  }, [router, secureGetItem]);
+
+  /* =========================================
+      STABLE DATA FETCHING
+  ========================================= */
   useEffect(() => {
     if (!designerId) return;
 
-    setLoading(true);
-    api.get(`/designer/${designerId}/portfolio`)
-      .then((res) => {
-        const mapped = res.data.map(w => ({
+    const fetchPortfolio = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(`/designer/${designerId}/portfolio`);
+        
+        // Handle potential encrypted payload from backend
+        let rawData = [];
+        if (res.data?.payload) {
+          rawData = decodePayload(res.data.payload) || [];
+        } else {
+          rawData = Array.isArray(res.data) ? res.data : [];
+        }
+
+        const mapped = rawData.map(w => ({
           ...w,
-          preview: w.image, // Cloudinary URL
+          preview: w.image, 
           isNew: false
         }));
         setWorks(mapped);
-      })
-      .catch(err => console.error("Fetch Portfolio Error:", err))
-      .finally(() => setLoading(false));
-  }, [designerId]);
+      } catch (err) {
+        console.error("Fetch Portfolio Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchPortfolio();
+  }, [designerId, decodePayload]);
+
+  /* =========================================
+      UI ACTIONS
+  ========================================= */
   const addWork = () => {
     if (works.length >= 5) return;
     setWorks((prev) => [
@@ -97,9 +137,9 @@ const DesignerExperience = () => {
     );
   };
 
-  /* =========================
+  /* =========================================
       SAVE / UPDATE WORK
-  ========================= */
+  ========================================= */
   const saveWork = async (work) => {
     if (!work.description && !work.image) {
       alert("Please add an image or description");
@@ -108,6 +148,7 @@ const DesignerExperience = () => {
 
     setSavingId(work.id);
     const formData = new FormData();
+    // Use the decoded designerId for the backend
     formData.append("designerId", designerId);
     formData.append("description", work.description || "");
 
@@ -123,9 +164,13 @@ const DesignerExperience = () => {
         res = await api.put(`/designer/portfolio/${work.id}`, formData);
       }
 
+      // Handle payload response if backend is encrypted
+      const responseData = res.data?.payload ? decodePayload(res.data.payload) : res.data;
+      const workData = responseData.work || responseData;
+
       const updatedWork = {
-        ...res.data.work,
-        preview: res.data.work.image,
+        ...workData,
+        preview: workData.image,
         isNew: false
       };
 
@@ -161,33 +206,19 @@ const DesignerExperience = () => {
     }
   };
 
-  // 2. SHOW SPINNER DURING INITIAL FETCH
   if (loading) return <LoadingSpinner message="Loading your portfolio..." />;
 
   return (
     <>
-      {/* 3. SHOW SPINNER DURING ACTION PROCESSING */}
       {savingId && <LoadingSpinner message="Uploading masterpiece..." />}
       {isDeleting && <LoadingSpinner message="Removing work item..." />}
 
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link 
-              href="/" 
-              className="nav-logo-link" 
-              draggable="true"
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
+            <Link href="/" className="nav-logo-link" style={{ textDecoration: 'none', color: 'inherit' }}>
               <span className="nav-logo-wrap">
-                <Image
-                  src={CoreToCoverLogo}
-                  alt="CoreToCover Logo"
-                  width={120}
-                  height={50}
-                  priority
-                  style={{ height: 'auto', width: '50px' }}
-                />
+                <Image src={CoreToCoverLogo} alt="Logo" width={120} height={50} priority style={{ height: 'auto', width: '50px' }} />
                 <BrandBold>Core2Cover</BrandBold>
               </span>
             </Link>
@@ -209,18 +240,18 @@ const DesignerExperience = () => {
       </header>
 
       <div className="de-page">
-        <div className="de-navigation-top de-reveal">
+        <div className="de-navigation-top">
           <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
             <FaArrowLeft /> Back to Dashboard
           </button>
         </div>
-        <div className="de-header de-reveal">
+        <div className="de-header">
           <h1 className="de-title">My Work Experience</h1>
           <p className="de-subtitle">Showcase your best interior & product designs.</p>
         </div>
 
         {works.length === 0 && (
-          <div className="de-empty de-reveal">
+          <div className="de-empty">
             <img src="https://cdn-icons-png.flaticon.com/512/9541/9541430.png" alt="Empty" width={100} />
             <p className="de-empty-text">You have not added any work yet</p>
             <button className="de-empty-btn" onClick={addWork}>
@@ -231,7 +262,7 @@ const DesignerExperience = () => {
 
         <div className="de-list">
           {works.map((work) => (
-            <div key={work.id} className="de-item de-reveal">
+            <div key={work.id} className="de-item">
               <label className="de-image">
                 {work.preview ? (
                   <img src={work.preview} alt="work" />

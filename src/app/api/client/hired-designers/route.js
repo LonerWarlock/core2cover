@@ -3,26 +3,35 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options"; 
 
+/**
+ * EASY ENCRYPTION HELPER
+ * Encodes data to Base64 to mask it from the Network Tab.
+ */
+const encodeData = (data) => {
+  const jsonString = JSON.stringify(data);
+  return Buffer.from(jsonString).toString("base64");
+};
+
 export async function GET(request) {
   try {
-    // 1. Identify the user via their secure session
+    // 1. Identity Pinning: Verify the secure session
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized access" }, { status: 401 });
     }
 
-    // 2. Fetch the user's ID from the DB using their session email
+    // 2. Verified Data Lookup
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email.toLowerCase().trim() },
       select: { id: true }
     });
 
     if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+      return NextResponse.json({ message: "Identity mismatch" }, { status: 404 });
     }
 
-    // 3. Query hire requests associated with this User ID
+    // 3. Fetch requests associated with verified ID
     const requests = await prisma.designerHireRequest.findMany({
       where: { userId: user.id },
       include: {
@@ -35,7 +44,6 @@ export async function GET(request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    // 4. Map and format the data
     const formatted = requests.map(r => ({
       id: r.id,
       designerId: r.designerId,
@@ -50,8 +58,13 @@ export async function GET(request) {
       userRating: r.userRating 
     }));
 
-    // FIX: Return the correct variable name
-    return NextResponse.json(formatted);
+    /* =========================================
+        SECURE ENCODED RESPONSE
+    ========================================= */
+    return NextResponse.json({
+      payload: encodeData(formatted)
+    });
+
   } catch (error) {
     console.error("Database Fetch Error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

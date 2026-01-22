@@ -21,6 +21,7 @@ const ProductCard = ({
   avgRating,
   ratingCount,
   origin,
+  availability = "available",
   // Logistics Props
   unit,
   unitsPerTrip,
@@ -34,7 +35,6 @@ const ProductCard = ({
   const router = useRouter();
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  // Robust Image Validation
   const getValidSrc = () => {
     if (images && images.length > 0 && images[0]) {
       const src = images[0];
@@ -47,11 +47,12 @@ const ProductCard = ({
   const coverImage = getValidSrc();
   const resolvedSellerName = typeof seller === 'string' ? seller : seller?.name || "Verified Seller";
 
-  /* =========================================
-      ADD TO CART LOGIC (Synced with ProductInfo)
-     ========================================= */
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Prevents navigation to ProductInfo
+    e.stopPropagation(); 
+    if (availability === "out_of_stock") {
+        setMsg({ text: "Sorry, this item is out of stock.", type: "error", show: true });
+        return;
+    }
 
     try {
       addToCart({
@@ -60,7 +61,7 @@ const ProductCard = ({
         name: title,
         supplier: resolvedSellerName,
         amountPerTrip: Number(price),
-        trips: 1, // Default to 1 trip from card
+        trips: 1,
         image: images[0] || "",
         unit: unit || "pcs",
         unitsPerTrip: unitsPerTrip || 1,
@@ -77,7 +78,6 @@ const ProductCard = ({
         show: true
       });
     } catch (error) {
-      console.error("Cart Error:", error);
       setMsg({
         text: "Failed to add item to cart.",
         type: "error",
@@ -97,7 +97,7 @@ const ProductCard = ({
       )}
 
       <article
-        className="product-card"
+        className={`product-card ${availability === 'out_of_stock' ? 'oos-card' : ''}`}
         onClick={() => router.push(`/productinfo?id=${id}`)}
       >
         <div className="product-image-container">
@@ -110,6 +110,15 @@ const ProductCard = ({
             unoptimized={true}
           />
           <span className="product-badge">{category}</span>
+          
+          {/* Availability Badge */}
+          <span className={`stock-badge ${availability}`}>
+             {availability.replace('_', ' ')}
+          </span>
+          
+          {availability === 'out_of_stock' && (
+             <div className="oos-overlay">SOLD OUT</div>
+          )}
         </div>
 
         <div className="product-info">
@@ -122,7 +131,9 @@ const ProductCard = ({
             </div>
           </div>
 
-          <p className="product-desc-text">{description || "No description provided."}</p>
+          <p className="product-desc-text">
+            {description ? (description.length > 80 ? description.substring(0, 80) + '...' : description) : "No description provided."}
+          </p>
 
           <div className="product-seller-group">
             <span className="seller-label">
@@ -138,10 +149,12 @@ const ProductCard = ({
               <span className="price-unit"> / {unit || 'pcs'}</span>
             </div>
             <button
-              className="product-view-btn"
+              className={`product-view-btn ${availability === 'out_of_stock' ? 'disabled' : ''}`}
               onClick={handleAddToCart}
+              disabled={availability === "out_of_stock"}
             >
-              <FaShoppingCart style={{ marginRight: "8px" }} /> Add to Cart
+              <FaShoppingCart style={{ marginRight: "8px" }} /> 
+              {availability === "out_of_stock" ? "Sold Out" : "Add to Cart"}
             </button>
           </div>
         </div>

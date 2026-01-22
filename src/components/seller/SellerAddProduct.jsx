@@ -6,7 +6,6 @@ import Sidebar from "./Sidebar";
 import "./SellerAddProduct.css";
 import { addSellerProduct } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerAddProduct = () => {
@@ -36,14 +35,58 @@ const SellerAddProduct = () => {
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
+  // Mapping categories to units
+  const categoryUnitMap = {
+    "Plywood & Boards": "sheet",
+    "MDF / HDF": "sheet",
+    "Laminates & Veneers": "sheet",
+    "Hardware & Fittings": "pcs",
+    "Glass & Mirrors": "sqft",
+    "Marble & Stone": "sqft",
+    "Fabrics & Upholstery": "metre",
+    "Paints & Finishes": "litre",
+    // Finished goods defaults
+    "Furniture": "pcs",
+    "Lighting": "pcs",
+    "Doors & Windows": "pcs"
+  };
+
+  /* =========================================
+      ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const decodePayload = (payload) => {
+    try {
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      return null;
+    }
+  };
+
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
   useEffect(() => {
     setMounted(true);
-    const sid = localStorage.getItem("sellerId");
+    const sid = secureGetItem("sellerId");
     if (!sid) router.push("/sellerlogin");
     else setSellerId(sid);
   }, [router]);
+
+  // AUTO-SET UNIT BASED ON CATEGORY
+  useEffect(() => {
+    if (category && categoryUnitMap[category]) {
+      setUnit(categoryUnitMap[category]);
+    }
+  }, [category]);
 
   // Commission Calculation
   useEffect(() => {
@@ -85,7 +128,7 @@ const SellerAddProduct = () => {
     e.preventDefault();
     if (!name.trim()) return triggerMsg("Product name is required.", "error");
     if (images.length < 1) return triggerMsg("Upload at least 1 image.", "error");
-    
+
     if (productType === "material") {
       if (!unitsPerTrip || parseFloat(unitsPerTrip) <= 0) {
         return triggerMsg("Please specify units per delivery trip.", "error");
@@ -106,16 +149,15 @@ const SellerAddProduct = () => {
       formData.append("description", description);
       formData.append("availability", availability);
 
-      // LOGISTICS DATA
-      formData.append("unit", productType === "material" ? unit : "pcs");
+      formData.append("unit", unit);
       formData.append("unitsPerTrip", productType === "material" ? unitsPerTrip : 1);
-      formData.append("conversionFactor", productType === "material" ? conversionFactor : 1);
+      formData.append("conversionFactor", productType === "material" ? (conversionFactor || 1) : 1);
 
       images.forEach((img) => formData.append("images", img));
       if (video) formData.append("video", video);
 
       await addSellerProduct(formData);
-      triggerMsg("Product listed successfully! ");
+      triggerMsg("Product listed successfully!");
 
       // Reset form
       setName("");
@@ -128,8 +170,8 @@ const SellerAddProduct = () => {
       setVideo(null);
       setVideoPreview(null);
       setUnit("pcs");
-      setUnitsPerTrip("");     
-      setConversionFactor("");  
+      setUnitsPerTrip("");
+      setConversionFactor("");
     } catch (err) {
       triggerMsg("Server error while adding product", "error");
     } finally {
@@ -141,45 +183,51 @@ const SellerAddProduct = () => {
 
   return (
     <>
-      {/* 2. PLACED AT THE TOP LEVEL TO ENSURE MAXIMUM VISIBILITY */}
       {submitting && <LoadingSpinner message="Uploading product files..." />}
 
       <div className="sma-root">
         {msg.show && (
-          <MessageBox 
-            message={msg.text} 
-            type={msg.type} 
-            onClose={() => setMsg({ ...msg, show: false })} 
+          <MessageBox
+            message={msg.text}
+            type={msg.type}
+            onClose={() => setMsg({ ...msg, show: false })}
           />
         )}
-        
+
         <Sidebar />
-        
+
         <main className="sma-main">
           <form className="sma-card" onSubmit={handleSubmit}>
             <h2 className="sma-title">➕ Add New Product</h2>
-            
+
             <div className="sma-grid">
               <label className="sma-field">
                 <span>Product Name *</span>
-                <input 
-                  className="sma-input" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  required 
+                <input
+                  className="sma-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                 />
               </label>
 
               <label className="sma-field">
-                <span>Your Price (₹) *</span>
-                <input 
-                  type="number" 
-                  className="sma-input" 
-                  value={price} 
-                  onChange={(e) => setPrice(e.target.value)} 
-                  placeholder="Amount you receive" 
-                  required 
+                <span>
+                  Your Price (₹) * <small style={{ color: "#666", marginLeft: "5px", fontWeight: "normal" }}>
+                    (Price for 1 {unit})
+                  </small>
+                </span>
+                <input
+                  type="number"
+                  className="sma-input"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder={`Enter price for 1 ${unit || 'unit'}`}
+                  required
                 />
+                <span style={{ fontSize: "11px", color: "#888", marginTop: "4px", display: "block" }}>
+                  Important: Enter the rate for exactly 1 {unit}. For example, if you sell paint, enter the price for **1 litre**.
+                </span>
               </label>
 
               <label className="sma-field">
@@ -194,10 +242,10 @@ const SellerAddProduct = () => {
 
               <label className="sma-field">
                 <span>Product Type *</span>
-                <select 
-                  className="sma-input" 
-                  value={productType} 
-                  onChange={(e) => { setProductType(e.target.value); setCategory(""); }} 
+                <select
+                  className="sma-input"
+                  value={productType}
+                  onChange={(e) => { setProductType(e.target.value); setCategory(""); }}
                   required
                 >
                   <option value="">Select</option>
@@ -208,11 +256,11 @@ const SellerAddProduct = () => {
 
               <label className="sma-field">
                 <span>Category *</span>
-                <select 
-                  className="sma-input" 
-                  value={category} 
-                  onChange={(e) => setCategory(e.target.value)} 
-                  disabled={!productType} 
+                <select
+                  className="sma-input"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={!productType}
                   required
                 >
                   <option value="">Select</option>
@@ -251,14 +299,14 @@ const SellerAddProduct = () => {
 
                   <label className="sma-field">
                     <span>Units per Delivery Trip *</span>
-                    <input 
-                      type="number" 
-                      className="sma-input" 
-                      value={unitsPerTrip} 
-                      onChange={(e) => setUnitsPerTrip(e.target.value)} 
-                      min="1" 
-                      placeholder="Max units in one vehicle" 
-                      required 
+                    <input
+                      type="number"
+                      className="sma-input"
+                      value={unitsPerTrip}
+                      onChange={(e) => setUnitsPerTrip(e.target.value)}
+                      min="1"
+                      placeholder="Max units in one vehicle"
+                      required
                     />
                   </label>
                 </>
@@ -266,22 +314,22 @@ const SellerAddProduct = () => {
 
               <label className="sma-field sma-full">
                 <span>Detailed Description</span>
-                <textarea 
-                  className="sma-textarea" 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)} 
-                  placeholder="Talk about materials, dimensions, and warranty..." 
+                <textarea
+                  className="sma-textarea"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Talk about materials, dimensions, and warranty..."
                 />
               </label>
 
               <label className="sma-field sma-full">
                 <span>Upload Images (1–10)</span>
-                <input 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  onChange={handleImages} 
-                  className="sma-file" 
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImages}
+                  className="sma-file"
                 />
                 <div className="sma-preview-grid">
                   {imagePreviews.map((src, i) => (
@@ -292,19 +340,19 @@ const SellerAddProduct = () => {
 
               <label className="sma-field sma-full">
                 <span>Upload Video (Max 30MB)</span>
-                <input 
-                  type="file" 
-                  accept="video/*" 
-                  onChange={handleVideo} 
-                  className="sma-file" 
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideo}
+                  className="sma-file"
                 />
                 {videoPreview && <video src={videoPreview} controls className="sma-preview" />}
               </label>
             </div>
 
-            <button 
-              type="submit" 
-              className="sma-btn sma-btn--primary" 
+            <button
+              type="submit"
+              className="sma-btn sma-btn--primary"
               disabled={submitting}
             >
               {submitting ? "Finalising Upload..." : "Add Product to Store"}

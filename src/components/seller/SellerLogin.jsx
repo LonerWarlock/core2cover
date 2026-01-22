@@ -8,16 +8,39 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { sellerLogin } from "../../api/auth";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  // NEW STATE FOR LOADING
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  
+  /**
+   * Scrambles data before saving to Local Storage to prevent plain-text visibility.
+   */
+  const secureSetItem = (key, value) => {
+    if (!value) return;
+    const encodedValue = btoa(String(value)); // Encodes to Base64
+    localStorage.setItem(key, encodedValue);
+  };
+
+  /**
+   * Decodes the backend payload.
+   */
+  const decodePayload = (payload) => {
+    try {
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      console.error("Payload decoding failed:", e);
+      return null;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,25 +49,43 @@ const SellerLogin = () => {
       return;
     }
 
-    setLoading(true); // 2. START LOADING
+    setLoading(true);
 
     try {
-      const res = await sellerLogin({ email, password });
-      localStorage.setItem("sellerId", res.data.seller.id);
-      localStorage.setItem("sellerEmail", res.data.seller.email);
-      localStorage.setItem("sellerProfile", JSON.stringify(res.data.seller));
-      window.dispatchEvent(new Event("storage"));
-      router.push("/sellerdashboard");
+      const response = await sellerLogin({ 
+        email: email.toLowerCase().trim(), 
+        password 
+      });
+      
+      const data = response?.data ?? response;
+
+      // Handle the encrypted payload from the backend
+      if (data?.payload) {
+        const decodedSeller = decodePayload(data.payload);
+
+        // Clear any existing plain-text identifiers
+        localStorage.removeItem("sellerId");
+        localStorage.removeItem("sellerEmail");
+        localStorage.removeItem("sellerProfile");
+
+        // Save new data in scrambled format for privacy in "Inspect" tool
+        secureSetItem("sellerId", decodedSeller.id);
+        secureSetItem("sellerEmail", decodedSeller.email);
+        secureSetItem("sellerProfile", JSON.stringify(decodedSeller));
+
+        // Trigger storage event for Navbar/Sidebar synchronization
+        window.dispatchEvent(new Event("storage"));
+        router.push("/sellerdashboard");
+      }
     } catch (err) {
       alert(err?.response?.data?.message || "Invalid email or password");
     } finally {
-      setLoading(false); // 3. STOP LOADING
+      setLoading(false);
     }
   };
 
   return (
     <>
-      {/* 4. APPLY THE LOADING SPINNER DURING AUTHENTICATION */}
       {loading && <LoadingSpinner message="Accessing your store dashboard..." />}
 
       <div className="login-container">
@@ -55,6 +96,7 @@ const SellerLogin = () => {
             className="brand-logo"
             width={150}
             height={50}
+            priority
             style={{ width: 'auto', height: 'auto', maxWidth: '200px' }}
           />
           <h4>Welcome back, Seller</h4>

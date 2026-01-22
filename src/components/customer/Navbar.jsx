@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -13,7 +13,7 @@ import {
   FaPalette,
   FaUserCircle,
   FaUserGraduate,
-  FaTimes // Added for the close button
+  FaTimes 
 } from "react-icons/fa";
 import { IoMdInformationCircle } from "react-icons/io";
 import "./Navbar.css";
@@ -33,28 +33,42 @@ const Navbar = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  const dropdownRef = useRef(null);
+  // SEPARATE REFS TO PREVENT OVERWRITING
+  const profileRef = useRef(null);
+  const searchRef = useRef(null);
+  
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-
-  const searchQuery = searchParams.get("search") || "";
 
   const rawMaterialSuggestions = ["Plywood", "Plywood Near Me", "Laminates", "Laminates near me", "Paints near me", "Hardware", "Glass & Mirrors", "Glass & Mirrors Near Me", "Tiles", "Flooring", "Adhesives", "Electricals", "Plumbing", "Decorative Items"];
   const designerSuggestions = ["Interior Designer", "Kitchen Designer", "Product Designer", "Architect", "3D Visualizer"];
   const readymadeSuggestions = ["Furniture","Lights","Lighting","Decor Items","Sofa", "Dining Table", "Beds", "Wardrobes", "Office Chairs", "Coffee Tables", "Curtains", "Chandeliers", "Carpets", "Study Tables", "Bookshelves"];
 
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = useCallback((key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null;
+    } catch (e) {
+      return item; // Fallback if not encoded
+    }
+  }, []);
+
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    const name = localStorage.getItem("userName");
-    const id = localStorage.getItem("userId");
+    const email = secureGetItem("userEmail");
+    const name = secureGetItem("userName");
+    const id = secureGetItem("userId");
 
     if (email) {
       setLocalUser({ email, name, id });
     } else {
       setLocalUser(null);
     }
-  }, [pathname]);
+  }, [pathname, secureGetItem]);
 
   const isUserAuthenticated = status === "authenticated" || !!localUser;
   const displayUser = session?.user || localUser;
@@ -63,6 +77,7 @@ const Navbar = () => {
   const isRawMaterialsPage = searchParams.get("page") === "Raw Materials";
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
+  const isProfilePage = pathname === "/userprofile";
   const currentPageTitle = isDesignerSection ? "Professional Designers" : isRawMaterialsPage ? "Raw Materials" : "Readymade Products";
 
   useEffect(() => {
@@ -72,10 +87,15 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // FIXED CLICK OUTSIDE LOGIC
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      // Check Profile Dropdown
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
+      }
+      // Check Search Suggestions
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
     };
@@ -88,14 +108,13 @@ const Navbar = () => {
     setSearchValue(value);
 
     if (value.trim().length > 0) {
-      // UPDATED LOGIC: Determine pool based on current section
       let pool = [];
       if (isDesignerSection) {
         pool = designerSuggestions;
       } else if (isRawMaterialsPage) {
         pool = rawMaterialSuggestions;
       } else {
-        pool = readymadeSuggestions; // Default for Readymade Products
+        pool = readymadeSuggestions;
       }
 
       const filtered = pool.filter(item =>
@@ -194,7 +213,8 @@ const Navbar = () => {
                 </Link>
               )}
 
-              <div className="profile-dropdown-container" ref={dropdownRef}>
+              {/* PROFILE DROPDOWN WITH DEDICATED REF */}
+              <div className="profile-dropdown-container" ref={profileRef}>
                 <div className="nav-profile-trigger" onClick={handleProfileToggle}>
                   <div className="ico">
                     {displayUser?.image ? (
@@ -207,7 +227,6 @@ const Navbar = () => {
 
                 {profileOpen && isUserAuthenticated && (
                   <div className="profile-popover shadow-reveal">
-                    {/* CLOSE BUTTON */}
                     <button
                       className="pop-close-btn"
                       onClick={() => setProfileOpen(false)}
@@ -249,9 +268,10 @@ const Navbar = () => {
         </div>
       </header>
 
-      {!isHomePage && !isContactPage && (
+      {!isHomePage && !isContactPage &&!isProfilePage && (
         <div className="search-container">
-          <div className="search-wrapper" ref={dropdownRef}>
+          {/* SEARCH WRAPPER WITH DEDICATED REF */}
+          <div className="search-wrapper" ref={searchRef}>
             <form onSubmit={handleFormSubmit} className="search_form">
               <input
                 name="search"

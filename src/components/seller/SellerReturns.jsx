@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import "./SellerReturns.css";
 import {
   getSellerReturns,
@@ -9,8 +9,7 @@ import {
 } from "../../api/seller";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
-import { FaTimes, FaExpand } from "react-icons/fa"; // Added icons for the Lightbox
-// 1. IMPORT THE LOADING SPINNER
+import { FaTimes, FaExpand } from "react-icons/fa"; 
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* =========================
@@ -33,6 +32,99 @@ const deriveReturnStatus = (r) => {
   return "REQUESTED";
 };
 
+/* ---------------------------
+    Lightbox Zoom & Drag Component
+    --------------------------- */
+function LightboxImage({ src }) {
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+    const [translate, setTranslate] = useState({ x: 0, y: 0 });
+    const lastPointer = useRef({ active: false, x: 0, y: 0 });
+
+    const transformStyle = {
+        transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+        touchAction: "none",
+        cursor: scale > 1 ? "grab" : "auto",
+        willChange: "transform",
+        transition: lastPointer.current.active ? "none" : "transform 0.1s ease-out"
+    };
+
+    const clamp = (val, a, b) => Math.max(a, Math.min(b, val));
+
+    const getBounds = useCallback((s = scale) => {
+        const c = containerRef.current;
+        if (!c) return { maxX: 0, maxY: 0 };
+        return { 
+            maxX: Math.max(0, (c.clientWidth * s - c.clientWidth) / 2), 
+            maxY: Math.max(0, (c.clientHeight * s - c.clientHeight) / 2) 
+        };
+    }, [scale]);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const onPointerDown = (e) => {
+            if (scale <= 1) return;
+            container.setPointerCapture(e.pointerId);
+            lastPointer.current = { active: true, id: e.pointerId, x: e.clientX, y: e.clientY };
+        };
+
+        const onPointerMove = (e) => {
+            if (!lastPointer.current.active || lastPointer.current.id !== e.pointerId) return;
+            const dx = e.clientX - lastPointer.current.x;
+            const dy = e.clientY - lastPointer.current.y;
+            lastPointer.current.x = e.clientX;
+            lastPointer.current.y = e.clientY;
+
+            setTranslate(prev => {
+                const { maxX, maxY } = getBounds();
+                return { 
+                    x: clamp(prev.x + dx, -maxX, maxX), 
+                    y: clamp(prev.y + dy, -maxY, maxY) 
+                };
+            });
+        };
+
+        const onPointerUp = (e) => {
+            lastPointer.current.active = false;
+            try { container.releasePointerCapture(e.pointerId); } catch {}
+        };
+
+        container.addEventListener("pointerdown", onPointerDown);
+        container.addEventListener("pointermove", onPointerMove);
+        container.addEventListener("pointerup", onPointerUp);
+        return () => {
+            container.removeEventListener("pointerdown", onPointerDown);
+            container.removeEventListener("pointermove", onPointerMove);
+            container.removeEventListener("pointerup", onPointerUp);
+        };
+    }, [getBounds, scale]);
+
+    const onWheel = (e) => {
+        e.preventDefault();
+        const newScale = clamp(scale * (e.deltaY < 0 ? 1.15 : 0.85), 1, 5);
+        setScale(newScale);
+        if (newScale === 1) setTranslate({ x: 0, y: 0 });
+    };
+
+    return (
+        <div 
+            ref={containerRef} 
+            className="lightbox-zoom-container" 
+            style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
+            onWheel={onWheel}
+        >
+            <img 
+                src={src} 
+                alt="Return Evidence Fullscreen" 
+                draggable={false} 
+                style={{ maxWidth: "90%", maxHeight: "90%", objectFit: "contain", userSelect: "none", ...transformStyle }} 
+            />
+        </div>
+    );
+}
+
 export default function SellerReturns() {
   const [sellerId, setSellerId] = useState(null);
   const [returns, setReturns] = useState([]);
@@ -40,14 +132,34 @@ export default function SellerReturns() {
   const [loadingId, setLoadingId] = useState(null);
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  /* 🔹 Modal states */
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedReturnId, setSelectedReturnId] = useState(null);
-  
-  /* 🔹 Lightbox state */
   const [fullscreenImg, setFullscreenImg] = useState(null);
+
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const decodePayload = (payload) => {
+    try {
+      const decodedString = atob(payload);
+      return JSON.parse(decodedString);
+    } catch (e) {
+      console.error("Returns data decryption failed:", e);
+      return null;
+    }
+  };
 
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
@@ -60,7 +172,16 @@ export default function SellerReturns() {
     try {
       setLoading(true);
       const res = await getSellerReturns(sid);
-      setReturns(res.data.returns || []);
+      
+      let data = [];
+      if (res.data?.payload) {
+        const decodedData = decodePayload(res.data.payload);
+        data = decodedData?.returns || [];
+      } else {
+        data = res.data.returns || [];
+      }
+      
+      setReturns(data);
     } catch (err) {
       setReturns([]);
     } finally {
@@ -70,7 +191,7 @@ export default function SellerReturns() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const sid = localStorage.getItem("sellerId");
+      const sid = secureGetItem("sellerId");
       setSellerId(sid);
       if (sid) fetchReturns(sid);
     }
@@ -138,7 +259,6 @@ export default function SellerReturns() {
     }
   };
 
-  // 2. SHOW SPINNER DURING INITIAL FETCH
   if (loading) return (
     <div className="ms-root">
       <Sidebar />
@@ -148,7 +268,6 @@ export default function SellerReturns() {
 
   return (
     <>
-      {/* 3. SHOW SPINNER DURING ACTION PROCESSING */}
       {loadingId && <LoadingSpinner message="Updating request status..." />}
 
       <div className="ms-root">
@@ -234,19 +353,18 @@ export default function SellerReturns() {
           )}
         </div>
 
-        {/* LIGHTBOX / FULLSCREEN VIEW */}
+        {/* Updated Lightbox with Zoom and Drag */}
         {fullscreenImg && (
           <div className="lightbox-overlay" onClick={() => setFullscreenImg(null)}>
             <button className="lightbox-close" onClick={() => setFullscreenImg(null)}>
               <FaTimes />
             </button>
             <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-              <img src={fullscreenImg} alt="Return Evidence Fullscreen" />
+              <LightboxImage src={fullscreenImg} />
             </div>
           </div>
         )}
 
-        {/* APPROVE CONFIRMATION MODAL */}
         {approveModalOpen && (
           <div className="modal-overlay">
             <div className="modal-card">
@@ -264,7 +382,6 @@ export default function SellerReturns() {
           </div>
         )}
 
-        {/* REJECT MODAL */}
         {rejectModalOpen && (
           <div className="modal-overlay">
             <div className="modal-card">

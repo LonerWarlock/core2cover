@@ -9,7 +9,6 @@ import {
 } from "../../api/seller";
 import Sidebar from "./Sidebar";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const EditBusinessDetails = () => {
@@ -20,14 +19,39 @@ const EditBusinessDetails = () => {
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
+    /* =========================================
+        EASY ENCRYPTION HELPERS
+    ========================================= */
+    const secureGetItem = (key) => {
+        if (typeof window === "undefined") return null;
+        const item = localStorage.getItem(key);
+        try {
+            // Decodes the scrambled sellerId from storage
+            return item ? atob(item) : null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const decodePayload = (payload) => {
+        try {
+            // Decodes the backend business data payload
+            const decodedString = atob(payload);
+            return JSON.parse(decodedString);
+        } catch (e) {
+            console.error("Business data decryption failed:", e);
+            return null;
+        }
+    };
+
     const triggerMsg = (text, type = "success") => {
         setMsg({ text, type, show: true });
     };
 
-    // Safe access to localStorage in Next.js
+    // Correctly retrieve the obfuscated ID to match security standards
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const sid = localStorage.getItem("sellerId");
+            const sid = secureGetItem("sellerId");
             if (!sid) {
                 router.push("/sellerlogin");
             } else {
@@ -36,14 +60,19 @@ const EditBusinessDetails = () => {
         }
     }, [router]);
 
-    // Fetch existing details
+    // Fetch existing details with payload handling
     useEffect(() => {
         if (!sellerId) return;
 
         setLoading(true);
         getSellerBusinessDetails(sellerId)
             .then((res) => {
-                setBusiness(res.data);
+                // Handle the encrypted payload from backend
+                let data = res.data;
+                if (res.data?.payload) {
+                    data = decodePayload(res.data.payload);
+                }
+                setBusiness(data);
             })
             .catch((err) => {
                 if (err.response?.status === 404) {
@@ -65,6 +94,7 @@ const EditBusinessDetails = () => {
         setSaving(true);
 
         try {
+            // Send actual decoded ID to the backend API
             await updateSellerBusinessDetails(sellerId, business);
             triggerMsg("Business details updated successfully ", "success");
         } catch (err) {
@@ -74,7 +104,6 @@ const EditBusinessDetails = () => {
         }
     };
 
-    // 2. APPLY THE LOADING SPINNER FOR INITIAL LOAD
     if (loading) return (
         <div className="sma-root">
             <Sidebar />
@@ -89,7 +118,6 @@ const EditBusinessDetails = () => {
 
     return (
         <div className="sma-root">
-            {/* 3. APPLY THE LOADING SPINNER DURING UPDATE */}
             {saving && <LoadingSpinner message="Updating your store profile..." />}
 
             {msg.show && (
@@ -100,7 +128,7 @@ const EditBusinessDetails = () => {
                 />
             )}
             <Sidebar />
-            <div className="business_container">
+            <div className="business_container" >
                 <div className="business-card business-reveal">
                     <h2>Edit Business Details</h2>
                     <p>Update your store information at Core2Cover</p>
@@ -110,7 +138,7 @@ const EditBusinessDetails = () => {
                             <label>Business / Store Name *</label>
                             <input
                                 name="businessName"
-                                value={business.businessName}
+                                value={business.businessName || ""}
                                 onChange={handleChange}
                                 required
                             />
@@ -120,14 +148,13 @@ const EditBusinessDetails = () => {
                             <label>What do you sell? *</label>
                             <select
                                 name="sellerType"
-                                value={business.sellerType}
+                                value={business.sellerType || ""}
                                 onChange={handleChange}
                                 required
                             >
+                                <option value="">Select Category</option>
                                 <option value="interior-products">Interior Products</option>
-                                <option value="raw-materials">
-                                    Raw Materials for Interior Products
-                                </option>
+                                <option value="raw-materials">Raw Materials</option>
                                 <option value="both">Both</option>
                             </select>
                         </div>
@@ -163,12 +190,12 @@ const EditBusinessDetails = () => {
                                 value={business.pincode || ""}
                                 onChange={handleChange}
                             />
-                            <input
+                            {/* <input
                                 name="gst"
                                 placeholder="GST (optional)"
                                 value={business.gst || ""}
                                 onChange={handleChange}
-                            />
+                            /> */}
                         </div>
 
                         <button type="submit" className="primary-btn" disabled={saving}>

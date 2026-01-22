@@ -6,7 +6,6 @@ import Link from "next/link";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./DesignerLogin.css";
 import { designerLogin } from "../../api/designer";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DesignerLogin = () => {
@@ -18,6 +17,31 @@ const DesignerLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  
+  /**
+   * Scrambles data before saving to Local Storage to prevent plain-text visibility.
+   */
+  const secureSetItem = (key, value) => {
+    if (!value) return;
+    const encodedValue = btoa(String(value)); // Encodes to Base64
+    localStorage.setItem(key, encodedValue);
+  };
+
+  /**
+   * Decodes the backend payload.
+   */
+  const decodePayload = (payload) => {
+    try {
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      console.error("Payload decoding failed:", e);
+      return null;
+    }
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -28,18 +52,28 @@ const DesignerLogin = () => {
     setLoading(true);
 
     try {
-      // Axios returns the server response in the .data property
       const res = await designerLogin({
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
 
-      // res.data is the JSON object returned by your POST route
-      const loginData = res.data;
+      const data = res.data;
 
-      if (loginData?.designer?.id) {
-        localStorage.setItem("designerId", loginData.designer.id);
-        router.push("/designerdashboard");
+      // Handle the encrypted payload from the backend
+      if (data?.payload) {
+        const decodedDesigner = decodePayload(data.payload);
+
+        if (decodedDesigner?.id) {
+          // Clear any existing plain-text identifiers
+          localStorage.removeItem("designerId");
+
+          // Save data in scrambled format for privacy in "Inspect" tool
+          secureSetItem("designerId", decodedDesigner.id);
+          
+          router.push("/designerdashboard");
+        } else {
+          throw new Error("Invalid payload data");
+        }
       } else {
         throw new Error("Invalid response from server");
       }
@@ -53,7 +87,6 @@ const DesignerLogin = () => {
 
   return (
     <div className="designer-login-page">
-      {/* 2. APPLY THE LOADING SPINNER DURING AUTHENTICATION */}
       {loading && <LoadingSpinner message="Accessing workspace..." />}
 
       <div className="login-box login-reveal">
@@ -104,7 +137,7 @@ const DesignerLogin = () => {
         </form>
 
         <p className="login-footer">
-          New to Casa?{" "}
+          New to Core2Cover?{" "}
           <Link href="/designersignup" className="login-link">
             Sign up as Designer
           </Link>

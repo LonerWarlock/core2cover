@@ -9,7 +9,6 @@ import api from "../../api/axios";
 import { rateDesigner } from "../../api/designer";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const MyHiredDesigners = () => {
@@ -20,13 +19,23 @@ const MyHiredDesigners = () => {
   const [showRating, setShowRating] = useState(false);
   const [selected, setSelected] = useState(null);
   const [ratingForm, setRatingForm] = useState({ stars: 5, review: "" });
-  // NEW STATE FOR SUBMISSION LOADING
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // MessageBox State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  // Helper to trigger messages
+  /**
+   * EASY DECRYPTION HELPER
+   * Decodes Base64 payloads back into readable JSON.
+   */
+  const decodePayload = (payload) => {
+    try {
+      const decodedString = atob(payload); // Decodes Base64
+      return JSON.parse(decodedString);    // Parses JSON
+    } catch (e) {
+      console.error("Data decryption failed:", e);
+      return null;
+    }
+  };
+
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
@@ -35,9 +44,18 @@ const MyHiredDesigners = () => {
     try {
       setLoading(true);
       setError("");
+      
       const res = await api.get("/client/hired-designers");
-      setDesigners(Array.isArray(res.data) ? res.data : []);
+      
+      // Handle the encrypted payload from backend
+      if (res.data?.payload) {
+        const decodedList = decodePayload(res.data.payload);
+        setDesigners(Array.isArray(decodedList) ? decodedList : []);
+      } else {
+        setDesigners(Array.isArray(res.data) ? res.data : []);
+      }
     } catch (err) {
+      console.error("Load Error:", err);
       setError("Failed to load hired designers");
     } finally {
       setLoading(false);
@@ -56,7 +74,6 @@ const MyHiredDesigners = () => {
     e.preventDefault();
     if (!selected) return;
     try {
-      // 2. SHOW SPINNER DURING SUBMISSION
       setIsSubmitting(true);
       await rateDesigner(selected.designerId, {
         hireRequestId: selected.id,
@@ -65,7 +82,6 @@ const MyHiredDesigners = () => {
       });
       
       triggerMsg("Thank you for rating the designer!", "success");
-      
       setShowRating(false);
       setSelected(null);
       setRatingForm({ stars: 5, review: "" });
@@ -93,14 +109,12 @@ const MyHiredDesigners = () => {
     </div>
   );
 
-  // 3. APPLY THE LOADING SPINNER DURING INITIAL FETCH OR SESSION VERIFICATION
   if (status === "loading" || loading) return <LoadingSpinner message="Retrieving hired experts..." />;
   
   if (status === "unauthenticated") return <div style={{ padding: 60, textAlign: "center" }}><h2>Please login to view your designers</h2></div>;
 
   return (
     <section className="hired-designers-page">
-      {/* 4. SHOW SPINNER DURING RATING SUBMISSION */}
       {isSubmitting && <LoadingSpinner message="Submitting your feedback..." />}
 
       {msg.show && (
@@ -171,7 +185,7 @@ const MyHiredDesigners = () => {
             <div key={d.id} className="review-card">
               <div className="review-header"><strong>{d.name}</strong>{renderStars(d.userRating.stars)}</div>
               {d.userRating.review && <p className="review-text">“{d.userRating.review}”</p>}
-              <span className="review-author">— {d.userRating.reviewerName}</span>
+              <span className="review-author">— {d.userRating.reviewerName || "Designer"}</span>
             </div>
           ))}
         </div>

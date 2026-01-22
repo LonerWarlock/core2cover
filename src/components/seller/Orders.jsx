@@ -9,7 +9,6 @@ import {
 } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
 import { FaTruckLoading, FaRulerCombined, FaUser, FaClock } from "react-icons/fa";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerOrders = () => {
@@ -20,12 +19,37 @@ const SellerOrders = () => {
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
   const [sellerId, setSellerId] = useState(null);
 
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      // Decodes the scrambled sellerId from storage
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const decodePayload = (payload) => {
+    try {
+      // Decodes the backend order data payload
+      const decodedString = atob(payload);
+      return JSON.parse(decodedString);
+    } catch (e) {
+      console.error("Orders decryption failed:", e);
+      return null;
+    }
+  };
+
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
 
   /* =========================
-      Normalizers (Updated for Logistics)
+      Normalizers
   ========================= */
   const normalizeOrder = (o) => {
     const orderItemId = o.orderItemId ?? o.id ?? o.order_item_id ?? null;
@@ -58,9 +82,9 @@ const SellerOrders = () => {
       INITIALISE & FETCH
   ========================= */
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setSellerId(localStorage.getItem("sellerId"));
-    }
+    // Correctly retrieve the obfuscated ID to match your security screenshot
+    const sid = secureGetItem("sellerId");
+    setSellerId(sid);
   }, []);
 
   useEffect(() => {
@@ -70,7 +94,15 @@ const SellerOrders = () => {
       try {
         setLoading(true);
         const res = await getSellerOrders(sellerId);
-        const data = Array.isArray(res.data) ? res.data : [];
+        
+        // Handle the encrypted payload from backend
+        let data = [];
+        if (res.data?.payload) {
+          data = decodePayload(res.data.payload) || [];
+        } else {
+          data = Array.isArray(res.data) ? res.data : [];
+        }
+
         const normalized = data.map(normalizeOrder);
         setOrders(normalized);
       } catch (err) {
@@ -90,7 +122,7 @@ const SellerOrders = () => {
   const updateStatus = async (orderItemId, newStatus) => {
     if (!orderItemId) return;
 
-    const prev = orders;
+    const prev = [...orders];
     setOrders((prevList) =>
       prevList.map((o) =>
         (o._orderItemId === orderItemId || o.id === orderItemId)
@@ -115,7 +147,7 @@ const SellerOrders = () => {
     if (!window.confirm(`Accept all ${pending.length} pending orders?`)) return;
 
     setConfirmingAll(true);
-    const prev = orders;
+    const prev = [...orders];
 
     setOrders((prevList) =>
       prevList.map((o) => (o._status === "pending" ? { ...o, _status: "confirmed" } : o))
@@ -135,13 +167,12 @@ const SellerOrders = () => {
   };
 
   const deliverAllOrders = async () => {
-    const confirmed = orders.filter((o) => o._status === "confirmed")
-                            .concat(orders.filter(o => o._status === "out_for_delivery"));
+    const confirmed = orders.filter((o) => ["confirmed", "out_for_delivery"].includes(o._status));
     if (confirmed.length === 0) return;
     if (!window.confirm(`Mark all active orders as delivered?`)) return;
 
     setDeliveringAll(true);
-    const prev = orders;
+    const prev = [...orders];
 
     setOrders((prevList) =>
       prevList.map((o) => (["confirmed", "out_for_delivery"].includes(o._status) ? { ...o, _status: "fulfilled" } : o))
@@ -161,6 +192,7 @@ const SellerOrders = () => {
   };
 
   const openMaps = (location) => {
+    if (!location) return;
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -180,7 +212,6 @@ const SellerOrders = () => {
   const hasPendingOrders = orders.some((o) => o._status === "pending");
   const hasConfirmedOrders = orders.some((o) => ["confirmed", "out_for_delivery"].includes(o._status));
 
-  // 2. SHOW SPINNER DURING INITIAL FETCH
   if (loading) return (
     <div className="orders-layout">
       <Sidebar />
@@ -190,7 +221,6 @@ const SellerOrders = () => {
 
   return (
     <div className="orders-layout">
-      {/* 3. SHOW SPINNER DURING BULK ACTIONS */}
       {confirmingAll && <LoadingSpinner message="Accepting pending orders..." />}
       {deliveringAll && <LoadingSpinner message="Updating delivery statuses..." />}
 

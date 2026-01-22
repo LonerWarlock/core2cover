@@ -10,7 +10,6 @@ import { GiSandsOfTime } from "react-icons/gi";
 import { FaTruckLoading, FaRulerCombined } from "react-icons/fa";
 import { requestReturn, getUserReturns, getUserCredit } from "../../api/return";
 import Image from "next/image";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* =========================
@@ -81,7 +80,7 @@ const MS_IN_DAY = 1000 * 60 * 60 * 24;
 export default function MyOrders() {
   const [query, setQuery] = useState("");
   const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(true); // NEW LOADING STATE FOR INITIAL FETCH
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [ratings, setRatings] = useState({});
   const [reviews, setReviews] = useState({});
   const [openRating, setOpenRating] = useState({});
@@ -94,9 +93,33 @@ export default function MyOrders() {
   const [credit, setCredit] = useState(0);
   const [userEmail, setUserEmail] = useState(null);
 
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const decodePayload = (payload) => {
+    try {
+      const decodedString = atob(payload); // Decodes Base64
+      return JSON.parse(decodedString);    // Parses JSON
+    } catch (e) {
+      console.error("Order decryption failed:", e);
+      return null;
+    }
+  };
+
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedEmail = localStorage.getItem("userEmail");
+      // Use secure helper to read scrambled email from storage
+      const storedEmail = secureGetItem("userEmail");
       if (storedEmail) {
         setUserEmail(storedEmail.toLowerCase().trim());
       }
@@ -109,7 +132,13 @@ export default function MyOrders() {
     api
       .get(`/orders/user/${encodeURIComponent(userEmail)}`)
       .then((res) => {
-        setOrders(Array.isArray(res.data) ? res.data : []);
+        // Handle potential encrypted payload from backend
+        if (res.data?.payload) {
+          const decodedOrders = decodePayload(res.data.payload);
+          setOrders(Array.isArray(decodedOrders) ? decodedOrders : []);
+        } else {
+          setOrders(Array.isArray(res.data) ? res.data : []);
+        }
       })
       .catch((err) => {
         console.error("Order Fetch Error:", err);
@@ -124,9 +153,15 @@ export default function MyOrders() {
     if (!userEmail) return;
     getUserReturns()
       .then((res) => {
-        const arr = res.data.returns || [];
+        // Handle payload for returns too
+        let rawReturns = res.data.returns || [];
+        if (res.data?.payload) {
+          const decoded = decodePayload(res.data.payload);
+          rawReturns = decoded?.returns || [];
+        }
+        
         const map = {};
-        arr.forEach((r) => {
+        rawReturns.forEach((r) => {
           map[r.orderItemId] = r;
         });
         setReturnsMap(map);
@@ -134,7 +169,14 @@ export default function MyOrders() {
       .catch(() => {});
 
     getUserCredit()
-      .then((res) => setCredit(res.data.credit || 0))
+      .then((res) => {
+        let creditVal = res.data.credit || 0;
+        if (res.data?.payload) {
+          const decoded = decodePayload(res.data.payload);
+          creditVal = decoded?.credit || 0;
+        }
+        setCredit(creditVal);
+      })
       .catch(() => {});
   }, [userEmail]);
 
@@ -206,7 +248,10 @@ export default function MyOrders() {
     setReturnLoading(order.orderItemId);
     try {
       const res = await requestReturn(formData);
-      const created = res.data.returnRequest || res.data;
+      let created = res.data.returnRequest || res.data;
+      if (res.data?.payload) {
+        created = decodePayload(res.data.payload);
+      }
       setReturnsMap((prev) => ({ ...prev, [order.orderItemId]: created }));
       setOpenReturnBox((p) => ({ ...p, [order.orderItemId]: false }));
     } catch (err) {
@@ -224,7 +269,6 @@ export default function MyOrders() {
 
   return (
     <div className="orders-page-container">
-      {/* 1. WRAP THE SPINNER IN A LOCAL CONTAINER */}
       {loadingOrders && (
         <div className="tab-loader-overlay">
           <LoadingSpinner message="Retrieving your orders..." />

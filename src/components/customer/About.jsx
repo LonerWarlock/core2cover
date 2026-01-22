@@ -93,7 +93,7 @@ export default function About() {
                   <Brandbold>Core2Cover</Brandbold> — a premium marketplace for home interiors & materials
                 </h1>
                 <p className="hero-sub">
-                  <Brand>Core2Cover</Brand> is a unified platform where customers can discover
+                  <BrandTag>Core2Cover</BrandTag> is a unified platform where customers can discover
                   curated interior products, source high-quality raw materials, and
                   directly collaborate with skilled freelance interior designers.
                 </p>
@@ -192,7 +192,7 @@ export default function About() {
 
         {/* CTA SECTION */}
         <section className="about-cta-section card">
-          <h2 className="cta-title">Build your space with <Brand>Core2Cover</Brand></h2>
+          <h2 className="cta-title">Build your space with <BrandTag>Core2Cover</BrandTag></h2>
           <div className="cta-actions">
             <Link href="/signup" className="cta-button">Get started</Link>
           </div>

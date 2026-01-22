@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./DesignerEditProfile.css";
 import "./DesignerDashboard.css";
 import { FaCamera, FaBars, FaTimes, FaArrowLeft } from "react-icons/fa";
@@ -13,7 +13,6 @@ import {
 } from "../../api/designer";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
@@ -22,8 +21,6 @@ const DesignerEditProfile = () => {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerId, setDesignerId] = useState(null);
-
-  // Message Box State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
   const [form, setForm] = useState({
@@ -39,37 +36,65 @@ const DesignerEditProfile = () => {
 
   const [profileImage, setProfileImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(true); // Set initial loading to true for fetch
-  const [isUpdating, setIsUpdating] = useState(false); // New state for form submission
+  const [loading, setLoading] = useState(true); 
+  const [isUpdating, setIsUpdating] = useState(false); 
   const [error, setError] = useState("");
+
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = useCallback((key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      // Decodes the scrambled ID from the Application Tab
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const decodePayload = useCallback((payload) => {
+    try {
+      // Decodes backend profile payload if encrypted
+      const decodedString = atob(payload);
+      return JSON.parse(decodedString);
+    } catch (e) {
+      console.error("Profile decryption failed:", e);
+      return null;
+    }
+  }, []);
 
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
 
-  /* =========================
-      INITIALISE & AUTH CHECK
-  ========================= */
+  /* =========================================
+      STABLE IDENTITY INITIALISATION
+  ========================================= */
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const id = localStorage.getItem("designerId");
-      if (!id) {
-        router.push("/designersignup");
-      } else {
-        setDesignerId(id);
-      }
+    const id = secureGetItem("designerId");
+    if (!id) {
+      router.push("/designerlogin");
+    } else {
+      setDesignerId(id);
     }
-  }, [router]);
+  }, [router, secureGetItem]);
 
-  /* =========================
-      FETCH PROFILE (API)
-  ========================= */
+  /* =========================================
+      STABLE FETCH PROFILE
+  ========================================= */
   useEffect(() => {
     if (!designerId) return;
 
-    setLoading(true);
-    getDesignerEditProfile(designerId)
-      .then((data) => {
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        const res = await getDesignerEditProfile(designerId);
+        
+        // Handle potential encrypted payload from backend
+        const data = res?.payload ? decodePayload(res.payload) : res;
+
         setForm({
           fullname: data.fullname || "",
           email: data.email || "",
@@ -84,15 +109,16 @@ const DesignerEditProfile = () => {
         if (data.profileImage) {
           setPreview(data.profileImage);
         }
-      })
-      .catch((err) => {
-        console.error(err);
+      } catch (err) {
+        console.error("Profile Load Error:", err);
         triggerMsg("Failed to load profile details.", "error");
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
-  }, [designerId]);
+      }
+    };
+
+    loadProfile();
+  }, [designerId, decodePayload]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -107,14 +133,14 @@ const DesignerEditProfile = () => {
   };
 
   /* =========================
-      SUBMIT UPDATE (API)
+      SUBMIT UPDATE
   ======================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      setIsUpdating(true); // 2. SHOW SPINNER DURING UPDATE
+      setIsUpdating(true); 
 
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
@@ -125,6 +151,7 @@ const DesignerEditProfile = () => {
         formData.append("profileImage", profileImage);
       }
 
+      // Use actual decoded ID for backend verification
       await updateDesignerProfile(designerId, formData);
 
       triggerMsg("Profile updated successfully", "success");
@@ -141,12 +168,10 @@ const DesignerEditProfile = () => {
     }
   };
 
-  // 3. SHOW SPINNER FOR INITIAL DATA FETCH
   if (loading) return <LoadingSpinner message="Opening profile settings..." />;
 
   return (
     <>
-      {/* 4. SHOW SPINNER FOR SUBMISSION */}
       {isUpdating && <LoadingSpinner message="Updating your professional profile..." />}
 
       {msg.show && (
@@ -163,7 +188,6 @@ const DesignerEditProfile = () => {
             <Link 
               href="/" 
               className="nav-link nav-logo-link" 
-              draggable="true"
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <span className="nav-logo-wrap">
@@ -199,13 +223,13 @@ const DesignerEditProfile = () => {
         </div>
       </header>
 
-      <div className="de-navigation-top de-reveal">
+      <div className="de-navigation-top">
         <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
           <FaArrowLeft /> Back to Dashboard
         </button>
       </div>
       <div className="dep-page">
-        <div className="dep-container dep-reveal">
+        <div className="dep-container">
           <h1 className="dep-title">Edit Profile</h1>
           <p className="dep-sub">
             Update your personal information and designer details.

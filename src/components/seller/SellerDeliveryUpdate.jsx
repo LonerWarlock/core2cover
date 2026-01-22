@@ -8,7 +8,6 @@ import {
     saveSellerDeliveryDetails,
 } from "../../api/seller";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerDeliveryUpdate = () => {
@@ -32,8 +31,32 @@ const SellerDeliveryUpdate = () => {
     const [delivery, setDelivery] = useState(emptyDelivery);
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(true);
-    // NEW STATE FOR SAVING LOADER
     const [saving, setSaving] = useState(false);
+
+    /* =========================================
+        EASY ENCRYPTION HELPERS
+    ========================================= */
+    const secureGetItem = (key) => {
+        if (typeof window === "undefined") return null;
+        const item = localStorage.getItem(key);
+        try {
+            // Decodes the scrambled sellerId from storage
+            return item ? atob(item) : null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const decodePayload = (payload) => {
+        try {
+            // Decodes the backend delivery data payload
+            const decodedString = atob(payload);
+            return JSON.parse(decodedString);
+        } catch (e) {
+            console.error("Logistics decryption failed:", e);
+            return null;
+        }
+    };
 
     const triggerMsg = (text, type = "success") => {
         setMsg({ text, type, show: true });
@@ -41,7 +64,8 @@ const SellerDeliveryUpdate = () => {
 
     useEffect(() => {
         setMounted(true);
-        const sid = localStorage.getItem("sellerId");
+        // Correctly retrieve the obfuscated ID to match your security screenshot
+        const sid = secureGetItem("sellerId");
         if (sid) {
             setSellerId(sid);
         } else {
@@ -54,7 +78,12 @@ const SellerDeliveryUpdate = () => {
 
         getSellerDeliveryDetails(sellerId)
             .then((res) => {
-                const data = res.data;
+                // Handle the encrypted payload from backend
+                let data = res.data;
+                if (res.data?.payload) {
+                    data = decodePayload(res.data.payload);
+                }
+
                 if (data) {
                     setDelivery({
                         ...data,
@@ -87,8 +116,9 @@ const SellerDeliveryUpdate = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSaving(true); // 2. TRIGGER SAVING LOADER
+        setSaving(true); 
         try {
+            // Send actual ID to the backend API
             await saveSellerDeliveryDetails({
                 sellerId: Number(sellerId),
                 ...delivery,
@@ -110,7 +140,6 @@ const SellerDeliveryUpdate = () => {
 
     return (
         <>
-            {/* 3. TOP LEVEL LOADERS */}
             {loading && <LoadingSpinner message="Retrieving delivery configuration..." />}
             {saving && <LoadingSpinner message="Saving your logistics preferences..." />}
 
@@ -131,7 +160,6 @@ const SellerDeliveryUpdate = () => {
 
                         {!loading && (
                             <form onSubmit={handleSubmit}>
-                                {/* Responsibility */}
                                 <div className="input-group">
                                     <label>Who will deliver the product? *</label>
                                     <select name="deliveryResponsibility" value={delivery.deliveryResponsibility} onChange={handleChange} required>
@@ -141,7 +169,6 @@ const SellerDeliveryUpdate = () => {
                                     </select>
                                 </div>
 
-                                {/* Coverage */}
                                 <div className="input-group">
                                     <label>Delivery Coverage *</label>
                                     <select name="deliveryCoverage" value={delivery.deliveryCoverage} onChange={handleChange} required>
@@ -152,7 +179,6 @@ const SellerDeliveryUpdate = () => {
                                     </select>
                                 </div>
 
-                                {/* Type */}
                                 <div className="input-group">
                                     <label>Delivery Type *</label>
                                     <select name="deliveryType" value={delivery.deliveryType} onChange={handleChange} required>
@@ -162,7 +188,6 @@ const SellerDeliveryUpdate = () => {
                                     </select>
                                 </div>
 
-                                {/* Times */}
                                 <div className="grid-2">
                                     <div className="input-group">
                                         <label>Delivery Time (Min days)</label>
@@ -174,7 +199,6 @@ const SellerDeliveryUpdate = () => {
                                     </div>
                                 </div>
 
-                                {/* Shipping Charges */}
                                 <div className="input-group">
                                     <label>Shipping Charges *</label>
                                     <select name="shippingChargeType" value={delivery.shippingChargeType} onChange={handleChange} required>
@@ -191,7 +215,6 @@ const SellerDeliveryUpdate = () => {
                                     </div>
                                 )}
 
-                                {/* Installation */}
                                 <div className="input-group">
                                     <label>Installation Available *</label>
                                     <select name="installationAvailable" value={delivery.installationAvailable} onChange={handleChange} required>

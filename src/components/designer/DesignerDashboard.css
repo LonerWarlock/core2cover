@@ -51,18 +51,15 @@
 
 .brand {
   font-family: var(--brand-font);
-  font-weight: var(--brand-font-weight);
-  letter-spacing: -0.4px;
-  color: var(--olive);
-  align-items: center;  
+  font-size: 1.25rem;
+  color: var(--green-dark) !important;
+  line-height: 1;
 }
 
 .brand-bold {
-  font-family: var(--brand-font-bold);
-  font-weight: var(--brand-font-bold-weight);
-  font-size: large;
+  font-weight: 700;
+  color: var(--green-dark) !important;
 }
-
 /* =========================================
    CASA — PREMIUM NAVBAR STYLES
    Designer Dashboard Focus
@@ -149,7 +146,11 @@
   transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
-.seller-btn {
+.nav-links li{
+  color: white;
+}
+
+.seller-bttn {
   background: #606e52;
   color: #ffffff !important;
   padding: 10px 22px;
@@ -161,7 +162,7 @@
   display: inline-block;
 }
 
-.seller-btn:hover {
+.seller-bttn:hover {
   background: #91a56e;
   transform: translateY(-1px);
 }
@@ -614,20 +615,7 @@
   }
 }
 
-/* Style the seller-btn inside the Designer Dashboard */
-.seller-btn {
-  background: var(--green-dark);
-  color: white !important;
-  padding: 10px 20px;
-  border-radius: 20px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: var(--transition);
-}
 
-.seller-btn:hover {
-  background: var(--green-mid);
-}
 
 /* Header Stats */
 .dd-header-stats {
