@@ -82,7 +82,7 @@ export default function About() {
           <div className="hero-copy">
             {isMobileOrTablet ? (
               <p className="mobile-brand-text">
-                <Brandbold>Core2Cover</Brandbold>
+                <Brandbold>Core2Cover</Brandbold> <br />
                 A unified platform where customers can discover curated interior products,
                 source high-quality raw materials, and collaborate with skilled freelance
                 interior designers — all in one place.
