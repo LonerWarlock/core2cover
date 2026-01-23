@@ -1,9 +1,10 @@
-"use client"; // Required to use usePathname
+"use client";
 
+import { Suspense } from "react"; // 1. Import Suspense
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
-import { usePathname } from "next/navigation"; // Import hook to detect current route
+import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,19 +16,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname(); // Get current URL path
-  const isHome = pathname === "/"; // Check if it is the home page
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   return (
     <html lang="en">
       <head>
-        {/* Manual favicon link */}
         <link rel="icon" href="/icon.png" sizes="any" />
       </head>
       <body 
@@ -35,7 +34,10 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <NextAuthProvider>
-          {children}
+          {/* 2. Wrap children in Suspense to fix the prerender error globally */}
+          <Suspense fallback={null}>
+            {children}
+          </Suspense>
         </NextAuthProvider>
       </body>
     </html>
