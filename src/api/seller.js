@@ -147,3 +147,12 @@ export const approveReturn = (returnId) => {
 export const rejectReturn = (returnId, reason) => {
   return api.patch(`/returns/${returnId}/reject`, { reason });
 };
+
+export const uploadSellerKYC = async (kycData) => {
+  try {
+    const response = await api.post("/seller/kyc", kycData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
