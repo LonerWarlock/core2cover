@@ -6,13 +6,15 @@ export const authOptions = {
     adapter: PrismaAdapter(prisma),
     secret: process.env.NEXTAUTH_SECRET,
     session: {
-        strategy: "jwt", // Use JWT for both Google and Credentials
+        strategy: "jwt", 
     },
     debug: true,
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // FIX: Allow linking Google login to an existing email in the DB
+            allowDangerousEmailAccountLinking: true, 
             profile(profile) {
                 return {
                     id: profile.sub,
