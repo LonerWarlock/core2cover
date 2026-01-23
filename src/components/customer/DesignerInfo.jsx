@@ -7,8 +7,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import {
   FaArrowLeft, FaStar, FaStarHalfAlt, FaRegStar,
-  FaTimes, FaExpand, FaExternalLinkAlt,
-  FaCheckCircle, FaMinusCircle
+  FaTimes, FaExpand, FaCheckCircle, FaMinusCircle, FaMapMarkerAlt
 } from "react-icons/fa";
 import { LuMapPin } from "react-icons/lu";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -16,7 +15,6 @@ import { hireDesigner } from "../../api/designer";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 /* ============================================================
@@ -87,17 +85,16 @@ const DesignerInfoContent = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [hireLoading, setHireLoading] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
 
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  // Lightbox Zoom & Pan States
   const [zoomLevel, setZoomLevel] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const touchStartDist = useRef(0);
-
   const [isMobile, setIsMobile] = useState(false);
 
   const [hireForm, setHireForm] = useState({
@@ -105,15 +102,56 @@ const DesignerInfoContent = () => {
     budget: "", workType: "", timelineDate: "", description: ""
   });
 
+  // AUTO-COMPLETE USER DETAILS FROM SESSION
   useEffect(() => {
     if (session?.user) {
       setHireForm(prev => ({
         ...prev,
-        fullName: session.user.name || "",
-        email: session.user.email || ""
+        fullName: session.user.name || prev.fullName,
+        email: session.user.email || prev.email,
+        mobile: session.user.mobile || session.user.phone || session.user.phoneNumber || prev.mobile
       }));
     }
   }, [session]);
+
+  // GEOLOCATION AUTO-COMPLETE
+  const fetchCurrentLocation = (e) => {
+    e.preventDefault();
+    if (!("geolocation" in navigator)) {
+      triggerMsg("Geolocation not supported", "error");
+      return;
+    }
+
+    setLocLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
+          const data = await response.json();
+
+          if (data.address) {
+            const city = data.address.city || data.address.town || data.address.village || "";
+            const state = data.address.state || "";
+            setHireForm(prev => ({
+              ...prev,
+              location: city && state ? `${city}, ${state}` : city || state || "Detected Location"
+            }));
+            triggerMsg("Location detected!", "success");
+          }
+        } catch (error) {
+          console.error("Geocode Error:", error);
+          triggerMsg("Failed to identify location", "error");
+        } finally {
+          setLocLoading(false);
+        }
+      },
+      (error) => {
+        setLocLoading(false);
+        triggerMsg("Location access denied", "error");
+      }
+    );
+  };
 
   useEffect(() => {
     const checkTouch = () => {
@@ -156,6 +194,7 @@ const DesignerInfoContent = () => {
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
   const handleHireChange = (e) => setHireForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
+  // LIGHTBOX LOGIC
   const handleWheel = useCallback((e) => {
     e.preventDefault();
     const delta = e.deltaY * -0.002;
@@ -229,15 +268,13 @@ const DesignerInfoContent = () => {
     }
   };
 
-  // 2. APPLY THE LOADING SPINNER DURING INITIAL FETCH
   if (loading || !designer) return <LoadingSpinner message="Opening portfolio..." />;
 
   return (
     <>
       <div className="designer-info-page">
-        {/* 3. APPLY SPINNER DURING HIRE REQUEST SUBMISSION */}
         {hireLoading && <LoadingSpinner message="Sending request to designer..." />}
-        
+
         {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
 
         <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
@@ -278,16 +315,52 @@ const DesignerInfoContent = () => {
           </div>
         </section>
 
+        {/* RESTORED REVIEWS SECTION WITH YOUR CUSTOM CLASSES */}
+        <section className="designer-reviews-section">
+          <div className="section-header">
+            <h2>Designer Feedback</h2>
+            <div className="overall-rating-badge">
+              <span className="avg-num">{stats.average || "0.0"}</span>
+              {renderStars(parseFloat(stats.average))}
+              <span className="review-date">({stats.total} Total)</span>
+            </div>
+          </div>
+
+          <div className="reviews-container">
+            {ratings.length > 0 ? (
+              ratings.map((rev, index) => (
+                <div key={index} className="individual-review-card">
+                  <div className="rev-header">
+                    <div className="rev-user-meta">
+                      <div className="rev-avatar">{rev.reviewerName?.charAt(0) || "U"}</div>
+                      <div>
+                        <span className="reviewer-name">{rev.reviewerName || "Verified Client"}</span>
+                        <span className="review-date">{new Date(rev.createdAt).toLocaleDateString('en-GB')}</span>
+                      </div>
+                    </div>
+                    <div className="stars-large">
+                        {"★".repeat(rev.stars)}{"☆".repeat(5 - rev.stars)}
+                    </div>
+                  </div>
+                  <div className="rev-body">
+                    <p>“{rev.review}”</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-history" style={{ padding: '20px', gridColumn: '1/-1', textAlign: 'center' }}>
+                No feedback received yet for this designer.
+              </div>
+            )}
+          </div>
+        </section>
+
         {isLightboxOpen && (
           <div className="lightbox-overlay" onWheel={handleWheel} onClick={closeLightbox}>
             <button className="lightbox-close" onClick={closeLightbox}><FaTimes /></button>
-
             <span className="lightbox-controls-aesthetic">
-              {isMobile
-                ? "Pinch to Zoom • Swipe to Move"
-                : "Scroll to Zoom • Drag to Move"}
+              {isMobile ? "Pinch to Zoom • Swipe to Move" : "Scroll to Zoom • Drag to Move"}
             </span>
-
             <div
               className="lightbox-content"
               onClick={(e) => e.stopPropagation()}
@@ -320,10 +393,41 @@ const DesignerInfoContent = () => {
               <div className="modal-header"><h2>Hire {designer.fullname}</h2><FaTimes onClick={() => setShowForm(false)} style={{ cursor: 'pointer' }} /></div>
               <form className="modal-form" onSubmit={handleHireSubmit}>
                 <div className="form-grid">
-                  <div><label>Full Name</label><input name="fullName" value={hireForm.fullName} onChange={handleHireChange} required /></div>
-                  <div><label>Mobile</label><input name="mobile" value={hireForm.mobile} onChange={handleHireChange} required /></div>
-                  <div><label>Email</label><input type="email" name="email" value={hireForm.email} onChange={handleHireChange} required /></div>
-                  <div><label>Location</label><input name="location" value={hireForm.location} onChange={handleHireChange} required /></div>
+                  <div>
+                    <label>Full Name</label>
+                    <input name="fullName" autoComplete="name" value={hireForm.fullName} onChange={handleHireChange} required />
+                  </div>
+                  <div>
+                    <label>Mobile</label>
+                    <input name="mobile" type="tel" autoComplete="tel" placeholder="Enter mobile number" value={hireForm.mobile} onChange={handleHireChange} required />
+                  </div>
+                  <div>
+                    <label>Email</label>
+                    <input type="email" name="email" autoComplete="email" value={hireForm.email} onChange={handleHireChange} required />
+                  </div>
+                  
+                  <div className="location-field-wrapper">
+                    <label>Location</label>
+                    <div className="location-input-container">
+                      <input
+                        name="location"
+                        value={hireForm.location}
+                        onChange={handleHireChange}
+                        placeholder="City, State"
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        className={`location-fetch-btn ${locLoading ? 'loading' : ''}`} 
+                        onClick={fetchCurrentLocation}
+                        disabled={locLoading}
+                      >
+                        {locLoading ? <div className="btn-spinner"></div> : <FaMapMarkerAlt />}
+                        <span>{locLoading ? "Detecting..." : "Detect"}</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div><label>Budget (₹)</label><input type="number" name="budget" value={hireForm.budget} onChange={handleHireChange} required /></div>
                   <div>
                     <label>Work Type</label>
@@ -348,6 +452,54 @@ const DesignerInfoContent = () => {
         )}
       </div>
       <Footer />
+      
+      <style jsx>{`
+        .location-input-container {
+          display: flex;
+          position: relative;
+          align-items: center;
+          gap: 5px;
+        }
+        .location-input-container input {
+          flex: 1;
+        }
+        .location-fetch-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: #f0f2f0;
+          border: 1px solid #4a5a3f;
+          color: #4a5a3f;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          height: 40px;
+          white-space: nowrap;
+        }
+        .location-fetch-btn:hover {
+          background: #4a5a3f;
+          color: white;
+        }
+        .location-fetch-btn.loading {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        .btn-spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid #ccc;
+          border-top: 2px solid #4a5a3f;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 };

@@ -82,13 +82,12 @@ export const createSellerBusinessDetails = async (businessData) => {
   }
 };
 
-// Fetch business details
 export const getSellerBusinessDetails = (id) => {
   return api.get(`/seller/${id}/business-details`);
 };
 
-// Update business details
 export const updateSellerBusinessDetails = (id, data) => {
+  // This matches the PUT route in the file above
   return api.put(`/seller/${id}/business-details`, data);
 };
 

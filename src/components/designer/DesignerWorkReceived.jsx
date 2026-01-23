@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./DesignerWorkReceived.css";
 import "./DesignerDashboard.css";
 import Link from "next/link";
@@ -24,9 +24,7 @@ import api from "../../api/axios";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import MessageBox from "../ui/MessageBox";
 import { useRouter } from "next/navigation";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
-
 
 const BrandBold = () => (
   <span className="brand brand-bold">Core2Cover</span>
@@ -38,63 +36,98 @@ const DesignerWorkReceived = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Custom Notification State
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
-  // Rate client modal
   const [rateModalOpen, setRateModalOpen] = useState(false);
   const [rateTarget, setRateTarget] = useState(null);
   const [tempStars, setTempStars] = useState(5);
   const [tempReview, setTempReview] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Client Reputation Modal
   const [clientRatingsModalOpen, setClientRatingsModalOpen] = useState(false);
   const [clientRatings, setClientRatings] = useState([]);
   const [ratingsLoading, setRatingsLoading] = useState(false);
-  
-  // Project Status Update Loading
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [designerId, setDesignerId] = useState(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const id = localStorage.getItem("designerId");
-      setDesignerId(id);
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = useCallback((key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      // Decodes the scrambled ID from the Application Tab
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
     }
   }, []);
 
-  useEffect(() => {
-    if (!designerId) {
-      if (designerId === null) return;
-      setLoading(false);
-      return;
+  const decodePayload = useCallback((payload) => {
+    try {
+      // Decodes the backend lead data payload
+      const decodedString = atob(payload);
+      return JSON.parse(decodedString);
+    } catch (e) {
+      console.error("Leads decryption failed:", e);
+      return null;
     }
-    fetchData();
-  }, [designerId]);
+  }, []);
 
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
   };
 
-  const fetchData = async () => {
+  /* =========================================
+      STABLE DATA FETCHING
+  ========================================= */
+  const fetchData = useCallback(async (id) => {
     try {
       setLoading(true);
-      const data = await getDesignerWorkRequests(designerId);
-      setJobs(Array.isArray(data) ? data : []);
+      const res = await getDesignerWorkRequests(id);
+      
+      // Handle potential encrypted payload from backend
+      let data = [];
+      if (res?.payload) {
+        data = decodePayload(res.payload) || [];
+      } else {
+        data = Array.isArray(res) ? res : [];
+      }
+      
+      setJobs(data);
     } catch (err) {
       console.error("Failed fetch work requests", err);
       setJobs([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [decodePayload]);
 
+  /* =========================================
+      STABLE IDENTITY INITIALISATION
+  ========================================= */
+  useEffect(() => {
+    const sid = secureGetItem("designerId");
+    if (sid) {
+      setDesignerId(sid);
+    } else {
+      router.push("/designerlogin");
+    }
+  }, [router, secureGetItem]);
+
+  useEffect(() => {
+    if (!designerId) return;
+    fetchData(designerId);
+  }, [designerId, fetchData]);
+
+  /* =========================================
+      ACTIONS
+  ========================================= */
   const updateStatus = async (jobId, newStatus) => {
     try {
-      setUpdatingStatus(true); // 2. TRIGGER LOADING FOR STATUS CHANGE
+      setUpdatingStatus(true);
       await api.patch(`/designer/work-request/${jobId}/status`, { status: newStatus });
 
       setJobs((prev) =>
@@ -127,7 +160,13 @@ const DesignerWorkReceived = () => {
     try {
       setRatingsLoading(true);
       const res = await api.get(`/client/${userId}/ratings`);
-      setClientRatings(Array.isArray(res.data) ? res.data : []);
+      
+      let rData = res.data;
+      if (res.data?.payload) {
+        rData = decodePayload(res.data.payload);
+      }
+
+      setClientRatings(Array.isArray(rData) ? rData : []);
       setClientRatingsModalOpen(true);
     } catch (err) {
       triggerMsg("Failed to load client reviews", "error");
@@ -144,7 +183,7 @@ const DesignerWorkReceived = () => {
   const submitUserRating = async (e) => {
     e.preventDefault();
     if (!rateTarget || !designerId) {
-      triggerMsg("Missing designer or job information. Please refresh.", "error");
+      triggerMsg("Missing designer or job information.", "error");
       return;
     }
 
@@ -157,14 +196,10 @@ const DesignerWorkReceived = () => {
       });
 
       triggerMsg("Client rated successfully!", "success");
-      await fetchData();
+      await fetchData(designerId);
       closeRateModal();
-      setTempStars(5);
-      setTempReview("");
-
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Failed to rate client";
-      triggerMsg(errorMessage, "error");
+      triggerMsg(err.response?.data?.message || "Failed to rate client", "error");
     } finally {
       setSubmitting(false);
     }
@@ -179,12 +214,10 @@ const DesignerWorkReceived = () => {
     });
   };
 
-  // 3. APPLY SPINNER DURING INITIAL FETCH
   if (loading) return <LoadingSpinner message="Scanning for work requests..." />;
 
   return (
     <>
-      {/* 4. OVERLAY SPINNERS FOR ACTIONS */}
       {updatingStatus && <LoadingSpinner message="Updating project records..." />}
       {submitting && <LoadingSpinner message="Submitting client feedback..." />}
 
@@ -199,12 +232,7 @@ const DesignerWorkReceived = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link 
-              href="/" 
-              className="nav-logo-link" 
-              draggable="true"
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
+            <Link href="/" className="nav-logo-link" style={{ textDecoration: 'none', color: 'inherit' }}>
               <span className="nav-logo-wrap">
                 <Image src={CoreToCoverLogo} alt="Logo" width={120} height={50} style={{ height: "auto", width: "50px" }} />
                 <BrandBold />
@@ -223,8 +251,7 @@ const DesignerWorkReceived = () => {
       </header>
 
       <div className="c2c-dwrx-page">
-
-        <div className="de-navigation-top de-reveal">
+        <div className="de-navigation-top">
           <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
             <FaArrowLeft /> Back to Dashboard
           </button>
@@ -234,7 +261,6 @@ const DesignerWorkReceived = () => {
           <h1 className="c2c-dwrx-title">Work Requests</h1>
           <p className="c2c-dwrx-sub">Premium client leads curated exclusively for you.</p>
         </div>
-
 
         <div className="c2c-dwrx-job-list">
           {jobs.length === 0 && <p style={{ padding: 20 }}>No work requests yet.</p>}

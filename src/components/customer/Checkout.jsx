@@ -9,6 +9,7 @@ import {
   getSingleCheckoutItem,
   clearSingleCheckoutItem,
 } from "../../utils/cart";
+import Footer from "./Footer";
 import { useRouter } from "next/navigation";
 import "./Checkout.css";
 import Navbar from "./Navbar";
@@ -63,25 +64,28 @@ export default function Checkout() {
   const [useCreditForFullAmount, setUseCreditForFullAmount] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
 
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = useCallback((key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try { return item ? atob(item) : null; } catch (e) { return item; }
+  }, []);
+
   const triggerMsg = (text, type = "success") => setMsg({ text, type, show: true });
 
   const updateQty = (id, val) => {
-    // Allow empty string for backspacing
     if (val === "") {
-      setItems((prev) =>
-        prev.map((it) => (it.materialId === id ? { ...it, quantity: "" } : it))
-      );
+      setItems((prev) => prev.map((it) => (it.materialId === id ? { ...it, quantity: "" } : it)));
       return;
     }
-
     const newQty = Number(val);
     if (isNaN(newQty) || newQty < 0) return;
-
     setItems((prev) =>
       prev.map((it) => {
         if (it.materialId === id) {
           const capacity = Number(it.unitsPerTrip || 1);
-          // Ensure trips are calculated correctly even if qty is 0
           const newTrips = newQty > 0 ? Math.ceil(newQty / capacity) : 1;
           return { ...it, quantity: newQty, trips: newTrips };
         }
@@ -116,7 +120,7 @@ export default function Checkout() {
   }, []);
 
   useEffect(() => {
-    const effectiveEmail = session?.user?.email || localStorage.getItem("userEmail");
+    const effectiveEmail = session?.user?.email || secureGetItem("userEmail");
     if (effectiveEmail) {
       setEmail(effectiveEmail);
       api.get(`/user/${encodeURIComponent(effectiveEmail)}`)
@@ -129,53 +133,44 @@ export default function Checkout() {
     const single = getSingleCheckoutItem();
     const rawItems = single ? [single] : getCart();
 
-    setItems((Array.isArray(rawItems) ? rawItems : []).map((it) => {
-      const qty = Number(it.quantity || 1);
-      const upt = Number(it.unitsPerTrip || 1);
-
-      return {
-        ...it,
-        quantity: qty,
-        unit: it.unit || "pcs",
-        conversionFactor: Number(it.conversionFactor || 1),
-        unitsPerTrip: upt,
-        trips: Math.ceil(qty / upt),
-        amountPerTrip: Number(it.amountPerTrip || it.price || 0),
-        shippingCharge: Number(it.shippingCharge ?? 0),
-        installationCharge: Number(it.installationCharge ?? 0),
-        shippingChargeType: String(it.shippingChargeType || "Paid").trim(),
-        installationAvailable: String(it.installationAvailable || "no").trim(),
-      };
-    }));
+    setItems((Array.isArray(rawItems) ? rawItems : []).map((it) => ({
+      ...it,
+      quantity: Number(it.quantity || 1),
+      trips: Number(it.trips || 1),
+      amountPerTrip: Number(it.amountPerTrip || it.price || 0),
+      shippingCharge: Number(it.shippingCharge ?? 0),
+      // PER-SELLER DATA FROM UPDATED BACKEND
+      installationCharge: Number(it.installationCharge ?? 0),
+      shippingChargeType: String(it.shippingChargeType || "Paid").trim(),
+      installationAvailable: String(it.installationAvailable || "no").trim().toLowerCase(),
+    })));
 
     getUserCredit().then((res) => setCredit(Number(res.data.credit || 0))).catch(() => setCredit(0));
-  }, [session, status]);
+  }, [session, status, secureGetItem]);
 
+  /* CALCULATE TOTALS INCLUDING INSTALLATION */
   const computeSummary = useMemo(() => {
     let subtotal = 0, rawDeliveryCharge = 0, installationTotal = 0;
 
     items.forEach((it) => {
-      subtotal += (Number(it.amountPerTrip) * it.quantity);
-      const isFreeShipping = it.shippingChargeType?.toLowerCase() === "free";
-      if (!isFreeShipping) {
-        rawDeliveryCharge += (Number(it.shippingCharge) * it.trips);
+      const qty = Number(it.quantity) || 0;
+      subtotal += (Number(it.amountPerTrip) * qty);
+      
+      if (it.shippingChargeType?.toLowerCase() !== "free") {
+        rawDeliveryCharge += (Number(it.shippingCharge) * (Number(it.trips) || 1));
       }
-      if (it.installationAvailable?.toLowerCase() === "yes") {
-        installationTotal += (Number(it.installationCharge) * it.quantity);
+
+      if (it.installationAvailable === "yes") {
+        installationTotal += (Number(it.installationCharge) * qty);
       }
     });
 
-    let platformCharge = 0;
-    if (subtotal < 10000) platformCharge = 89;
-    else if (subtotal <= 50000 && subtotal > 10000) platformCharge = 69;
-    else platformCharge = 59;
-
-    const deliveryWithPlatform = rawDeliveryCharge + platformCharge;
-    const finalTotal = subtotal + deliveryWithPlatform + installationTotal;
+    let platformCharge = subtotal > 0 ? (subtotal < 10000 ? 89 : subtotal <= 50000 ? 69 : 59) : 0;
+    const finalTotal = subtotal + rawDeliveryCharge + platformCharge + installationTotal;
 
     return {
       subtotal,
-      deliveryCharge: deliveryWithPlatform,
+      deliveryCharge: rawDeliveryCharge + platformCharge,
       installationTotal,
       grandTotal: finalTotal
     };
@@ -185,6 +180,7 @@ export default function Checkout() {
     const hasInvalidQty = items.some(it => !it.quantity || Number(it.quantity) <= 0);
     if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
     if (hasInvalidQty) return triggerMsg("Please enter valid quantities for all items.", "error");
+    
     setLoading(true);
     try {
       const res = await api.post("/order/place", {
@@ -195,13 +191,15 @@ export default function Checkout() {
           trips: it.trips,
           unit: it.unit,
           conversionFactor: it.conversionFactor,
-          unitsPerTrip: it.unitsPerTrip
+          unitsPerTrip: it.unitsPerTrip,
+          installationCharge: it.installationCharge,
+          installationAvailable: it.installationAvailable
         })),
         summary: computeSummary,
         creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
       });
       if (res?.data?.orderId) {
-        localStorage.setItem("userEmail", email.toLowerCase().trim());
+        localStorage.setItem("userEmail", btoa(email.toLowerCase().trim()));
         clearSingleCheckoutItem();
         clearCart();
         triggerMsg("Order placed successfully!", "success");
@@ -232,46 +230,31 @@ export default function Checkout() {
 
         <div className="checkout-grid">
           <section className="checkout-left">
-            {/* Items Card */}
+            {/* ITEMS REVIEW */}
             <div className="checkout-card">
               <h2><FaShoppingBag /> Review Items</h2>
               <div className="checkout-items-list">
                 {items.map((item, idx) => (
                   <div key={idx} className="checkout-item">
                     <div className="checkout-item-img-container">
-                      <Image
-                        src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image}`) : sample}
-                        alt={item.name || "Product"}
-                        width={80}
-                        height={80}
-                        className="checkout-item-img"
-                        unoptimized
-                      />
+                      <Image src={item.image ? (item.image.startsWith('http') ? item.image : `/${item.image}`) : sample} alt="item" width={80} height={80} className="checkout-item-img" unoptimized />
                     </div>
                     <div className="checkout-item-details">
                       <h4 className="checkout-item-name">{item.name}</h4>
-                      <p className="checkout-item-seller">Seller: {item.supplier || item.seller}</p>
+                      <p className="checkout-item-seller">Seller ID: {item.sellerId || item.supplierId}</p>
                       <div className="checkout-logistics-info">
-                        <span><FaRulerCombined /> {(item.quantity * item.conversionFactor).toFixed(0)} Sq. Ft</span>
                         <span><FaTruckLoading /> {item.trips} Trip(s)</span>
-                        {item.installationAvailable === "yes" && <span className="installation-tag"><FaTools /> Installation Incl.</span>}
+                        {item.installationAvailable === "yes" && (
+                          <span className="installation-tag" style={{color: '#4e5a44', fontWeight: '600'}}>
+                            <FaTools /> Seller Install: {formatINR(item.installationCharge)}/unit
+                          </span>
+                        )}
                       </div>
                       <div className="checkout-item-meta-row">
                         <div className="checkout-qty-controls">
                           <button onClick={() => updateQty(item.materialId, item.quantity - 1)}>-</button>
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            min="1"
-                            onChange={(e) => updateQty(item.materialId, e.target.value)}
-                            onBlur={(e) => {
-                              if (!e.target.value || Number(e.target.value) <= 0) {
-                                updateQty(item.materialId, 1);
-                              }
-                            }}
-                          />
+                          <input type="number" value={item.quantity} readOnly />
                           <button onClick={() => updateQty(item.materialId, item.quantity + 1)}>+</button>
-                          <span className="checkout-unit-tag">{item.unit}</span>
                         </div>
                         <span className="checkout-item-sub">{formatINR(item.amountPerTrip * item.quantity)}</span>
                       </div>
@@ -281,55 +264,43 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Store Credit Card */}
+            {/* STORE CREDIT SECTION */}
             {credit > 0 && (
-              <div className="checkout-card credit-card">
+              <div className="checkout-card credit-card" style={{ border: '1px solid #4e5a44', background: '#f9faf8' }}>
                 <h2><FaWallet /> Store Credit</h2>
                 <div className="credit-info">
-                  <p>You have <strong>{formatINR(credit)}</strong> available in store credit.</p>
+                  <p>Available Balance: <strong>{formatINR(credit)}</strong></p>
                   {credit >= computeSummary.grandTotal ? (
-                    <label className="credit-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={useCreditForFullAmount}
-                        onChange={(e) => setUseCreditForFullAmount(e.target.checked)}
-                      />
-                      <span>Apply credit to pay for this order in full</span>
+                    <label className="credit-checkbox" style={{ display: 'flex', gap: '10px', alignItems: 'center', cursor: 'pointer', marginTop: '10px' }}>
+                      <input type="checkbox" style={{ width: '18px', height: '18px' }} checked={useCreditForFullAmount} onChange={(e) => setUseCreditForFullAmount(e.target.checked)} />
+                      <span style={{ fontWeight: '500' }}>Pay in full using store credit</span>
                     </label>
                   ) : (
-                    <p className="muted">Credit can only be applied if it covers the full order amount.</p>
+                    <p className="muted" style={{ fontSize: '0.85rem', color: '#666' }}>
+                      Insufficient balance to cover the full order amount.
+                    </p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Contact Card */}
+            {/* CONTACT & DELIVERY */}
             <div className="checkout-card">
               <h2>Contact Information</h2>
               <div className="form-grid">
-                <label className="form-row">
-                  <span>Full name</span>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
-                </label>
-                <label className="form-row">
-                  <span>Email Address</span>
-                  <input value={email} disabled className="disabled-input" />
-                </label>
+                <label className="form-row"><span>Full name</span><input value={name} onChange={(e) => setName(e.target.value)} /></label>
+                <label className="form-row"><span>Email Address</span><input value={email} disabled className="disabled-input" /></label>
               </div>
             </div>
 
-            {/* Map Card */}
             <div className="checkout-card">
               <h2><FaMapMarkerAlt /> Delivery Location</h2>
               <div className="search-box-wrapper">
                 <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
-                  <div className="checkout-search-inner">
-                    <FaSearch className="search-icon" />
-                    <input type="text" placeholder="Search for your street or house number..." />
-                  </div>
+                  <div className="checkout-search-inner"><FaSearch className="search-icon" /><input type="text" placeholder="Search address..." /></div>
                 </Autocomplete>
               </div>
-              <GoogleMap mapContainerStyle={mapContainerStyle} center={markerPosition || defaultCenter} zoom={12} onLoad={(map) => (mapRef.current = map)} onClick={onMapClick}>
+              <GoogleMap mapContainerStyle={mapContainerStyle} center={markerPosition || defaultCenter} zoom={15} onLoad={(map) => (mapRef.current = map)} onClick={onMapClick}>
                 {markerPosition && <Marker position={markerPosition} />}
               </GoogleMap>
               <label className="form-row address-textarea" style={{ marginTop: "15px" }}>
@@ -338,7 +309,6 @@ export default function Checkout() {
               </label>
             </div>
 
-            {/* Payment Card */}
             {!useCreditForFullAmount && (
               <div className="checkout-card">
                 <h2>Payment Method</h2>
@@ -354,6 +324,7 @@ export default function Checkout() {
             )}
           </section>
 
+          {/* ORDER SUMMARY */}
           <aside className="checkout-right">
             <div className="summary-card">
               <h2 className="summary-title">Order Summary</h2>
@@ -366,20 +337,24 @@ export default function Checkout() {
                   <span>Delivery Charges</span>
                   <span>{formatINR(computeSummary.deliveryCharge)}</span>
                 </div>
+                
+                {/* INSTALLATION CHARGES - FORCED VISIBLE IF > 0 */}
                 {computeSummary.installationTotal > 0 && (
-                  <div className="summary-row highlight-row">
-                    <span><FaTools /> Installation Charges</span>
+                  <div className="summary-row highlight-row" style={{ color: '#4e5a44', fontWeight: 'bold', borderTop: '1px dashed #ddd', paddingTop: '10px', marginTop: '5px' }}>
+                    <span><FaTools style={{marginRight: '8px'}} /> Installation Charges</span>
                     <span>{formatINR(computeSummary.installationTotal)}</span>
                   </div>
                 )}
               </div>
               <hr className="summary-divider" />
+              
               {useCreditForFullAmount && (
-                <div className="summary-row credit-applied">
+                <div className="summary-row credit-applied" style={{ color: '#606E52', fontWeight: '600' }}>
                   <span>Credit Applied</span>
-                  <span style={{ color: '#606E52' }}>-{formatINR(computeSummary.grandTotal)}</span>
+                  <span>-{formatINR(computeSummary.grandTotal)}</span>
                 </div>
               )}
+              
               <div className="summary-row total">
                 <span>Total Amount</span>
                 <span>{useCreditForFullAmount ? formatINR(0) : formatINR(computeSummary.grandTotal)}</span>
@@ -393,6 +368,7 @@ export default function Checkout() {
           </aside>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

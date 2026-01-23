@@ -775,3 +775,31 @@
     gap: 20px;
   }
 }
+
+/* Availability Badge Styling */
+.availability-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.availability-badge.available {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #2e7d32;
+}
+
+.availability-badge.low_stock {
+    background-color: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ef6c00;
+}
+
+.availability-badge.out_of_stock {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #c62828;
+}

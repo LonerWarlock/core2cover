@@ -449,3 +449,48 @@
     align-items: center;
   }
 }
+
+.product-image-container {
+    position: relative; /* Required for the badge to stick to the corner */
+}
+
+.stock-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-radius: 4px;
+    z-index: 2;
+    text-transform: uppercase;
+}
+
+/* Specific Badge Colors */
+.stock-badge.available { background: #2e7d32; color: white; }
+.stock-badge.low_stock { background: #ef6c00; color: white; }
+.stock-badge.out_of_stock { background: #c62828; color: white; }
+
+/* Out of Stock Overlay for the Image */
+.oos-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c62828;
+    font-weight: 800;
+    font-size: 1.2rem;
+    z-index: 1;
+}
+
+/* Dim the card if out of stock */
+.oos-card {
+    opacity: 0.8;
+}
+
+.product-view-btn.disabled {
+    background-color: #ccc !important;
+    cursor: not-allowed;
+}

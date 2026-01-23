@@ -524,3 +524,17 @@
   font-weight: bold;
   cursor: not-allowed;
 }
+
+.ms-label-hint {
+    font-size: 0.8rem;
+    color: #6b7280; /* Gray color */
+    font-weight: normal;
+    margin-left: 4px;
+}
+
+.ms-helper-text {
+    font-size: 0.75rem;
+    color: #4b5563;
+    margin-top: 4px;
+    font-style: italic;
+}

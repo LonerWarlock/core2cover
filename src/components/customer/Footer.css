@@ -81,6 +81,11 @@
   transform: translateY(-2px);
 }
 
+.footer-social a:hover svg, 
+.footer-social a:hover i {
+  color: #fff !important;
+}
+
 .footer-bottom {
   font-size: 0.75rem;
   color: var(--text-muted);

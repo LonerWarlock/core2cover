@@ -17,31 +17,20 @@ import {
 
 const Cart = () => {
   const router = useRouter();
-
-  // Hydration safety state
   const [isMounted, setIsMounted] = useState(false);
   const [basketItems, setBasketItems] = useState([]);
 
-  /* ===============================
-      INITIAL LOAD (Hydration Safe)
-  =============================== */
   useEffect(() => {
     setIsMounted(true);
     const cart = loadCart();
     setBasketItems(Array.isArray(cart) ? cart : []);
   }, []);
 
-  /* ===============================
-      REFRESH CART
-  =============================== */
   const refreshCart = () => {
     const cart = loadCart();
     setBasketItems(Array.isArray(cart) ? cart : []);
   };
 
-  /* ===============================
-      QUANTITY HANDLERS
-  =============================== */
   const handleQuantityChange = (id, value) => {
     if (value === "") {
       setBasketItems((prev) =>
@@ -51,10 +40,8 @@ const Cart = () => {
       );
       return;
     }
-
     const qty = Number(value);
     if (isNaN(qty) || qty < 1) return;
-
     updateCartItemQuantity(id, qty);
     refreshCart();
   };
@@ -66,33 +53,21 @@ const Cart = () => {
     refreshCart();
   };
 
-  /* ===============================
-      REMOVE ITEM
-  =============================== */
   const handleRemove = (id) => {
     removeFromCart(id);
     refreshCart();
   };
 
-  /* ===============================
-      TOTAL CALCULATION
-  =============================== */
   const subtotal = basketItems.reduce(
     (sum, item) =>
       sum + (Number(item.amountPerTrip) || 0) * (Number(item.trips) || 1),
     0
   );
 
-  /* ===============================
-      CHECKOUT NAVIGATION 
-  =============================== */
   const handleCheckout = () => {
     if (!basketItems.length) return;
-
-    // Explicitly map keys and ensure Number types
     const formattedItems = basketItems.map(item => ({
       ...item,
-      // Ensure these keys are preserved for the Checkout computation logic
       shippingCharge: Number(item.shippingCharge || 0),
       installationCharge: Number(item.installationCharge || 0),
       shippingChargeType: item.shippingChargeType || "Paid",
@@ -102,24 +77,30 @@ const Cart = () => {
     }));
 
     try {
-      localStorage.setItem("casa_cart", JSON.stringify(formattedItems));
-      clearSingleCheckoutItem(); // Avoid conflicts with "Buy Now"
+      localStorage.setItem("casa_cart", btoa(JSON.stringify(formattedItems)));
+      clearSingleCheckoutItem(); 
       router.push("/checkout");
     } catch (err) {
       console.error("Failed to save cart for checkout", err);
     }
   };
 
-  // Prevent rendering the dynamic basket content until mounted on the client
+  /**
+   * Helper to resolve image source correctly
+   */
+  const getImageUrl = (img) => {
+    if (!img) return sample;
+    if (typeof img !== 'string') return sample;
+    if (img.startsWith("http")) return img;
+    // Ensure relative paths have a leading slash but not double slashes
+    return img.startsWith("/") ? img : `/${img}`;
+  };
+
   if (!isMounted) {
     return (
       <>
         <Navbar />
-        <main className="cart-page">
-          <div className="cart-loading">
-            <p>Loading your shopping basket...</p>
-          </div>
-        </main>
+        <main className="cart-page"><div className="cart-loading"><p>Loading...</p></div></main>
         <Footer />
       </>
     );
@@ -128,7 +109,6 @@ const Cart = () => {
   return (
     <>
       <Navbar />
-
       <div className="cart-top-nav">
         <button className="cart-back-btn" onClick={() => router.back()}>
           <FaArrowLeft /> Back to Shopping
@@ -136,16 +116,12 @@ const Cart = () => {
       </div>
       <main className="cart-page">
         <h1 className="cart-heading">Your Shopping Basket</h1>
-
         <section className="cart-layout">
           <div className="cart-list">
             {basketItems.length === 0 ? (
               <div className="cart-empty-container">
                 <p className="cart-empty">Your basket is empty.</p>
-                <button
-                  className="continue-shopping-btn"
-                  onClick={() => router.push('/productlisting')}
-                >
+                <button className="continue-shopping-btn" onClick={() => router.push('/productlisting')}>
                   Continue Shopping
                 </button>
               </div>
@@ -154,28 +130,20 @@ const Cart = () => {
                 <article key={`${item.materialId}-${item.supplierId}`} className="cart-card">
                   <div className="cart-img-box">
                     <Image
-                      src={
-                        item.image && typeof item.image === "string" && item.image.startsWith("http")
-                          ? item.image
-                          : item.image
-                            ? `/${item.image}`
-                            : sample
-                      }
+                      src={getImageUrl(item.image)}
                       className="cart-img"
                       alt={item.name || "Product Image"}
                       width={200}
                       height={200}
                       style={{ objectFit: "cover" }}
+                      unoptimized // Useful if paths are external or complex
                     />
                   </div>
 
                   <div className="cart-details">
                     <h3>{item.name}</h3>
                     <p className="cart-price">
-                      ₹
-                      {(
-                        Number(item.amountPerTrip) * (Number(item.trips) || 1)
-                      ).toLocaleString()}
+                      ₹{(Number(item.amountPerTrip) * (Number(item.trips) || 1)).toLocaleString()}
                     </p>
 
                     <div className="cart-actions">
@@ -185,19 +153,11 @@ const Cart = () => {
                           type="number"
                           min="1"
                           value={item.trips}
-                          onChange={(e) =>
-                            handleQuantityChange(item.materialId, e.target.value)
-                          }
-                          onBlur={(e) =>
-                            handleQuantityBlur(item.materialId, e.target.value)
-                          }
+                          onChange={(e) => handleQuantityChange(item.materialId, e.target.value)}
+                          onBlur={(e) => handleQuantityBlur(item.materialId, e.target.value)}
                         />
                       </div>
-
-                      <button
-                        className="cart-remove-btn"
-                        onClick={() => handleRemove(item.materialId)}
-                      >
+                      <button className="cart-remove-btn" onClick={() => handleRemove(item.materialId)}>
                         Remove
                       </button>
                     </div>
@@ -209,20 +169,9 @@ const Cart = () => {
 
           <aside className="cart-summary">
             <h2>Order Summary</h2>
-            <div className="summary-row">
-              <span>Subtotal</span>
-              <span>₹{subtotal.toLocaleString()}</span>
-            </div>
-            <div className="summary-row total">
-              <span>Estimated Total</span>
-              <span>₹{subtotal.toLocaleString()}</span>
-            </div>
-
-            <button
-              className="checkout-btn"
-              disabled={!basketItems.length}
-              onClick={handleCheckout}
-            >
+            <div className="summary-row"><span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span></div>
+            <div className="summary-row total"><span>Estimated Total</span><span>₹{subtotal.toLocaleString()}</span></div>
+            <button className="checkout-btn" disabled={!basketItems.length} onClick={handleCheckout}>
               Proceed to Checkout
             </button>
           </aside>

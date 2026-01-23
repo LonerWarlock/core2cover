@@ -1,24 +1,26 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api", // HARDCODE THIS to ensure it hits your local routes
+  baseURL: "/api", 
   withCredentials: true,
   headers: { "Content-Type": "application/json" }
 });
 
-// Request Interceptor: Attach local storage IDs for extra validation
+/* =========================================
+    SECURE REQUEST INTERCEPTOR
+========================================= */
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      //const userEmail = localStorage.getItem("userEmail");
       const sellerId = localStorage.getItem("sellerId");
       const designerId = localStorage.getItem("designerId");
+      const token = localStorage.getItem("token");
 
-      //if (userEmail) config.headers["x-user-email"] = userEmail;
+      // Attach secure identifiers to headers
       if (sellerId) config.headers["x-seller-id"] = sellerId;
       if (designerId) config.headers["x-designer-id"] = designerId;
       
-      const token = localStorage.getItem("token");
+      // Pin the Identity via Bearer Token
       if (token) {
         config.headers["Authorization"] = `Bearer ${token}`;
       }
@@ -28,11 +30,23 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Better error logging
+/* =========================================
+    SECURE RESPONSE INTERCEPTOR
+========================================= */
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Logic for global decryption will go here once backend is ready
+    return response;
+  },
   (error) => {
-    // This logs the 401 error to your console
+    // Handle session expiry (401)
+    if (error.response?.status === 401) {
+      console.warn("Security Challenge: Unauthorized or Expired Session.");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+      }
+    }
+
     console.error("API Error Interface:", error.response?.data?.message || error.message);
     return Promise.reject(error);
   }

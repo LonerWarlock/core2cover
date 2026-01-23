@@ -14,7 +14,6 @@ import {
 import "./Signup.css";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 import MessageBox from "../ui/MessageBox";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function Signup() {
@@ -41,6 +40,19 @@ export default function Signup() {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState({ text: "", type: "", show: false });
+
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const decodePayload = (payload) => {
+    try {
+      const decodedString = atob(payload); // Decodes Base64
+      return JSON.parse(decodedString);    // Parses JSON
+    } catch (e) {
+      console.error("Signup payload decoding failed", e);
+      return null;
+    }
+  };
 
   const showMessage = (text, type = "success") => {
     setMsg({ text, type, show: true });
@@ -115,13 +127,20 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await customerSignup({
+      // Outgoing data is protected by HTTPS
+      const response = await customerSignup({
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim(),
         address: form.address.trim(),
         password: form.password,
       });
+
+      // Decode the protected payload from the backend
+      if (response.data?.payload) {
+        const decodedUser = decodePayload(response.data.payload);
+        console.log("Secure Identity Created:", decodedUser?.email);
+      }
 
       showMessage("Account created successfully! Redirecting to login...", "success");
       setTimeout(() => router.push("/login"), 2000);
@@ -134,7 +153,6 @@ export default function Signup() {
 
   return (
     <>
-      {/* 2. OVERLAY LOADERS FOR VARIOUS PROCESSES */}
       {sendingOtp && <LoadingSpinner message="Sending code..." />}
       {verifyingOtp && <LoadingSpinner message="Verifying..." />}
       {loading && <LoadingSpinner message="Creating your account..." />}

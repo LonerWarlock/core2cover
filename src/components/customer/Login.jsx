@@ -4,13 +4,16 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-// Consolidate all react-icons into ONE import statement
 import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 import { customerLogin } from "../../api/auth"; 
 import "./Login.css";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
+/**
+ * Login Component
+ * Handles user authentication via credentials and Google.
+ * Implements Base64 obfuscation for Local Storage data.
+ */
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,24 +21,52 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter(); 
-  const { data: session, status } = useSession(); // Retrieve NextAuth session status
+  const { data: session, status } = useSession();
 
-  // Redirect to home if user is already authenticated via Google
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  
+  /**
+   * Scrambles data before saving to Local Storage to prevent plain-text visibility.
+   */
+  const secureSetItem = (key, value) => {
+    if (!value) return;
+    const encodedValue = btoa(String(value)); // Encodes to Base64
+    localStorage.setItem(key, encodedValue);
+  };
+
+  /**
+   * Decodes the backend payload.
+   */
+  const decodePayload = (payload) => {
+    try {
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      console.error("Payload decoding failed:", e);
+      return null;
+    }
+  };
+
+  /* =========================================
+      SESSION SYNC & REDIRECT
+  ========================================= */
   useEffect(() => {
-  if (status === "authenticated" && session?.user) {
-    // If logged in via Google, sync the data to localStorage 
-    // so the rest of your app doesn't "malfunction"
-    localStorage.setItem("userEmail", session.user.email);
-    localStorage.setItem("userName", session.user.name);
-    localStorage.setItem("userId", session.user.id);
-    
-    router.push("/userprofile");
-  }
-}, [status, session, router]);
+    if (status === "authenticated" && session?.user) {
+      // Obfuscate Google session data before it enters Local Storage
+      secureSetItem("userEmail", session.user.email);
+      secureSetItem("userName", session.user.name);
+      secureSetItem("userId", session.user.id);
+      
+      router.push("/userprofile");
+    }
+  }, [status, session, router]);
 
-  const isEmailValid = (val) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  const isEmailValid = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
+  /* =========================================
+      MANUAL LOGIN HANDLER
+  ========================================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -51,43 +82,43 @@ export default function Login() {
 
     setLoading(true);
     try {
+      // Call the backend login route
       const response = await customerLogin({ email: email.trim(), password });
       const data = response?.data ?? response;
 
+      // Save the JWT token normally for the interceptor to use
       if (data?.token) {
         localStorage.setItem("token", data.token); 
       }
 
-      if (data?.user) {
+      // Handle the encrypted payload from the backend
+      if (data?.payload) {
+        const decodedUser = decodePayload(data.payload);
+
+        // Clear old plain-text data if any exists
         localStorage.removeItem("userId");
         localStorage.removeItem("userEmail");
         localStorage.removeItem("userName");
 
-        localStorage.setItem("userId", String(data.user.id ?? "")); 
-        localStorage.setItem("userEmail", data.user.email ?? ""); 
-        localStorage.setItem("userName", data.user.name ?? ""); 
+        // Save new data in scrambled format to hide it from "Inspect"
+        secureSetItem("userId", decodedUser.id); 
+        secureSetItem("userEmail", decodedUser.email); 
+        secureSetItem("userName", decodedUser.name); 
       }
 
       router.push("/");
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Login failed. Please check your credentials.";
-      setError(msg);
+      setError(err?.response?.data?.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. SHOW SPINNER DURING SESSION LOADING OR LOGIN PROCESSING
-  if (status === "loading") {
-    return <LoadingSpinner message="Verifying session..." />;
-  }
+  // Prevent flicker during session check
+  if (status === "loading") return <LoadingSpinner message="Verifying session..." />;
 
   return (
     <div className="login-page">
-      {/* 3. SHOW SPINNER DURING MANUAL LOGIN OR REDIRECT */}
       {loading && <LoadingSpinner message="Authenticating..." />}
 
       <div className="login-box">
@@ -97,7 +128,11 @@ export default function Login() {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          {error && <div className="error-message" style={{ color: '#d9534f', marginBottom: '15px', fontWeight: '600' }}>{error}</div>}
+          {error && (
+            <div className="error-message" style={{ color: '#d9534f', marginBottom: '15px', fontWeight: '600' }}>
+              {error}
+            </div>
+          )}
 
           <div className="input-group">
             <label>Email Address</label>
@@ -143,7 +178,7 @@ export default function Login() {
             type="button"
             className="google-btn-premium"
             onClick={() => {
-              setLoading(true); // Trigger loading state for Google Login
+              setLoading(true);
               signIn("google", { callbackUrl: "/" });
             }}
           >
@@ -161,7 +196,6 @@ export default function Login() {
         </form>
 
         <div className="login-footer">
-          {/* eslint-disable-next-line react/no-unescaped-entities */}
           Don't have an account? <Link href="/signup">Sign Up</Link>
         </div>
       </div>

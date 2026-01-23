@@ -42,20 +42,27 @@ export async function POST(request) {
           subtotal: Number(summary.subtotal || 0),
           casaCharge: Number(summary.casaCharge || 0),
           deliveryCharge: Number(summary.deliveryCharge || 0),
+          // ADDED: Capture the total installation cost for the whole order
+          installationCharge: Number(summary.installationTotal || 0),
           grandTotal: Number(summary.grandTotal || 0),
         },
       });
 
-      // 2. Map and Create Order Items with Logistics Data
+      // 2. Map and Create Order Items with Logistics & Installation Data
       const orderItemsData = orders.map((item) => {
         const qty = Number(item.quantity || 1);
         const trips = Number(item.trips || 1);
         const price = Number(item.amountPerTrip || 0);
         const shipCharge = Number(item.shippingCharge || 0);
+        const instCharge = Number(item.installationCharge || 0);
         
         // Final calculation for this specific item including trip-based shipping
         const itemShippingTotal = item.shippingChargeType === "Paid" ? (trips * shipCharge) : 0;
-        const itemTotal = (qty * price) + itemShippingTotal;
+        // ADDED: Calculate installation total for this specific item quantity
+        const itemInstallationTotal = item.installationAvailable === "yes" ? (qty * instCharge) : 0;
+        
+        // Final calculation for this specific item
+        const itemTotal = (qty * price) + itemShippingTotal + itemInstallationTotal;
 
         return {
           orderId: order.id,
@@ -72,11 +79,12 @@ export async function POST(request) {
           totalAmount: itemTotal,
           imageUrl: item.imageUrl || item.image || null,
 
-          // SNAPSHOT DELIVERY DATA
+          // SNAPSHOT DELIVERY & INSTALLATION DATA
           shippingChargeType: item.shippingChargeType || "Paid",
           shippingCharge: shipCharge,
           installationAvailable: item.installationAvailable || "no",
-          installationCharge: Number(item.installationCharge || 0),
+          // ADDED: Capture the per-unit installation charge snapshot
+          installationCharge: instCharge,
         };
       });
 

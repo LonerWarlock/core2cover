@@ -21,38 +21,48 @@ const UserProfile = () => {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("orders");
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
-
-  // FIX: Added missing designers state
   const [designers, setDesigners] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const autocompleteRef = useRef(null);
 
-  // Google Maps Loader
+  const [user, setUser] = useState({
+    id: "", // Track the user ID in state
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    image: "" 
+  });
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     libraries,
   });
 
-  const autocompleteRef = useRef(null);
+  /* =========================================
+      EASY ENCRYPTION HELPERS
+  ========================================= */
+  const secureSetItem = (key, value) => {
+    if (value === undefined || value === null) return;
+    // Scrambles the ID/Data before saving to Local Storage
+    localStorage.setItem(key, btoa(String(value)));
+  };
 
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      // Decodes the scrambled string for UI use
+      return item ? atob(item) : null;
+    } catch (e) {
+      return null;
+    }
+  };
 
-  const [isEditing, setIsEditing] = useState(false);
-
-  // FIX: Added SSR safety checks for window/localStorage
+  // Identity Pinning: Priority to secure session, then secure local storage
   const effectiveEmail = useMemo(() => {
     if (status === "authenticated") return session?.user?.email;
-    if (typeof window !== "undefined") return localStorage.getItem("userEmail");
-    return null;
-  }, [session, status]);
-
-  const effectiveUserId = useMemo(() => {
-    if (status === "authenticated") return session?.user?.id;
-    if (typeof window !== "undefined") return localStorage.getItem("userId");
-    return null;
+    return secureGetItem("userEmail");
   }, [session, status]);
 
   const triggerMsg = (text, type = "success") => {
@@ -69,45 +79,47 @@ const UserProfile = () => {
 
     const loadData = async () => {
       try {
-        // 1. Check if we have an email before calling
         if (!effectiveEmail) return;
 
         const [userRes, designersRes] = await Promise.all([
           getUserByEmail(effectiveEmail),
-          getClientHiredDesigners(), // Call without parameters as updated in Step 1
+          getClientHiredDesigners(),
         ]);
 
-        // Axios responses wrap data in a 'data' property
         const userData = userRes.data;
-        const designersData = designersRes.data;
+        
+        /* =========================================
+            ENCRYPTED LOCAL STORAGE SYNC
+        ========================================= */
+        // Scrambles all sensitive markers in the Application Tab
+        secureSetItem("userId", userData?.id);
+        secureSetItem("userEmail", userData?.email);
+        secureSetItem("userName", userData?.name);
+        if (userData?.image) secureSetItem("userImage", userData.image);
 
         setUser({
+          id: userData?.id || "",
           name: userData?.name || "",
           email: userData?.email || "",
           phone: userData?.phone || "",
           address: userData?.address || "",
+          image: userData?.image || ""
         });
 
-        // Handle the designers list safely
-        setDesigners(Array.isArray(designersData) ? designersData : []);
+        setDesigners(Array.isArray(designersRes.data) ? designersRes.data : []);
 
-        if (
-          status === "authenticated" &&
-          (!userData?.phone || !userData?.address)
-        ) {
+        if (status === "authenticated" && (!userData?.phone || !userData?.address)) {
           setIsEditing(true);
           triggerMsg("Please complete your profile details.", "info");
         }
       } catch (err) {
         console.error("Critical Load Error:", err);
-        triggerMsg("Failed to load profile data. Please try again.", "error");
+        triggerMsg("Failed to load profile data.", "error");
       }
     };
 
-    if (effectiveEmail) {
-      loadData();
-    }
-  }, [effectiveEmail, effectiveUserId, router, status]);
+    loadData();
+  }, [effectiveEmail, router, status]);
 
   const handlePlaceSelect = () => {
     if (autocompleteRef.current) {
@@ -119,12 +131,8 @@ const UserProfile = () => {
 
   const handleLogout = async () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userId");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("sellerId");
-      localStorage.removeItem("designerId");
+      // Full context wipe to remove all encrypted markers
+      localStorage.clear();
     }
     await signOut({ callbackUrl: "/login" });
   };
@@ -147,31 +155,19 @@ const UserProfile = () => {
         address: user.address,
       });
 
-      const updatedUser = response.data || response;
-
-      setUser({
-        name: updatedUser.name || "",
-        email: updatedUser.email || "",
-        phone: updatedUser.phone || "",
-        address: updatedUser.address || "",
-      });
-
+      const updatedUser = response.data;
+      setUser(prev => ({ ...prev, ...updatedUser }));
       setIsEditing(false);
       triggerMsg("Profile updated successfully", "success");
-
-      if (status === "authenticated") {
-        router.refresh();
-      }
+      router.refresh();
     } catch (err) {
-      triggerMsg(
-        err.response?.data?.message || "Failed to update profile",
-        "error",
-      );
+      triggerMsg(err.response?.data?.message || "Failed to update profile", "error");
     }
   };
 
-  if (status === "loading")
-    return <LoadingSpinner message="Securing your profile..." />;
+  if (status === "loading") return <LoadingSpinner message="Securing your profile..." />;
+
+  const profileImgSrc = session?.user?.image || user.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
   return (
     <>
@@ -184,98 +180,49 @@ const UserProfile = () => {
         />
       )}
       <div className="profile-page-wrapper">
-        <button onClick={() => router.back()} className="back-button">
-          ← Back
-        </button>
-        <div className="profile-header-section">
-          <h1 className="main-profile-title">My Account</h1>
-        </div>
+        <button onClick={() => router.back()} className="back-button">← Back</button>
 
         <div className="profile-info-card">
           <div className="profile-card-content">
             <div className="profile-details-column">
-              {session?.user?.image && (
-                <div className="profile-image-container">
-                  <Image
-                    src={session.user.image}
-                    alt="Profile"
-                    width={80}
-                    height={80}
-                    className="user-profile-img"
-                    unoptimized={true}
-                  />
-                </div>
-              )}
+              
+              <div className="profile-image-container">
+                <Image
+                  src={profileImgSrc}
+                  alt="Profile"
+                  width={120}
+                  height={120}
+                  className="user-profile-img"
+                  unoptimized={true}
+                  style={{ borderRadius: "50%", objectFit: "cover", border: "4px solid #fff", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}
+                />
+              </div>
 
               {isEditing ? (
                 <div className="edit-form">
                   <h3>Complete Your Profile</h3>
                   <div className="input-group">
                     <label>Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={user.name || ""}
-                      onChange={handleChange}
-                      className="up-profile-input"
-                    />
+                    <input type="text" name="name" value={user.name} onChange={handleChange} className="up-profile-input" />
                   </div>
                   <div className="input-group">
                     <label>Phone Number</label>
-                    <input
-                      type="text"
-                      name="phone"
-                      value={user.phone || ""}
-                      onChange={handleChange}
-                      className="up-profile-input"
-                      placeholder="+91 00000 00000"
-                    />
+                    <input type="text" name="phone" value={user.phone} onChange={handleChange} className="up-profile-input" placeholder="+91 00000 00000" />
                   </div>
-
                   <div className="input-group">
                     <label>Address (Your Location)</label>
                     {isLoaded ? (
-                      <Autocomplete
-                        onLoad={(autocomplete) =>
-                          (autocompleteRef.current = autocomplete)
-                        }
-                        onPlaceChanged={handlePlaceSelect}
-                      >
-                        <input
-                          type="text"
-                          name="address"
-                          value={user.address || ""}
-                          onChange={handleChange}
-                          className="up-profile-input"
-                          placeholder="Search for your address..."
-                        />
+                      <Autocomplete onLoad={(a) => (autocompleteRef.current = a)} onPlaceChanged={handlePlaceSelect}>
+                        <input type="text" name="address" value={user.address} onChange={handleChange} className="up-profile-input" placeholder="Search for your address..." />
                       </Autocomplete>
                     ) : (
-                      <input
-                        type="text"
-                        name="address"
-                        value={user.address || ""}
-                        onChange={handleChange}
-                        className="up-profile-input"
-                        placeholder="Loading maps..."
-                      />
+                      <input type="text" value={user.address} className="up-profile-input" disabled placeholder="Loading maps..." />
                     )}
                   </div>
-
                   <div className="edit-actions">
-                    <button
-                      onClick={handleSave}
-                      className="up-profile-button up-save"
-                    >
-                      Save Profile
-                    </button>
+                    <button onClick={handleSave} className="up-profile-button up-save">Save Profile</button>
                     {user.phone && user.address && (
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="up-profile-button cancel"
-                      >
-                        Cancel
-                      </button>
+                      <button onClick={() => setIsEditing(false)} className="up-profile-button cancel">Cancel</button>
                     )}
                   </div>
                 </div>
@@ -284,35 +231,17 @@ const UserProfile = () => {
                   <div className="user-info-display">
                     <h2>
                       {session?.user?.name || user.name || "User"}{" "}
-                      {status === "authenticated" && (
-                        <span className="verified-badge">✓</span>
-                      )}
+                      {status === "authenticated" && <span className="verified-badge">✓</span>}
                     </h2>
-                    <p className="user-email">
-                      {session?.user?.email || user.email}
-                    </p>
+                    <p className="user-email">{session?.user?.email || user.email}</p>
                     <div className="contact-info">
-                      <p>
-                        <strong>Phone:</strong> {user.phone || "—"}
-                      </p>
-                      <p>
-                        <strong>Address:</strong> {user.address || "—"}
-                      </p>
+                      <p><strong>Phone:</strong> {user.phone || "—"}</p>
+                      <p><strong>Address:</strong> {user.address || "—"}</p>
                     </div>
                   </div>
                   <div className="profile-actions">
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="profile-button edit"
-                    >
-                      Edit Profile
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="profile-button logout"
-                    >
-                      Logout
-                    </button>
+                    <button onClick={() => setIsEditing(true)} className="profile-button edit">Edit Profile</button>
+                    <button onClick={handleLogout} className="profile-button logout">Logout</button>
                   </div>
                 </>
               )}
@@ -321,27 +250,12 @@ const UserProfile = () => {
         </div>
 
         <div className="profile-tabs-container">
-          <button
-            className={`tab-btn ${activeTab === "orders" ? "active" : ""}`}
-            onClick={() => setActiveTab("orders")}
-          >
-            My Orders
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "designers" ? "active" : ""}`}
-            onClick={() => setActiveTab("designers")}
-          >
-            Hired Designers
-          </button>
+          <button className={`tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>My Orders</button>
+          <button className={`tab-btn ${activeTab === "designers" ? "active" : ""}`} onClick={() => setActiveTab("designers")}>Hired Designers</button>
         </div>
 
         <div className="tab-content-area">
-          {/* If we are loading data, show the spinner ONLY here */}
-          {activeTab === "orders" ? (
-            <MyOrders />
-          ) : (
-            <MyHiredDesigners designers={designers} />
-          )}
+          {activeTab === "orders" ? <MyOrders /> : <MyHiredDesigners designers={designers} />}
         </div>
       </div>
     </>

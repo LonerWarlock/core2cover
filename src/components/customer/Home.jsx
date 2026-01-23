@@ -27,13 +27,15 @@ const Card = ({ images, title, onClick }) => {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
+    // INCREASED TIME: Changed from 2500 to 4500 (4.5 seconds)
     const interval = setInterval(() => {
       setFade(true);
       setTimeout(() => {
         setIndex((prev) => (prev + 1) % images.length);
         setFade(false);
-      }, 300);
-    }, 2500);
+      }, 300); // Duration of the fade effect
+    }, 6500);
+    
     return () => clearInterval(interval);
   }, [images.length]);
 
@@ -75,7 +77,10 @@ const Home = () => {
       {pageLoading && <LoadingSpinner message="Welcome to Core2Cover" />}
 
       {/* PAGE CONTENT */}
-      <div className={`partition-page ${!pageLoading ? "fade-in" : ""}`} style={{ visibility: pageLoading ? 'hidden' : 'visible' }}>
+      <div 
+        className={`partition-page ${!pageLoading ? "fade-in" : ""}`} 
+        style={{ visibility: pageLoading ? 'hidden' : 'visible' }}
+      >
         <div className="partition-grid">
           {/* Card 1 */}
           <Card

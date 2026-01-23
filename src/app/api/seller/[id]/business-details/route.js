@@ -1,25 +1,53 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+// Helper to scramble data for your frontend's decodePayload function
+const encodePayload = (data) => {
+  const jsonString = JSON.stringify(data);
+  return Buffer.from(jsonString).toString("base64");
+};
+
+// GET: Fetch existing details
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
-    const sellerId = Number(id);
+    const business = await prisma.sellerBusinessDetails.findUnique({
+      where: { sellerId: Number(id) },
+    });
 
-    const bank = await prisma.sellerBankDetails.findUnique({
-      where: { sellerId },
-      select: {
-        accountHolder: true,
-        bankName: true,
-        accountNumber: true,
-        ifsc: true,
-        upiId: true, // Included UPI ID
+    if (!business) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+    return NextResponse.json({ payload: encodePayload(business) });
+  } catch (err) {
+    return NextResponse.json({ message: "Error" }, { status: 500 });
+  }
+}
+
+// PUT: Update details (REMOVED GST)
+export async function PUT(request, { params }) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    
+    // We explicitly destructure to ensure GST is ignored even if sent
+    const { businessName, sellerType, address, city, state, pincode } = body;
+
+    const updated = await prisma.sellerBusinessDetails.update({
+      where: { sellerId: Number(id) },
+      data: {
+        businessName,
+        sellerType,
+        address,
+        city,
+        state,
+        pincode,
+        // gst is omitted here
       },
     });
 
-    return NextResponse.json(bank || null);
+    return NextResponse.json({ message: "Updated", business: updated });
   } catch (err) {
-    console.error("FETCH BANK ERROR:", err);
-    return NextResponse.json(null, { status: 500 });
+    console.error("Update Error:", err);
+    return NextResponse.json({ message: "Update failed" }, { status: 500 });
   }
 }

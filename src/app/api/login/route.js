@@ -3,17 +3,23 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+/**
+ * EASY ENCRYPTION HELPER
+ * Encodes data to Base64 to mask it from the Network Tab.
+ */
+const encodeData = (data) => {
+  const jsonString = JSON.stringify(data);
+  return Buffer.from(jsonString).toString("base64");
+};
+
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
 
-    // 1. Find the customer in the 'User' table
-    // We trim and lowercase to ensure a match regardless of formatting
     const user = await prisma.user.findUnique({ 
       where: { email: email.toLowerCase().trim() } 
     });
 
-    // 2. Validate user existence and password
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json(
         { message: "Invalid email or password" }, 
@@ -21,22 +27,24 @@ export async function POST(request) {
       );
     }
 
-    // 3. Generate a JWT Token for the Customer
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.NEXTAUTH_SECRET, // Ensure this is in your .env
+      process.env.NEXTAUTH_SECRET,
       { expiresIn: "7d" }
     );
 
-    // 4. Return the data in the format your frontend expects
+    // Prepare the user data for encoding
+    const userData = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    };
+
     return NextResponse.json({
       message: "Login successful",
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
+      // The payload is now scrambled Base64
+      payload: encodeData(userData),
     });
 
   } catch (err) {

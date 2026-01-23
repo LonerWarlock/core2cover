@@ -6,13 +6,12 @@ import Sidebar from "./Sidebar";
 import "./SellerDashboard.css";
 import { FaShoppingCart, FaRupeeSign } from "react-icons/fa";
 import { getSellerProfile, getSellerDashboard } from "../../api/seller";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerDashboard = () => {
   const router = useRouter();
 
-  // 1. State Management
+  // State Management
   const [sellerId, setSellerId] = useState(null);
   const [sellerName, setSellerName] = useState("Seller");
   const [ordersCount, setOrdersCount] = useState(0);
@@ -20,12 +19,25 @@ const SellerDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   /* =========================================
-      2. AUTHENTICATION CHECK
+      ENCRYPTION HELPERS
+  ========================================= */
+  const secureGetItem = (key) => {
+    if (typeof window === "undefined") return null;
+    const item = localStorage.getItem(key);
+    try {
+      return item ? atob(item) : null; // Decodes Base64 for internal use
+    } catch (e) {
+      return null;
+    }
+  };
+
+  /* =========================================
+      AUTHENTICATION CHECK
   ========================================= */
   useEffect(() => {
-    const sid = localStorage.getItem("sellerId");
+    // Reading the encrypted ID from storage
+    const sid = secureGetItem("sellerId");
     if (!sid) {
-      // Corrected: Redirect to login if not authenticated
       router.push("/sellerlogin");
     } else {
       setSellerId(sid);
@@ -33,10 +45,9 @@ const SellerDashboard = () => {
   }, [router]);
 
   /* =========================================
-      3. DATA FETCHING (Hook Placement)
+      DATA FETCHING
   ========================================= */
   useEffect(() => {
-    // Only run if we have a sellerId
     if (!sellerId) return;
 
     const loadDashboardData = async () => {
@@ -45,8 +56,13 @@ const SellerDashboard = () => {
       try {
         // Fetch Profile Info
         const profileRes = await getSellerProfile(sellerId);
-        // Note: Check if your backend sends 'name' or 'seller.name'
-        const fetchedName = profileRes.data?.name || profileRes.data?.seller?.name || "Seller";
+        
+        // Handle potential encrypted payload from backend
+        const data = profileRes.data?.payload 
+          ? JSON.parse(atob(profileRes.data.payload)) 
+          : (profileRes.data || {});
+
+        const fetchedName = data.name || data.seller?.name || "Seller";
         setSellerName(fetchedName);
       } catch (err) {
         console.error("Could not fetch seller name:", err);
@@ -56,8 +72,13 @@ const SellerDashboard = () => {
       try {
         // Fetch Stats
         const statsRes = await getSellerDashboard(sellerId);
-        setOrdersCount(statsRes.data?.ordersCount || 0);
-        setTotalEarnings(statsRes.data?.totalEarnings || 0);
+        
+        const stats = statsRes.data?.payload 
+          ? JSON.parse(atob(statsRes.data.payload)) 
+          : (statsRes.data || {});
+
+        setOrdersCount(stats.ordersCount || 0);
+        setTotalEarnings(stats.totalEarnings || 0);
       } catch (err) {
         console.error("Stats Error:", err);
       } finally {
@@ -66,21 +87,16 @@ const SellerDashboard = () => {
     };
 
     loadDashboardData();
-  }, [sellerId]); // This runs whenever sellerId is set
+  }, [sellerId]);
 
-  /* =========================================
-      4. RENDER LOGIC
-  ========================================= */
   return (
     <>
-      {/* 2. PLACED AT THE TOP LEVEL TO ENSURE MAXIMUM VISIBILITY */}
       {loading && <LoadingSpinner message="Initialising Dashboard..." />}
 
       <div className="dashboard-wrapper">
         <Sidebar />
 
         <main className="dashboard-main">
-          {/* Dashboard content only shows its full styling when loading is complete */}
           {!loading && (
             <>
               <header className="dashboard-header">
@@ -89,7 +105,6 @@ const SellerDashboard = () => {
               </header>
 
               <div className="dashboard-cards">
-                {/* Orders Card */}
                 <div className="dashboard-card">
                   <div className="card-icon-bg">
                     <FaShoppingCart className="dashboard-icon" />
@@ -100,7 +115,6 @@ const SellerDashboard = () => {
                   </div>
                 </div>
 
-                {/* Earnings Card */}
                 <div className="dashboard-card highlight">
                   <div className="card-icon-bg">
                     <FaRupeeSign className="dashboard-icon" />
