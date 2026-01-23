@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react"; // 1. Import Suspense
+import { Suspense, useState, useEffect } from "react"; // Added hooks
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
@@ -22,7 +22,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    // Function to check if the screen is desktop-sized
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    // Set initial value
+    handleResize();
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Only apply no-scroll if it's the home page AND a desktop screen
+  const shouldDisableScroll = pathname === "/" && isDesktop;
 
   return (
     <html lang="en">
@@ -30,11 +47,10 @@ export default function RootLayout({
         <link rel="icon" href="/icon.png" sizes="any" />
       </head>
       <body 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased ${isHome ? "no-scroll" : ""}`} 
+        className={`${geistSans.variable} ${geistMono.variable} antialiased ${shouldDisableScroll ? "no-scroll" : ""}`} 
         suppressHydrationWarning={true}
       >
         <NextAuthProvider>
-          {/* 2. Wrap children in Suspense to fix the prerender error globally */}
           <Suspense fallback={null}>
             {children}
           </Suspense>
