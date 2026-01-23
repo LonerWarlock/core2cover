@@ -20,14 +20,14 @@ const founderData = [
     linkedin: "https://www.linkedin.com/in/om-karande",
     instagram: "https://www.instagram.com/om_karande_28/"
   },
-  {
-    name: "Atharv Khot",
-    role: "Technical Operations",
-    image: "/atharv.jpg",
-    // email: "atharv@example.com", 
-    linkedin: "#",
-    instagram: "#"
-  },
+  // {
+  //   name: "Atharv Khot",
+  //   role: "Technical Operations",
+  //   image: "/atharv.jpg",
+  //   email: "atharv@example.com", 
+  //   linkedin: "#",
+  //   instagram: "#"
+  // },
   {
     name: "Soham Phatak",
     role: "Co-Founder",
@@ -82,7 +82,7 @@ export default function About() {
           <div className="hero-copy">
             {isMobileOrTablet ? (
               <p className="mobile-brand-text">
-                <img src={CoreToCoverTitle} alt="CoreToCover" className="inline-brand-logo" />
+                <Brandbold>Core2Cover</Brandbold>
                 A unified platform where customers can discover curated interior products,
                 source high-quality raw materials, and collaborate with skilled freelance
                 interior designers — all in one place.
