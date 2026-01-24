@@ -6,9 +6,9 @@ export default function ShippingPolicy() {
       <section>
         <h3>1. Shipping Coverage</h3>
         <p>
-          Core2Cover facilitates delivery services across [Your State/India]. Shipping availability for specific 
+          Core2Cover facilitates delivery services across Maharashtra. Shipping availability for specific 
           locations is determined by the Seller's delivery coverage or our integrated logistics partners. 
-          You can verify delivery availability by entering your pincode on the product page.
+          {/* You can verify delivery availability by entering your pincode on the product page. */}
         </p>
 
         <h3>2. Delivery Responsibility</h3>

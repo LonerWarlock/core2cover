@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
                 <h3>7. Contact Us</h3>
                 <p>
                     If you have any questions about this Privacy Policy, please contact us at
-                    <strong> support@core2cover.com</strong>.
+                    <strong> team.core2cover@gmail.com</strong>.
                 </p>
             </section>
         </LegalLayout>

@@ -78,6 +78,11 @@ const Navbar = () => {
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
   const isProfilePage = pathname === "/userprofile";
+  const isTermsPage = pathname === "/userprofile";
+  const isRefundPage = pathname === "/refund-policy";
+  const isShippingPage = pathname === "/shipping-policy";
+  const isPrivacyPage = pathname === "/privacy-policy";
+
   const currentPageTitle = isDesignerSection ? "Professional Designers" : isRawMaterialsPage ? "Raw Materials" : "Readymade Products";
 
   useEffect(() => {
@@ -268,7 +273,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {!isHomePage && !isContactPage &&!isProfilePage && (
+      {!isHomePage && !isContactPage && !isProfilePage && !isTermsPage && !isRefundPage && !isShippingPage && !isPrivacyPage && (
         <div className="search-container">
           {/* SEARCH WRAPPER WITH DEDICATED REF */}
           <div className="search-wrapper" ref={searchRef}>
