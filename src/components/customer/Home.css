@@ -4,7 +4,7 @@
   --green-light: #C0CCA4;
   --white: #fff;
   --radius: 18px;
-  --shadow: 0 20px 40px rgba(0,0,0,0.1);
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   --bg-soft: linear-gradient(180deg, #fafaf8, #f1f1ec);
 }
 
@@ -15,19 +15,24 @@
   background: var(--bg-soft);
 
   display: flex;
-  justify-content: center; /* center items vertically */
+  justify-content: center;
+  /* center items vertically */
   align-items: flex-start;
 }
 
 /* Grid Layout (3 cards per row) */
 .partition-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 even columns */
-  gap: 40px;  /* spacing between cards */
+  grid-template-columns: repeat(3, 1fr);
+  /* 3 even columns */
+  gap: 40px;
+  /* spacing between cards */
 
   width: 100%;
-  max-width: 1400px; /* use full screen width */
-  margin: auto; /* center grid container */
+  max-width: 1400px;
+  /* use full screen width */
+  margin: auto;
+  /* center grid container */
 }
 
 /* Vertical Card */
@@ -43,7 +48,7 @@
 
 .partition-card-vertical:hover {
   transform: translateY(-6px);
-  box-shadow: 0 26px 45px rgba(0,0,0,0.18);
+  box-shadow: 0 26px 45px rgba(0, 0, 0, 0.18);
 }
 
 /* Image Box */
@@ -62,8 +67,13 @@
   transition: opacity 0.6s ease-in-out;
 }
 
-.fade-in { opacity: 1; }
-.fade-out { opacity: 0; }
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
 
 /* Title under image */
 .partition-title-under {
@@ -75,14 +85,20 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-  .partition-img-box { height: 200px; }
-  .partition-title-under { font-size: 1.1rem; }
+  .partition-img-box {
+    height: 200px;
+  }
+
+  .partition-title-under {
+    font-size: 1.1rem;
+  }
 }
 
 .slideshow-img {
   position: absolute;
   top: 0;
-  left: 0;   /* THIS FIXES THE ISSUE */
+  left: 0;
+  /* THIS FIXES THE ISSUE */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -91,15 +107,22 @@
 
 @media (max-width: 1024px) {
   .partition-grid {
-    grid-template-columns: repeat(3, 1fr); /* 2 per row on tablets */
+    grid-template-columns: repeat(3, 1fr);
+    /* 2 per row on tablets */
   }
 }
 
 @media (max-width: 600px) {
   .partition-grid {
-    grid-template-columns: 1fr; /* 1 per row on mobile */
+    grid-template-columns: 1fr;
+    /* 1 per row on mobile */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: 5px;
+    margin-left: 5px;
   }
 }
+
 
 
 /* =========================================
