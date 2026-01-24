@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
                 <h3>2. How We Use Your Information</h3>
                 <ul>
                     <li>To facilitate orders between customers and sellers.</li>
-                    <li>To process payments via our secure gateway (Razorpay).</li>
+                    <li>To process payments via our secure gateway.</li>
                     <li>To provide customer support and send order updates.</li>
                     <li>To improve our platform and user experience.</li>
                 </ul>
