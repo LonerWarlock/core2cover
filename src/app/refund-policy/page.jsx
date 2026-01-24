@@ -32,7 +32,7 @@ export default function RefundPolicy() {
 
             <h3>4. Refund Timeline</h3>
             <p>
-                Once the Seller approves the return, the refund will be processed to your original payment method (Razorpay) within 7-10 working days.
+                Once the Seller approves the return, the refund will be processed to your original payment method within 7-10 working days.
             </p>
         </LegalLayout>
     );
