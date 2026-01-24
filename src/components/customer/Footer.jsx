@@ -33,6 +33,17 @@ export default function Footer() {
             From Design To Finish - In One Place.
           </p>
         </div>
+
+        <div className="footer-links">
+          <h4 className="footer-heading">Legal & Policies</h4>
+          <ul>
+            <li><Link href="/terms">Terms & Conditions</Link></li>
+            <li><Link href="/privacy">Privacy Policy</Link></li>
+            <li><Link href="/refund-policy">Refund Policy</Link></li>
+            <li><Link href="/shipping-policy">Shipping Policy</Link></li>
+          </ul>
+        </div>
+        
         {/* Right: Copyright */}
         <div className="footer-bottom">
           © {new Date().getFullYear()} Core2Cover. All rights reserved.
