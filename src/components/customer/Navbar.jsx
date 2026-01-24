@@ -78,10 +78,10 @@ const Navbar = () => {
   const isHomePage = pathname === "/";
   const isContactPage = pathname === "/contact";
   const isProfilePage = pathname === "/userprofile";
-  const isTermsPage = pathname === "/userprofile";
+  const isTermsPage = pathname === "/terms";
   const isRefundPage = pathname === "/refund-policy";
   const isShippingPage = pathname === "/shipping-policy";
-  const isPrivacyPage = pathname === "/privacy-policy";
+  const isPrivacyPage = pathname === "/privacy";
 
   const currentPageTitle = isDesignerSection ? "Professional Designers" : isRawMaterialsPage ? "Raw Materials" : "Readymade Products";
 

@@ -8,7 +8,7 @@ const LegalLayout = ({ title, lastUpdated, children }) => {
       <Navbar />
       <div style={{ 
         maxWidth: "800px", 
-        margin: "120px auto 60px", 
+        margin: "32px  auto 60px", 
         padding: "0 20px",
         lineHeight: "1.6",
         color: "#333",
