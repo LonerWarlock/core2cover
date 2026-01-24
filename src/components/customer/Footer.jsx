@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { FaFacebookF, FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
@@ -43,7 +44,7 @@ export default function Footer() {
             <li><Link href="/shipping-policy">Shipping Policy</Link></li>
           </ul>
         </div>
-        
+
         {/* Right: Copyright */}
         <div className="footer-bottom">
           © {new Date().getFullYear()} Core2Cover. All rights reserved.
