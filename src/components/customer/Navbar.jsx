@@ -13,7 +13,8 @@ import {
   FaPalette,
   FaUserCircle,
   FaUserGraduate,
-  FaTimes 
+  FaTimes,
+  FaSignInAlt // Added for Login icon
 } from "react-icons/fa";
 import { IoMdInformationCircle } from "react-icons/io";
 import "./Navbar.css";
@@ -33,7 +34,6 @@ const Navbar = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  // SEPARATE REFS TO PREVENT OVERWRITING
   const profileRef = useRef(null);
   const searchRef = useRef(null);
   
@@ -45,16 +45,13 @@ const Navbar = () => {
   const designerSuggestions = ["Interior Designer", "Kitchen Designer", "Product Designer", "Architect", "3D Visualizer"];
   const readymadeSuggestions = ["Furniture","Lights","Lighting","Decor Items","Sofa", "Dining Table", "Beds", "Wardrobes", "Office Chairs", "Coffee Tables", "Curtains", "Chandeliers", "Carpets", "Study Tables", "Bookshelves"];
 
-  /* =========================================
-      EASY ENCRYPTION HELPERS
-  ========================================= */
   const secureGetItem = useCallback((key) => {
     if (typeof window === "undefined") return null;
     const item = localStorage.getItem(key);
     try {
       return item ? atob(item) : null;
     } catch (e) {
-      return item; // Fallback if not encoded
+      return item; 
     }
   }, []);
 
@@ -92,14 +89,11 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // FIXED CLICK OUTSIDE LOGIC
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Check Profile Dropdown
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
       }
-      // Check Search Suggestions
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
@@ -166,12 +160,9 @@ const Navbar = () => {
     if (searchValue.trim()) performSearch(searchValue);
   };
 
+  /* CHANGED: Always toggle instead of redirecting */
   const handleProfileToggle = () => {
-    if (!isUserAuthenticated) {
-      router.push("/login");
-    } else {
-      setProfileOpen(!profileOpen);
-    }
+    setProfileOpen(!profileOpen);
   };
 
   const handleSignOut = async () => {
@@ -218,7 +209,6 @@ const Navbar = () => {
                 </Link>
               )}
 
-              {/* PROFILE DROPDOWN WITH DEDICATED REF */}
               <div className="profile-dropdown-container" ref={profileRef}>
                 <div className="nav-profile-trigger" onClick={handleProfileToggle}>
                   <div className="ico">
@@ -230,7 +220,7 @@ const Navbar = () => {
                   </div>
                 </div>
 
-                {profileOpen && isUserAuthenticated && (
+                {profileOpen && (
                   <div className="profile-popover shadow-reveal">
                     <button
                       className="pop-close-btn"
@@ -240,31 +230,55 @@ const Navbar = () => {
                       <FaTimes />
                     </button>
 
-                    <div className="popover-header">
-                      <p className="pop-name">{displayUser?.name || "User"}</p>
-                      <p className="pop-email">{displayUser?.email}</p>
-                    </div>
-                    <div className="popover-body">
-                      <Link href="/userprofile" className="pop-item" onClick={() => setProfileOpen(false)}>
-                        <FaUserCircle /> My Account
-                      </Link>
-                      {isMobile && (
-                        <Link href="/cart" className="pop-item" onClick={() => setProfileOpen(false)}>
-                          <FaShoppingCart /> My Cart
-                        </Link>
-                      )}
-                      <Link href="/sellersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
-                        <FaStore /> Become a Seller
-                      </Link>
-                      <Link href="/designersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
-                        <FaPalette /> I am a Designer
-                      </Link>
-                    </div>
-                    <div className="popover-footer">
-                      <button className="pop-signout" onClick={handleSignOut}>
-                        SignOut <FaSignOutAlt />
-                      </button>
-                    </div>
+                    {isUserAuthenticated ? (
+                      /* LOGGED IN VIEW */
+                      <>
+                        <div className="popover-header">
+                          <p className="pop-name">{displayUser?.name || "User"}</p>
+                          <p className="pop-email">{displayUser?.email}</p>
+                        </div>
+                        <div className="popover-body">
+                          <Link href="/userprofile" className="pop-item" onClick={() => setProfileOpen(false)}>
+                            <FaUserCircle /> My Account
+                          </Link>
+                          {isMobile && (
+                            <Link href="/cart" className="pop-item" onClick={() => setProfileOpen(false)}>
+                              <FaShoppingCart /> My Cart
+                            </Link>
+                          )}
+                          <Link href="/sellersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
+                            <FaStore /> Become a Seller
+                          </Link>
+                          <Link href="/designersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
+                            <FaPalette /> I am a Designer
+                          </Link>
+                        </div>
+                        <div className="popover-footer">
+                          <button className="pop-signout" onClick={handleSignOut}>
+                            SignOut <FaSignOutAlt />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      /* NOT LOGGED IN VIEW */
+                      <>
+                        <div className="popover-header">
+                          <p className="pop-name">Welcome Guest</p>
+                          <p className="pop-email">Please login to manage your account</p>
+                        </div>
+                        <div className="popover-body">
+                           <Link href="/login" className="pop-item" onClick={() => setProfileOpen(false)}>
+                             <FaSignInAlt /> Login / Sign Up
+                           </Link>
+                           <Link href="/sellersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
+                            <FaStore /> Become a Seller
+                          </Link>
+                          <Link href="/designersignup" className="pop-item" onClick={() => setProfileOpen(false)}>
+                            <FaPalette /> I am a Designer
+                          </Link>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -275,7 +289,6 @@ const Navbar = () => {
 
       {!isHomePage && !isContactPage && !isProfilePage && !isTermsPage && !isRefundPage && !isShippingPage && !isPrivacyPage && (
         <div className="search-container">
-          {/* SEARCH WRAPPER WITH DEDICATED REF */}
           <div className="search-wrapper" ref={searchRef}>
             <form onSubmit={handleFormSubmit} className="search_form">
               <input

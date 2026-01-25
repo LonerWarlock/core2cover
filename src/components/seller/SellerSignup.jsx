@@ -288,11 +288,12 @@ const SellerSignup = () => {
               </button>
 
               {/* Login */}
-              <p className="login-link">
+              
+            </div>
+            <p className="login-link">
                 Already have an account?{" "}
                 <Link href="/sellerlogin">Login</Link>
               </p>
-            </div>
           </form>
         </div>
       </div>
