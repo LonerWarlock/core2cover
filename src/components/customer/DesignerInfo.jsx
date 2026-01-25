@@ -180,7 +180,8 @@ const DesignerInfoContent = () => {
           setSelectedWorkIndex(0);
           setActiveImage(info.works[0].image);
         } else {
-          setActiveImage(info.profile?.profileImage || "/assets/images/sample.jpg");
+            setSelectedWorkIndex(-1);
+            setActiveImage(null);
         }
       } catch (err) {
         console.error("Data Fetch Error:", err);
@@ -279,7 +280,7 @@ const DesignerInfoContent = () => {
 
         <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
 
-        <div className="designer-info-layout">
+        <div className={`designer-info-layout ${!designer.works?.length ? 'no-portfolio' : ''}`}>
           <div className="designer-text">
             <div className="profile-header-wrap">
               <Image src={designer.profile?.profileImage || "/assets/images/sample.jpg"} width={150} height={150} className="designer-photo" alt="profile" />
@@ -297,23 +298,34 @@ const DesignerInfoContent = () => {
             </button>
           </div>
 
-          <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
-            <Image src={activeImage} alt="Main" width={800} height={600} priority style={{ objectFit: "cover", cursor: "zoom-in" }} />
-            <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
-          </div>
+          {designer.works?.length > 0 && activeImage && (
+            <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
+                <Image 
+                src={activeImage} 
+                alt="Main" 
+                width={800} 
+                height={600} 
+                priority 
+                style={{ objectFit: "cover", cursor: "zoom-in" }} 
+                />
+                <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
+            </div>
+        )}
         </div>
 
-        <section className="portfolio-section">
-          <h2>Works Portfolio</h2>
-          <div className="portfolio-row">
-            {designer.works?.map((w, i) => (
-              <div key={w.id} className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`} onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}>
-                <Image src={w.image} width={300} height={200} alt="Work" />
-                <p className="work_desc">{w.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        {designer.works?.length > 0 && (
+            <section className="portfolio-section">
+            <h2>Works Portfolio</h2>
+            <div className="portfolio-row">
+                {designer.works?.map((w, i) => (
+                <div key={w.id} className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`} onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}>
+                    <Image src={w.image} width={300} height={200} alt="Work" />
+                    <p className="work_desc">{w.description}</p>
+                </div>
+                ))}
+            </div>
+            </section>
+        )}
 
         {/* RESTORED REVIEWS SECTION WITH YOUR CUSTOM CLASSES */}
         <section className="designer-reviews-section">

@@ -662,3 +662,13 @@ body {
 .see-more-btn:hover {
   text-decoration: underline;
 }
+
+.designer-info-layout.no-portfolio {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.designer-info-layout.no-portfolio .designer-text {
+  max-width: 800px;
+}
