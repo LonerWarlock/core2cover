@@ -851,3 +851,79 @@
     margin-left: 60px;
   }
 }
+
+.verification-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fdfdfb;
+  padding: 20px;
+}
+
+.verification-card {
+  max-width: 450px;
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 12px 34px rgba(96, 110, 82, 0.12);
+  border: 1px solid #eef2e6;
+}
+
+.verification-card h2 {
+  font-family: "Big Caslon", serif;
+  color: #606e52;
+  font-size: 1.8rem;
+  margin: 15px 0;
+}
+
+.verification-card p {
+  color: #6b7280;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.verification-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff8e6;
+  color: #ca8a04;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 25px 0;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: #facc15;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+.logout-btn {
+  background: none;
+  border: 1.5px solid #606e52;
+  color: #606e52;
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #606e52;
+  color: white;
+}
