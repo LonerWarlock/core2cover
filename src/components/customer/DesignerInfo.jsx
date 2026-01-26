@@ -298,19 +298,34 @@ const DesignerInfoContent = () => {
             </button>
           </div>
 
-          {designer.works?.length > 0 && activeImage && (
-            <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
-              <Image
-                src={activeImage}
-                alt="Main"
-                width={800}
-                height={600}
-                priority
-                style={{ objectFit: "cover", cursor: "zoom-in" }}
-              />
-              <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
-            </div>
-          )}
+          <div className="designer-main-image-container">
+            {designer.works?.length > 0 && activeImage ? (
+              <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
+                <Image
+                  src={activeImage}
+                  alt="Main"
+                  width={800}
+                  height={600}
+                  priority
+                  style={{ objectFit: "cover", cursor: "zoom-in" }}
+                />
+                <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
+              </div>
+            ) : (
+              <div className="designer-main-image placeholder">
+                <div className="placeholder-content">
+                  <Image
+                    src="/assets/logo/CoreToCover_2_.png"
+                    alt="No Work Uploaded"
+                    width={150}
+                    height={150}
+                    style={{ opacity: 0.3, filter: 'grayscale(100%)' }}
+                  />
+                  <p>No portfolio images uploaded yet</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Portfoilo Section - with empty state handler */}
