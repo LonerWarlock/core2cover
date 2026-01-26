@@ -664,9 +664,9 @@ body {
 }
 
 .designer-info-layout.no-portfolio {
-  display: flex;
+  /* display: flex; */
   justify-content: center;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .designer-info-layout.no-portfolio .designer-text {
