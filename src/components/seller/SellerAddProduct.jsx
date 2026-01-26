@@ -214,7 +214,7 @@ const SellerAddProduct = () => {
               <label className="sma-field">
                 <span>
                   Your Price (₹) * <small style={{ color: "#666", marginLeft: "5px", fontWeight: "normal" }}>
-                    (Price for 1 {unit})
+                    (Price for 1 {unit} including taxes)
                   </small>
                 </span>
                 <input

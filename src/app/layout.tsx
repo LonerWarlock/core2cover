@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react"; // Added hooks
+import { Suspense, useState, useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 import { usePathname } from "next/navigation";
+import { Analytics } from '@vercel/analytics/next'; // [NEW] Added Analytics import
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,6 +56,9 @@ export default function RootLayout({
             {children}
           </Suspense>
         </NextAuthProvider>
+        
+        {/* [NEW] Vercel Analytics Component */}
+        <Analytics />
       </body>
     </html>
   );

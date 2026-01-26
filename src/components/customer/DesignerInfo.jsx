@@ -180,8 +180,8 @@ const DesignerInfoContent = () => {
           setSelectedWorkIndex(0);
           setActiveImage(info.works[0].image);
         } else {
-            setSelectedWorkIndex(-1);
-            setActiveImage(null);
+          setSelectedWorkIndex(-1);
+          setActiveImage(null);
         }
       } catch (err) {
         console.error("Data Fetch Error:", err);
@@ -298,34 +298,58 @@ const DesignerInfoContent = () => {
             </button>
           </div>
 
-          {designer.works?.length > 0 && activeImage && (
-            <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
-                <Image 
-                src={activeImage} 
-                alt="Main" 
-                width={800} 
-                height={600} 
-                priority 
-                style={{ objectFit: "cover", cursor: "zoom-in" }} 
+          <div className="designer-main-image-container">
+            {designer.works?.length > 0 && activeImage ? (
+              <div className="designer-main-image" onClick={() => setIsLightboxOpen(true)}>
+                <Image
+                  src={activeImage}
+                  alt="Main"
+                  width={800}
+                  height={600}
+                  priority
+                  style={{ objectFit: "cover", cursor: "zoom-in" }}
                 />
                 <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
-            </div>
-        )}
+              </div>
+            ) : (
+              <div className="designer-main-image placeholder">
+                <div className="placeholder-content">
+                  <Image
+                    src="/assets/logo/CoreToCover_2_.png"
+                    alt="No Work Uploaded"
+                    width={150}
+                    height={150}
+                    style={{ opacity: 0.3, filter: 'grayscale(100%)' }}
+                  />
+                  <p>No portfolio images uploaded yet</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {designer.works?.length > 0 && (
-            <section className="portfolio-section">
-            <h2>Works Portfolio</h2>
+        {/* Portfoilo Section - with empty state handler */}
+        <section className="portfolio-section">
+          <h2>Works Portfolio</h2>
+          {designer.works && designer.works.length > 0 ? (
             <div className="portfolio-row">
-                {designer.works?.map((w, i) => (
-                <div key={w.id} className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`} onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}>
-                    <Image src={w.image} width={300} height={200} alt="Work" />
-                    <p className="work_desc">{w.description}</p>
+              {designer.works.map((w, i) => (
+                <div
+                  key={w.id}
+                  className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`}
+                  onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}
+                >
+                  <Image src={w.image} width={300} height={200} alt="Work" />
+                  <p className="work_desc">{w.description}</p>
                 </div>
-                ))}
+              ))}
             </div>
-            </section>
-        )}
+          ) : (
+            <div className="empty-portfolio-message">
+              <p>No works or portfolio items have been uploaded by this designer yet.</p>
+            </div>
+          )}
+        </section>
 
         {/* RESTORED REVIEWS SECTION WITH YOUR CUSTOM CLASSES */}
         <section className="designer-reviews-section">
@@ -351,7 +375,7 @@ const DesignerInfoContent = () => {
                       </div>
                     </div>
                     <div className="stars-large">
-                        {"★".repeat(rev.stars)}{"☆".repeat(5 - rev.stars)}
+                      {"★".repeat(rev.stars)}{"☆".repeat(5 - rev.stars)}
                     </div>
                   </div>
                   <div className="rev-body">
@@ -417,7 +441,7 @@ const DesignerInfoContent = () => {
                     <label>Email</label>
                     <input type="email" name="email" autoComplete="email" value={hireForm.email} onChange={handleHireChange} required />
                   </div>
-                  
+
                   <div className="location-field-wrapper">
                     <label>Location</label>
                     <div className="location-input-container">
@@ -428,9 +452,9 @@ const DesignerInfoContent = () => {
                         placeholder="City, State"
                         required
                       />
-                      <button 
-                        type="button" 
-                        className={`location-fetch-btn ${locLoading ? 'loading' : ''}`} 
+                      <button
+                        type="button"
+                        className={`location-fetch-btn ${locLoading ? 'loading' : ''}`}
                         onClick={fetchCurrentLocation}
                         disabled={locLoading}
                       >
@@ -464,7 +488,7 @@ const DesignerInfoContent = () => {
         )}
       </div>
       <Footer />
-      
+
       <style jsx>{`
         .location-input-container {
           display: flex;
