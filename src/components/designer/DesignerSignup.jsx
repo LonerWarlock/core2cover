@@ -13,12 +13,22 @@ import {
 } from "../../api/designer";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_2_.png";
 // 1. Import MessageBox
-import MessageBox from "../ui/MessageBox"; 
+import MessageBox from "../ui/MessageBox";
 // IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
+import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
+
+const LIBRARIES = ["places"];
+
 const DesignerSignup = () => {
   const router = useRouter();
+  const autocompleteRef = useRef(null);
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES,
+  });
 
   const [form, setForm] = useState({
     fullname: "",
@@ -49,7 +59,7 @@ const DesignerSignup = () => {
   const triggerMsg = (text, type = "success") => {
     setMsg({ text, type, show: true });
     // Optional: Clear the red inline error if a success message is shown
-    if (type === "success") setError(""); 
+    if (type === "success") setError("");
   };
 
   useEffect(() => {
@@ -61,6 +71,15 @@ const DesignerSignup = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
+  };
+
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current !== null) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.formatted_address) {
+        setForm((prev) => ({ ...prev, location: place.formatted_address }));
+      }
+    }
   };
 
   const handleSendOtp = async () => {
@@ -115,11 +134,11 @@ const DesignerSignup = () => {
     setError("");
 
     if (form.mobile.length < 10) {
-    const msg = "Please enter a valid 10-digit mobile number.";
-    setError(msg);
-    triggerMsg(msg, "error");
-    return;
-  }
+      const msg = "Please enter a valid 10-digit mobile number.";
+      setError(msg);
+      triggerMsg(msg, "error");
+      return;
+    }
 
     if (!emailVerified) {
       setError("Verify email before signup");
@@ -148,7 +167,7 @@ const DesignerSignup = () => {
       if (designerId) localStorage.setItem("designerId", designerId);
 
       triggerMsg("Account created! Redirecting to setup...", "success");
-      
+
       // Delay redirection so user can see the success message
       setTimeout(() => {
         router.push("/designer_profile_setup");
@@ -173,10 +192,10 @@ const DesignerSignup = () => {
 
       {/* 4. Render MessageBox at the top level of the component */}
       {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
       )}
 
@@ -234,14 +253,24 @@ const DesignerSignup = () => {
             </div>
 
             <div className="ds-field">
-              <label>Location</label>
-              <input
-                type="text"
-                name="location"
-                placeholder="City or location"
-                value={form.location}
-                onChange={handleChange}
-              />
+              <label>Studio Location</label>
+              {isLoaded ? (
+                <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
+                  <div className="ds-input-icon-wrapper">
+                    <input
+                      type="text"
+                      name="location"
+                      placeholder="Search city or area..."
+                      value={form.location}
+                      onChange={handleChange}
+                      required
+                    />
+                    <FaMapMarkerAlt className="ds-input-icon" />
+                  </div>
+                </Autocomplete>
+              ) : (
+                <input type="text" name="location" placeholder="Loading location services..." disabled />
+              )}
             </div>
 
             <div className="ds-field ds-full">
@@ -255,10 +284,10 @@ const DesignerSignup = () => {
                   {emailVerified
                     ? "Email Verified"
                     : otpSent
-                    ? "OTP Sent"
-                    : sendingOtp
-                    ? "Sending..."
-                    : "Send OTP"}
+                      ? "OTP Sent"
+                      : sendingOtp
+                        ? "Sending..."
+                        : "Send OTP"}
                 </button>
 
                 {otpSent && !emailVerified && (

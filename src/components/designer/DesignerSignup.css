@@ -241,8 +241,8 @@
 
   .ds-form,
   .ds-reveal {
-    grid-template-columns: 1fr;
-    /* Single column */
+    display: flex;
+    flex-direction: column;
   }
 
   .ds-full,
@@ -253,4 +253,31 @@
   .ds-auth-box {
     padding: 30px 20px;
   }
+}
+
+.ds-input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ds-input-icon-wrapper input {
+  padding-right: 35px; /* Space for the icon */
+  width: 100%;
+}
+
+.ds-input-icon {
+  position: absolute;
+  right: 12px;
+  color: var(--ds-olive);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+/* Ensure the Autocomplete dropdown is visible above the signup card */
+.pac-container {
+  z-index: 2000 !important;
+  font-family: inherit;
+  border-radius: 8px;
+  margin-top: 2px;
 }
