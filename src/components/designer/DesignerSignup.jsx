@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import "./DesignerSignup.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaMapMarkerAlt} from "react-icons/fa";
 import {
   designerSignup,
   sendDesignerOtp,
