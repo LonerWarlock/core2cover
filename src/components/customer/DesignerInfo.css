@@ -672,3 +672,25 @@ body {
 .designer-info-layout.no-portfolio .designer-text {
   max-width: 800px;
 }
+
+.empty-portfolio-message {
+  padding: 40px;
+  background: rgba(96, 110, 82, 0.05); /* Very light olive tint */
+  border: 1px dashed #606e52;
+  border-radius: 12px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+.designer-info-layout.no-portfolio {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.designer-info-layout.no-portfolio .designer-text {
+  max-width: 700px;
+  margin: 0 auto;
+}
