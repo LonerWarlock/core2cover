@@ -7,26 +7,31 @@ export async function GET(request) {
     const type = searchParams.get("type");
 
     const products = await prisma.product.findMany({
-      where: type ? { productType: type } : {},
-      include: {
-        seller: {
+  where: {
+    ...(type ? { productType: type } : {}),
+    seller: {
+      isVerified: true // - Only fetch products from verified sellers
+    }
+  },
+  include: {
+    seller: {
+      select: {
+        name: true,
+        delivery: {
           select: {
-            name: true,
-            delivery: {
-              select: {
-                shippingChargeType: true,
-                shippingCharge: true,
-                installationAvailable: true,
-                installationCharge: true,
-              }
-            },
-            business: { select: { city: true, state: true } },
-          },
+            shippingChargeType: true,
+            shippingCharge: true,
+            installationAvailable: true,
+            installationCharge: true,
+          }
         },
-        ratings: { select: { stars: true } },
+        business: { select: { city: true, state: true } },
       },
-      orderBy: { createdAt: "desc" },
-    });
+    },
+    ratings: { select: { stars: true } },
+  },
+  orderBy: { createdAt: "desc" },
+});
 
     const formatted = products.map((p) => {
       const total = p.ratings.reduce((sum, r) => sum + r.stars, 0);

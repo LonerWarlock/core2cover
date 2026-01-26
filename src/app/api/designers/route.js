@@ -22,21 +22,22 @@ export async function GET(request) {
     }
 
     const designers = await prisma.designer.findMany({
-      where: {
-        availability: "Available",
-        ...(search && {
-          OR: [
-            { fullname: { contains: search, mode: 'insensitive' } },
-            { location: { contains: search, mode: 'insensitive' } },
-            { profile: { bio: { contains: search, mode: 'insensitive' } } },
-          ]
-        })
-      },
-      include: {
-        profile: true,
-        ratings: { select: { stars: true } }
-      }
-    });
+  where: {
+    availability: "Available",
+    isVerified: true, // - Only fetch designers who are verified
+    ...(search && {
+      OR: [
+        { fullname: { contains: search, mode: 'insensitive' } },
+        { location: { contains: search, mode: 'insensitive' } },
+        { profile: { bio: { contains: search, mode: 'insensitive' } } },
+      ]
+    })
+  },
+  include: {
+    profile: true,
+    ratings: { select: { stars: true } }
+  }
+});
 
     const formatted = designers.map(d => {
       const count = d.ratings.length;

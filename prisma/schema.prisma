@@ -103,6 +103,7 @@ model Seller {
   phone         String
   password      String
   phoneVerified Boolean                @default(false)
+  isVerified    Boolean                @default(false)
   createdAt     DateTime               @default(now())
   orderItems    OrderItem[]
   products      Product[]
@@ -299,6 +300,7 @@ model Designer {
   location     String?
   passwordHash String
   availability String  @default("Available")
+  isVerified   Boolean @default(false)
 
   profile      DesignerProfile?
   works        DesignerWork[]
