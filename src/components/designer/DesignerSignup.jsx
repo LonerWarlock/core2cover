@@ -19,7 +19,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 
-const LIBRARIES = ["places"];
+const LIBRARIES = ["places", "maps"];
 
 const DesignerSignup = () => {
   const router = useRouter();
