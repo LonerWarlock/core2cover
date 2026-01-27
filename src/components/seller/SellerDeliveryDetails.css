@@ -183,3 +183,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+.disabled-section {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+input:disabled, select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
