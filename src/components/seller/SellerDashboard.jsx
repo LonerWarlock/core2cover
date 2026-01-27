@@ -64,11 +64,12 @@ const SellerDashboard = () => {
           ? JSON.parse(atob(profileRes.data.payload))
           : (profileRes.data || {});
 
-        setIsVerified(!!data.isVerified);
+        const verified = !!data.isVerified;
+        setIsVerified(verified);
 
         const fetchedName = data.name || data.seller?.name || "Seller";
         setSellerName(fetchedName);
-        if (data.isVerified) {
+        if (verified) {
           const statsRes = await getSellerDashboard(sellerId);
           const stats = statsRes.data?.payload
             ? JSON.parse(atob(statsRes.data.payload))
