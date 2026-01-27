@@ -33,14 +33,13 @@ const SellerDeliveryUpdate = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    /* =========================================
-        EASY ENCRYPTION HELPERS
-    ========================================= */
+    // LOGIC: Check if Core2Cover managed delivery is selected
+    const isC2CManaged = delivery.deliveryResponsibility === "core2cover";
+
     const secureGetItem = (key) => {
         if (typeof window === "undefined") return null;
         const item = localStorage.getItem(key);
         try {
-            // Decodes the scrambled sellerId from storage
             return item ? atob(item) : null;
         } catch (e) {
             return null;
@@ -49,7 +48,6 @@ const SellerDeliveryUpdate = () => {
 
     const decodePayload = (payload) => {
         try {
-            // Decodes the backend delivery data payload
             const decodedString = atob(payload);
             return JSON.parse(decodedString);
         } catch (e) {
@@ -64,7 +62,6 @@ const SellerDeliveryUpdate = () => {
 
     useEffect(() => {
         setMounted(true);
-        // Correctly retrieve the obfuscated ID to match your security screenshot
         const sid = secureGetItem("sellerId");
         if (sid) {
             setSellerId(sid);
@@ -78,7 +75,6 @@ const SellerDeliveryUpdate = () => {
 
         getSellerDeliveryDetails(sellerId)
             .then((res) => {
-                // Handle the encrypted payload from backend
                 let data = res.data;
                 if (res.data?.payload) {
                     data = decodePayload(res.data.payload);
@@ -89,8 +85,10 @@ const SellerDeliveryUpdate = () => {
                         ...data,
                         installationAvailable:
                             data.installationAvailable === true ||
-                            data.installationAvailable === "yes"
-                                ? "yes"
+                            data.installationAvailable === "yes" ||
+                            data.installationAvailable === "free" || 
+                            data.installationAvailable === "paid"
+                                ? data.installationAvailable === "no" ? "no" : data.installationAvailable
                                 : "no",
                         internationalDelivery:
                             data.internationalDelivery === true ||
@@ -118,7 +116,6 @@ const SellerDeliveryUpdate = () => {
         e.preventDefault();
         setSaving(true); 
         try {
-            // Send actual ID to the backend API
             await saveSellerDeliveryDetails({
                 sellerId: Number(sellerId),
                 ...delivery,
@@ -166,74 +163,122 @@ const SellerDeliveryUpdate = () => {
                                         <option value="">Select</option>
                                         <option value="seller">Seller</option>
                                         <option value="courier">Courier Partner</option>
+                                        {/* NEW OPTION */}
+                                        <option value="core2cover">Core2Cover Delivery (Managed)</option>
                                     </select>
                                 </div>
 
-                                <div className="input-group">
-                                    <label>Delivery Coverage *</label>
-                                    <select name="deliveryCoverage" value={delivery.deliveryCoverage} onChange={handleChange} required>
-                                        <option value="">Select</option>
-                                        <option value="pan-india">PAN India</option>
-                                        <option value="selected-states">Selected States</option>
-                                        <option value="selected-cities">Selected Cities</option>
-                                    </select>
-                                </div>
-
-                                <div className="input-group">
-                                    <label>Delivery Type *</label>
-                                    <select name="deliveryType" value={delivery.deliveryType} onChange={handleChange} required>
-                                        <option value="">Select</option>
-                                        <option value="courier">Courier / Surface</option>
-                                        <option value="seller-transport">Seller Transport</option>
-                                    </select>
-                                </div>
-
-                                <div className="grid-2">
+                                {/* SECTION DISABLED IF CORE2COVER IS SELECTED */}
+                                <div className={`form-lock-section ${isC2CManaged ? 'locked' : ''}`}>
                                     <div className="input-group">
-                                        <label>Delivery Time (Min days)</label>
-                                        <input type="number" name="deliveryTimeMin" value={delivery.deliveryTimeMin} onChange={handleChange} />
+                                        <label>Delivery Coverage *</label>
+                                        <select 
+                                            name="deliveryCoverage" 
+                                            value={delivery.deliveryCoverage} 
+                                            onChange={handleChange} 
+                                            required={!isC2CManaged} 
+                                            disabled={isC2CManaged}
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="pan-india">PAN India</option>
+                                            <option value="selected-states">Selected States</option>
+                                            <option value="selected-cities">Selected Cities</option>
+                                        </select>
                                     </div>
+
                                     <div className="input-group">
-                                        <label>Delivery Time (Max days)</label>
-                                        <input type="number" name="deliveryTimeMax" value={delivery.deliveryTimeMax} onChange={handleChange} />
+                                        <label>Delivery Type *</label>
+                                        <select 
+                                            name="deliveryType" 
+                                            value={delivery.deliveryType} 
+                                            onChange={handleChange} 
+                                            required={!isC2CManaged} 
+                                            disabled={isC2CManaged}
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="courier">Courier / Surface</option>
+                                            <option value="seller-transport">Seller Transport</option>
+                                        </select>
                                     </div>
-                                </div>
 
-                                <div className="input-group">
-                                    <label>Shipping Charges *</label>
-                                    <select name="shippingChargeType" value={delivery.shippingChargeType} onChange={handleChange} required>
-                                        <option value="">Select</option>
-                                        <option value="free">Free</option>
-                                        <option value="fixed">Fixed</option>
-                                    </select>
-                                </div>
+                                    <div className="grid-2">
+                                        <div className="input-group">
+                                            <label>Delivery Time (Min days)</label>
+                                            <input 
+                                                type="number" 
+                                                name="deliveryTimeMin" 
+                                                value={delivery.deliveryTimeMin} 
+                                                onChange={handleChange} 
+                                                disabled={isC2CManaged}
+                                            />
+                                        </div>
+                                        <div className="input-group">
+                                            <label>Delivery Time (Max days)</label>
+                                            <input 
+                                                type="number" 
+                                                name="deliveryTimeMax" 
+                                                value={delivery.deliveryTimeMax} 
+                                                onChange={handleChange} 
+                                                disabled={isC2CManaged}
+                                            />
+                                        </div>
+                                    </div>
 
-                                {delivery.shippingChargeType === "fixed" && (
                                     <div className="input-group">
-                                        <label>Shipping Charge (₹)</label>
-                                        <input type="number" name="shippingCharge" value={delivery.shippingCharge} onChange={handleChange} />
+                                        <label>Shipping Charges *</label>
+                                        <select 
+                                            name="shippingChargeType" 
+                                            value={delivery.shippingChargeType} 
+                                            onChange={handleChange} 
+                                            required={!isC2CManaged} 
+                                            disabled={isC2CManaged}
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="free">Free</option>
+                                            <option value="fixed">Fixed</option>
+                                        </select>
                                     </div>
-                                )}
 
-                                <div className="input-group">
-                                    <label>Installation Available *</label>
-                                    <select name="installationAvailable" value={delivery.installationAvailable} onChange={handleChange} required>
-                                        <option value="">Select</option>
-                                        <option value="yes">Yes</option>
-                                        <option value="no">No</option>
-                                    </select>
-                                </div>
+                                    {delivery.shippingChargeType === "fixed" && !isC2CManaged && (
+                                        <div className="input-group">
+                                            <label>Shipping Charge (₹)</label>
+                                            <input type="number" name="shippingCharge" value={delivery.shippingCharge} onChange={handleChange} />
+                                        </div>
+                                    )}
 
-                                {delivery.installationAvailable === "yes" && (
                                     <div className="input-group">
-                                        <label>Installation Charge (₹)</label>
-                                        <input type="number" name="installationCharge" value={delivery.installationCharge} onChange={handleChange} />
+                                        <label>Installation Available *</label>
+                                        <select 
+                                            name="installationAvailable" 
+                                            value={delivery.installationAvailable} 
+                                            onChange={handleChange} 
+                                            required={!isC2CManaged} 
+                                            disabled={isC2CManaged}
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
                                     </div>
-                                )}
 
-                                <div className="checkbox-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
-                                    <input type="checkbox" name="internationalDelivery" id="intl-check" checked={delivery.internationalDelivery} onChange={handleChange} />
-                                    <label htmlFor="intl-check">Can deliver internationally</label>
+                                    {delivery.installationAvailable === "yes" && !isC2CManaged && (
+                                        <div className="input-group">
+                                            <label>Installation Charge (₹)</label>
+                                            <input type="number" name="installationCharge" value={delivery.installationCharge} onChange={handleChange} />
+                                        </div>
+                                    )}
+
+                                    <div className="checkbox-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px', opacity: isC2CManaged ? 0.5 : 1 }}>
+                                        <input 
+                                            type="checkbox" 
+                                            name="internationalDelivery" 
+                                            id="intl-check" 
+                                            checked={delivery.internationalDelivery} 
+                                            onChange={handleChange} 
+                                            disabled={isC2CManaged}
+                                        />
+                                        <label htmlFor="intl-check">Can deliver internationally</label>
+                                    </div>
                                 </div>
 
                                 <button className="primary-btn" type="submit" disabled={saving}>
