@@ -81,20 +81,6 @@ const SellerDashboard = () => {
       } catch (err) {
         console.error("Could not fetch seller name:", err);
         setSellerName("Seller");
-      }
-
-      try {
-        // Fetch Stats
-        const statsRes = await getSellerDashboard(sellerId);
-
-        const stats = statsRes.data?.payload
-          ? JSON.parse(atob(statsRes.data.payload))
-          : (statsRes.data || {});
-
-        setOrdersCount(stats.ordersCount || 0);
-        setTotalEarnings(stats.totalEarnings || 0);
-      } catch (err) {
-        console.error("Stats Error:", err);
       } finally {
         setLoading(false);
       }

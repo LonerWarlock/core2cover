@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-/**
- * GET: Fetch complete seller profile
- * Matches your 'Seller' model in schema.prisma
- */
+const encodeData = (data) => {
+  return Buffer.from(JSON.stringify(data)).toString("base64");
+};
+
+
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
