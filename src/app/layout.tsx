@@ -41,7 +41,7 @@ export default function RootLayout({
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "WebSite",
     "name": "Core2Cover",
     "alternateName": "C2C",
     "url": "https://core2cover.vercel.app",
