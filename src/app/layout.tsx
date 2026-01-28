@@ -1,64 +1,36 @@
-"use client";
+// src/app/layout.tsx
+import { Metadata } from "next";
+import ClientLayout from "./ClientLayout";
 
-import { Suspense, useState, useEffect } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
-import { usePathname } from "next/navigation";
-import { Analytics } from '@vercel/analytics/next'; // [NEW] Added Analytics import
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export const metadata: Metadata = {
+  title: {
+    default: "Core2Cover (C2C) | Interior Design & Home Decor Marketplace",
+    template: "%s | Core2Cover",
+  },
+  description: "Connect with top interior designers and shop premium home decor at Core2Cover (C2C).",
+  keywords: ["Core2Cover", "C2C", "Interior Design India", "Home Decor", "Architects"],
+  verification: {
+    google: "48hxJVOfuV3-SlJW8Bhs4y6wFM3OEiyDY0vr2dNld48", 
+  },
+  metadataBase: new URL("https://core2cover.vercel.app"),
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    // Function to check if the screen is desktop-sized
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-
-    // Set initial value
-    handleResize();
-
-    // Add event listener
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Only apply no-scroll if it's the home page AND a desktop screen
-  const shouldDisableScroll = pathname === "/" && isDesktop;
-
   return (
     <html lang="en">
       <head>
         <link rel="icon" href="/icon.png" sizes="any" />
       </head>
-      <body 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased ${shouldDisableScroll ? "no-scroll" : ""}`} 
-        suppressHydrationWarning={true}
-      >
-        <NextAuthProvider>
-          <Suspense fallback={null}>
-            {children}
-          </Suspense>
-        </NextAuthProvider>
-        
-        {/* [NEW] Vercel Analytics Component */}
-        <Analytics />
+      <body>
+        {/* Pass children to the ClientLayout which handles the logic */}
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
