@@ -52,14 +52,14 @@ export default function Footer() {
 
         {/* Center: Social Icons */}
         <div className="footer-social">
-          <a
+          {/* <a
             href="https://facebook.com"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
           >
             <FaFacebookF />
-          </a>
+          </a> */}
           <a
             href="https://www.instagram.com/core2cover?igsh=ODdldnJnaHg3eXMz"
             target="_blank"
