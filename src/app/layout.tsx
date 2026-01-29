@@ -31,6 +31,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -39,21 +44,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  const jsonLd = {
+  const jsonLd = [{
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Core2Cover",
-    "alternateName": "C2C",
-    "url": "https://core2cover.vercel.app",
-    "logo": "https://core2cover.vercel.app/icon.png",
-    "description": "India’s complete interior marketplace where customers buy furniture and raw materials and also can send work request to designers, sellers list and sell their products, and designers & architects showcase their work and get hired for projects.",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+91-8275922422",
-      "contactType": "customer service",
-      "email": "team.core2cover@gmail.com"
+    "alternateName": ["C2C", "Core 2 Cover"],
+    "url": "https://core2cover.vercel.app"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Core2Cover",
+      "url": "https://core2cover.vercel.app",
+      "logo": "https://core2cover.vercel.app/icon.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-8275922422",
+        "contactType": "customer service",
+        "email": "team.core2cover@gmail.com"
+      }
     }
-  };
+ ];
 
   return (
     <html lang="en">
