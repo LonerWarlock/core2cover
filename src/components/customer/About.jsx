@@ -102,6 +102,8 @@ export default function About() {
             <div className="hero-ctas">
               <Link href="/" className="btn btn-primary">Explore Marketplace</Link>
               <Link href="/signup" className="btn btn-ghost">Create an account</Link>
+              <Link href="/sellersignup" className="btn btn-ghost">Signup as Seller</Link>
+              <Link href="/designersignup" className="btn btn-ghost">Signup as Designer</Link>
             </div>
           </div>
         </div>
