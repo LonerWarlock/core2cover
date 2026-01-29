@@ -34,7 +34,7 @@ export async function POST(request) {
     if (!verifiedOtp) return NextResponse.json({ message: "Email not verified" }, { status: 403 });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    
+
     // 3. Create Designer with Admin Notification
     const designer = await prisma.$transaction(async (tx) => {
       const newDesigner = await tx.designer.create({
@@ -44,26 +44,34 @@ export async function POST(request) {
       return newDesigner;
     });
 
-    // 4. Send Email to Admins
+    // 4. Send Email to Team Core2Cover
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to: "omnileshkarande@gmail.com, sohamphatakssp@gmail.com",
-      subject: "New Designer Registration - Verification Needed",
+      from: process.env.EMAIL_FROM, // Your system email (e.g., noreply@core2cover.com)
+      to: "team.core2cover@gmail.com", // The new target email
+      replyTo: emailNormalized, // This allows you to reply directly to the seller
+      subject: `New Designer Alert: ${fullname}`,
       html: `
-        <div style="font-family: sans-serif;">
-          <h2>New Designer Alert</h2>
-          <p>A new designer has joined Core2Cover and is awaiting verification.</p>
-          <ul>
-            <li><strong>Name:</strong> ${fullname}</li>
-            <li><strong>Email:</strong> ${emailNormalized}</li>
-            <li><strong>Mobile:</strong> ${mobile}</li>
-            <li><strong>Location:</strong> ${location}</li>
-          </ul>
-          <p>Please review their professional profile and verify the account in the Admin Panel.</p>
-        </div>
-      `,
-    });
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #1a1a1a; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        New Registration - Verification Required
+      </h2>
+      <p>A new professional Designer has registered on <strong>Core2Cover</strong> and is waiting for your verification.</p>
+      <p>Verify the designer on <strong>Core2Cover Admin Panel</strong>.</p>
+      
+      <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0;">Designer Details</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><strong>Name:</strong> ${fullname}</li>
+          <li><strong>Email:</strong> ${emailNormalized}</li>
+          <li><strong>Mobile:</strong> ${mobile}</li>
+          <li><strong>Location:</strong> ${location}</li>
+        </ul>
+      </div>
 
+      <p><em>Note: You can click "Reply" to this email to contact the user directly at their registered email.</em></p>
+      
+    </div>`,
+    });
     return NextResponse.json({ message: "Success", designer: { id: designer.id } }, { status: 201 });
 
   } catch (err) {
