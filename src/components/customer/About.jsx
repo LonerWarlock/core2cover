@@ -226,11 +226,11 @@ export default function About() {
           <div className="cta-actions">
             <Link href="/signup" className="cta-button">Get started</Link>
           </div>
-          <div className="cta-credits">
+          {/* <div className="cta-credits">
             <p className="credits-title">Platform Credits</p>
             <p>Design & Marketing Head — Prathamesh Mali</p>
             <p>CFO — Om Mali</p>
-          </div>
+          </div> */}
         </section>
       </main>
     </section>
