@@ -7,6 +7,7 @@ import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import CoreToCoverTitle from "../../assets/logo/CoreToCover_1.png";
 import Om from "../../assets/founders/om.jpg";
 import Soham from "../../assets/founders/soham.jpeg";
+import Prathmesh from "../../assets/founders/Prathmesh.jpeg"
 import NextImage from "next/image";
 import { Github, Linkedin, Instagram, Mail } from "lucide-react";
 
@@ -36,6 +37,13 @@ const founderData = [
     github: "https://github.com/LonerWarlock",
     linkedin: "https://www.linkedin.com/in/soham-phatak",
     instagram: "https://www.instagram.com/sohamphatak21/"
+  },
+  {
+    name: "Prathmesh Mali",
+    role: "Design and Marketing Head",
+    image: Prathmesh,
+    email: "Sonaigfx@gamil.com",
+    instagram: "https://www.instagram.com/sonai_graphics/"
   }
 ];
 
