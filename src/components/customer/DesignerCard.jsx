@@ -8,26 +8,25 @@ import "./DesignerCard.css";
 
 const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, location, experience, bio, isLocal }) => {
   const router = useRouter();
-  
+
   // Robust Image Validation to prevent "Invalid URL" crash
-  const finalImage = (typeof image === "string" && image.startsWith("http")) 
-    ? image 
-    : "/assets/placeholder-designer.jpg"; 
+  const finalImage = (typeof image === "string" && image.includes("cloudinary.com"))
+    ? image.replace("/upload/", "/upload/w_400,h_400,c_fill,g_face,q_auto,f_auto/")
+    : image || "/assets/placeholder-designer.jpg";
 
   return (
-    <article 
-      className={`product-card ${isLocal ? "local-highlight" : ""}`} 
+    <article
+      className={`product-card ${isLocal ? "local-highlight" : ""}`}
       onClick={() => router.push(`/designer_info?id=${id}`)}
     >
       <div className="product-image-container">
-        <Image 
-          src={finalImage} 
-          alt={name} 
-          className="product-image" 
+        <Image
+          src={finalImage}
+          alt={name}
+          className="product-image"
           fill
-          sizes="(max-width: 600px) 140px, 340px"
+          unoptimized
           priority={id < 4}
-          style={{ objectFit: 'cover' }}
         />
         <span className="product-badge">{category}</span>
         {/* {isLocal && <span className="local-badge">Near You</span>} */}
