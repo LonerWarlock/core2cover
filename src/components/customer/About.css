@@ -375,3 +375,12 @@
     justify-content: center;
   }
 }
+
+.draggable-logo {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.draggable-logo:hover {
+  transform: scale(1.02);
+}

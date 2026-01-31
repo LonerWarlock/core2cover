@@ -117,7 +117,16 @@ export default function About() {
         </div>
         {!isMobileOrTablet && (
           <div className="hero-art">
-            <NextImage src={CoreToCoverLogo} alt="Logo" width={400} height={400} />
+            <Link href="/" title="Go to Core2Cover Home">
+              <NextImage
+                src={CoreToCoverLogo}
+                alt="Core2Cover Logo"
+                width={400}
+                height={400}
+                unoptimized
+                className="draggable-logo"
+              />
+            </Link>
             <BrandTag>From Design To Finish - In One Place.</BrandTag>
           </div>
         )}
