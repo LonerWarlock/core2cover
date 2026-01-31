@@ -164,12 +164,14 @@ export default function About() {
                     className="founder-img-circle"
                     width={150}
                     height={150}
+                    unoptimized
                   />
                 </div>
                 <div className="founder-content">
                   <h3 className="founder-name-text">{founder.name}</h3>
                   <p className="founder-role-text">{founder.role}</p>
                   <div className="founder-socials">
+                    {/* Email logic remains the same */}
                     {founder.email && (
                       <a
                         href={`mailto:${founder.email}?subject=Contacting Core2Cover`}
@@ -180,9 +182,27 @@ export default function About() {
                         <Mail size={20} />
                       </a>
                     )}
-                    <a href={founder.github} target="_blank" rel="noreferrer" className="social-icon"><Github size={20} /></a>
-                    <a href={founder.linkedin} target="_blank" rel="noreferrer" className="social-icon"><Linkedin size={20} /></a>
-                    <a href={founder.instagram} target="_blank" rel="noreferrer" className="social-icon"><Instagram size={20} /></a>
+
+                    {/* Only show Github if provided */}
+                    {founder.github && (
+                      <a href={founder.github} target="_blank" rel="noreferrer" className="social-icon" title="Github">
+                        <Github size={20} />
+                      </a>
+                    )}
+
+                    {/* Only show Linkedin if provided */}
+                    {founder.linkedin && (
+                      <a href={founder.linkedin} target="_blank" rel="noreferrer" className="social-icon" title="LinkedIn">
+                        <Linkedin size={20} />
+                      </a>
+                    )}
+
+                    {/* Only show Instagram if provided */}
+                    {founder.instagram && (
+                      <a href={founder.instagram} target="_blank" rel="noreferrer" className="social-icon" title="Instagram">
+                        <Instagram size={20} />
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
