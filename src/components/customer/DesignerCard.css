@@ -234,11 +234,13 @@
   .product-image-container {
     width: 140px;
     height: 100%;
+    flex-shrink: 0;
     aspect-ratio: auto;
   }
 
   .product-info {
     padding: 16px;
+    width: calc(100% - 120px);
   }
 
   .product-desc-text {

@@ -24,9 +24,10 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, loca
           src={finalImage} 
           alt={name} 
           className="product-image" 
-          width={340} 
-          height={340} 
+          fill
+          sizes="(max-width: 600px) 140px, 340px"
           priority={id < 4}
+          style={{ objectFit: 'cover' }}
         />
         <span className="product-badge">{category}</span>
         {/* {isLocal && <span className="local-badge">Near You</span>} */}
