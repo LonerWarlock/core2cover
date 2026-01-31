@@ -14,6 +14,10 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, loca
     ? image.replace("/upload/", "/upload/w_400,h_400,c_fill,g_face,q_auto,f_auto/")
     : image || "/assets/placeholder-designer.jpg";
 
+  const truncatedBio = bio 
+  ? bio.split(" ").slice(0, 6).join(" ") + (bio.split(" ").length > 6 ? "..." : "")
+  : "No bio provided.";
+
   return (
     <article
       className={`product-card ${isLocal ? "local-highlight" : ""}`}
@@ -41,7 +45,7 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, loca
           </div>
         </div>
 
-        <p className="product-desc-text">{bio || "No bio provided."}</p>
+        <p className="product-desc-text">{truncatedBio || "No bio provided."}</p>
 
         <div className="product-seller-group">
           <span className="seller-label">

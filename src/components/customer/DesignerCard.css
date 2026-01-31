@@ -120,14 +120,19 @@
 /* Typography Enhancements */
 .product-desc-text {
   color: var(--text-muted);
-  -webkit-line-clamp: 2;
-  /* -webkit-box-orient: vertical; */
-  /* height: 2.8rem; */
-  /* margin-bottom: 20px; */
   font-size: .88rem;
-  /* line-height: 1.6; */
+  
+  /* Webkit Multi-line Truncation */
   display: -webkit-box;
+  -webkit-line-clamp: 2;      /* Allows up to 2 lines before cutting off */
+  -webkit-box-orient: vertical;
   overflow: hidden;
+  
+  /* Layout stability */
+  margin-top: 8px;
+  margin-bottom: 16px;
+  height: 2.8rem;             /* Fixed height for 2 lines of text */
+  line-height: 1.4;           /* Controls spacing between lines */
 }
 
 /* Metadata Styling */
