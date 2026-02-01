@@ -9,7 +9,7 @@ import sample from "../../assets/images/sample.jpg";
 import { addToCart } from "../../utils/cart";
 import api from "../../api/axios";
 import Image from "next/image";
-import { FaArrowLeft, FaShareAlt, FaTimes, FaPlay, FaPause, FaExpand, FaCompress, FaVolumeUp, FaVolumeMute, FaTruckLoading, FaRulerCombined, FaStore } from "react-icons/fa";
+import { FaArrowLeft, FaShareAlt, FaTimes, FaPlay, FaPause, FaExpand, FaStore, FaTruckLoading } from "react-icons/fa";
 import MessageBox from "../ui/MessageBox";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
@@ -81,7 +81,7 @@ function VideoPlayer({ src, poster }) {
                 <button onClick={togglePlay} style={{ background: "transparent", border: "none", color: "#fff", fontSize: 18, cursor: 'pointer' }}>{playing ? <FaPause /> : <FaPlay />}</button>
                 <input type="range" min={0} max={duration || 0} value={current} onChange={handleSeek} style={{ flex: 1, cursor: 'pointer' }} />
                 <div style={{ color: "#fff", fontSize: 12 }}>{formatTime(current)} / {formatTime(duration)}</div>
-                <button onClick={toggleMute} style={{ background: "transparent", border: "none", color: "#fff", fontSize: 16, cursor: 'pointer' }}>{muted ? <FaVolumeMute /> : <FaVolumeUp />}</button>
+                <button onClick={toggleMute} style={{ background: "transparent", border: "none", color: "#fff", fontSize: 16, cursor: 'pointer' }}>{muted ? "🔇" : "🔊"}</button>
                 <button onClick={toggleFullscreen} style={{ background: "transparent", border: "none", color: "#fff", fontSize: 16, cursor: 'pointer' }}><FaExpand /></button>
             </div>
         </div>
@@ -110,9 +110,9 @@ function ZoomableImage({ src, alt, className }) {
     const getBounds = useCallback((s = scale) => {
         const c = containerRef.current;
         if (!c) return { maxX: 0, maxY: 0 };
-        return { 
-            maxX: Math.max(0, (c.clientWidth * s - c.clientWidth) / 2), 
-            maxY: Math.max(0, (c.clientHeight * s - c.clientHeight) / 2) 
+        return {
+            maxX: Math.max(0, (c.clientWidth * s - c.clientWidth) / 2),
+            maxY: Math.max(0, (c.clientHeight * s - c.clientHeight) / 2)
         };
     }, [scale]);
 
@@ -120,7 +120,6 @@ function ZoomableImage({ src, alt, className }) {
         const container = containerRef.current;
         if (!container) return;
 
-        // Fix for "Unable to preventDefault inside passive event listener"
         const onWheel = (e) => {
             e.preventDefault();
             const delta = e.deltaY < 0 ? 1.15 : 0.85;
@@ -142,23 +141,23 @@ function ZoomableImage({ src, alt, className }) {
 
             setTranslate(prev => {
                 const { maxX, maxY } = getBounds();
-                return { 
-                    x: clamp(prev.x + dx, -maxX, maxX), 
-                    y: clamp(prev.y + dy, -maxY, maxY) 
+                return {
+                    x: clamp(prev.x + dx, -maxX, maxX),
+                    y: clamp(prev.y + dy, -maxY, maxY)
                 };
             });
         };
 
         const onPointerUp = (e) => {
             lastPointer.current.active = false;
-            try { container.releasePointerCapture(e.pointerId); } catch {}
+            try { container.releasePointerCapture(e.pointerId); } catch { }
         };
 
         container.addEventListener("wheel", onWheel, { passive: false });
         container.addEventListener("pointerdown", onPointerDown);
         container.addEventListener("pointermove", onPointerMove);
         container.addEventListener("pointerup", onPointerUp);
-        
+
         return () => {
             container.removeEventListener("wheel", onWheel);
             container.removeEventListener("pointerdown", onPointerDown);
@@ -168,16 +167,16 @@ function ZoomableImage({ src, alt, className }) {
     }, [getBounds, scale]);
 
     return (
-        <div 
-            ref={containerRef} 
-            className={className || "zoomable-img-container"} 
+        <div
+            ref={containerRef}
+            className={className || "zoomable-img-container"}
             style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative", touchAction: "none", background: "#f8f8f6" }}
         >
-            <img 
-                src={src} 
-                alt={alt || "Product"} 
-                draggable={false} 
-                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none", ...transformStyle }} 
+            <img
+                src={src}
+                alt={alt || "Product"}
+                draggable={false}
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none", ...transformStyle }}
             />
         </div>
     );
@@ -220,12 +219,11 @@ const ProductInfo = () => {
             .finally(() => setLoading(false));
     }, [productId]);
 
-    const { 
-        id, sellerId, title, name, seller, price, images = [], video = null, 
-        description, productType, unit, unitsPerTrip, conversionFactor, availability 
+    const {
+        id, sellerId, title, name, seller, price, images = [], video = null,
+        description, productType, unit, unitsPerTrip, conversionFactor, availability
     } = product || {};
 
-    // Bypass Vercel 402 error with unoptimized Cloudinary URLs
     const mediaList = useMemo(() => {
         const list = [];
         images.forEach((img) => {
@@ -322,7 +320,7 @@ const ProductInfo = () => {
             <Navbar />
             {isProcessing && <LoadingSpinner message="Preparing your order..." />}
             {msg.show && <MessageBox message={msg.text} type={msg.type} onClose={() => setMsg({ ...msg, show: false })} />}
-            
+
             <div className="pd-container">
                 <div className="pd-top-nav">
                     <button className="back-btn" onClick={() => router.back()}><FaArrowLeft /> Back</button>
@@ -338,24 +336,33 @@ const ProductInfo = () => {
                     </div>
                     <div className="pd-thumbnails" style={{ marginTop: 14 }}>
                         {mediaList.map((m, i) => (
-                            <div 
-                                key={i} 
-                                className={`pd-thumb-container ${selectedMedia?.src === m.src ? "active-thumb" : ""}`} 
-                                onClick={() => setSelectedMedia(m)} 
+                            <div
+                                key={i}
+                                className={`pd-thumb-container ${selectedMedia?.src === m.src ? "active-thumb" : ""}`}
+                                onClick={() => setSelectedMedia(m)}
                                 style={{ width: 80, height: 80, borderRadius: 8, overflow: "hidden", border: selectedMedia?.src === m.src ? "2px solid #4e5a44" : "1px solid #ddd", marginRight: 10, display: "inline-block", cursor: "pointer" }}
                             >
                                 {m.type === "video" ? (
-                                    <div style={{ width: "100%", height: "100%", background: "#000", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <FaPlay style={{color: '#fff'}} />
+                                    <div style={{ width: "100%", height: "100%", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", position: 'relative' }}>
+                                        {images[0] && (
+                                            <Image
+                                                src={images[0].includes("cloudinary") ? images[0].replace("/upload/", "/upload/w_200,c_thumb/") : images[0]}
+                                                fill
+                                                unoptimized
+                                                style={{ objectFit: 'cover', opacity: 0.5 }}
+                                                alt="video-bg"
+                                            />
+                                        )}
+                                        <FaPlay style={{ color: '#fff', fontSize: '24px', zIndex: 1 }} />
                                     </div>
                                 ) : (
                                     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                                        <Image 
-                                            src={m.src} 
-                                            alt="thumb" 
-                                            fill 
-                                            unoptimized // Fix for Vercel 402 Error
-                                            style={{ objectFit: "cover" }} 
+                                        <Image
+                                            src={m.src}
+                                            alt="thumb"
+                                            fill
+                                            unoptimized
+                                            style={{ objectFit: "cover" }}
                                         />
                                     </div>
                                 )}
@@ -400,7 +407,7 @@ const ProductInfo = () => {
                     )}
 
                     <hr className="pd-divider" />
-                    
+
                     <div className="pd-seller-section" style={{ marginTop: '15px' }}>
                         <p className="pd-seller-info">
                             <FaStore style={{ marginRight: '8px', color: '#4e5a44' }} />

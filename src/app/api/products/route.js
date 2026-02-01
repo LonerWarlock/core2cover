@@ -37,7 +37,7 @@ export async function GET(request) {
       const total = p.ratings.reduce((sum, r) => sum + r.stars, 0);
       const count = p.ratings.length;
       const avgRating = count ? total / count : 0;
-
+      
       return {
         id: p.id,
         name: p.name,
