@@ -226,17 +226,28 @@ const ProductInfo = () => {
 
     const mediaList = useMemo(() => {
         const list = [];
-        images.forEach((img) => {
-            let src = img.startsWith("http") ? img : `/${img}`;
-            if (src.includes("cloudinary.com")) {
-                src = src.replace("/upload/", "/upload/w_1000,q_auto,f_auto/");
-            }
-            list.push({ type: "image", src });
-        });
-        if (video) {
+
+        // 1. Process Images
+        if (images && Array.isArray(images)) {
+            images.forEach((img) => {
+                let src = img.startsWith("http") ? img : `/${img}`;
+                if (src.includes("cloudinary.com")) {
+                    src = src.replace("/upload/", "/upload/w_1000,q_auto,f_auto/");
+                }
+                list.push({ type: "image", src });
+            });
+        }
+
+        // 2. Ultra-Safe Video Detection
+        // Check if video exists and isn't just an empty string
+        if (video && typeof video === "string" && video.trim() !== "") {
             let vSrc = video.startsWith("http") ? video : `/${video}`;
             list.push({ type: "video", src: vSrc });
+            console.log("✅ Video detected and added to list:", vSrc);
+        } else {
+            console.log("❌ No video string found in product data.");
         }
+
         return list;
     }, [images, video]);
 
