@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-/**
- * GET: Fetch complete seller profile
- * Matches your 'Seller' model in schema.prisma
- */
+const encodeData = (data) => {
+  return Buffer.from(JSON.stringify(data)).toString("base64");
+};
+
+
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
@@ -28,19 +29,21 @@ export async function GET(request, { params }) {
 
     // Format the response to match your SellerProfile.jsx expectations
     return NextResponse.json({
-      id: seller.id,
-      name: seller.name,
-      email: seller.email,
-      phone: seller.phone,
-      // Mapping from business details table
-      location: seller.business?.city || "Not specified",
-      businessName: seller.business?.businessName || seller.name
+      payload: encodeData({
+        id: seller.id,
+        name: seller.name,
+        email: seller.email,
+        phone: seller.phone,
+        isVerified: seller.isVerified,
+        location: seller.business?.city || "Not specified",
+        businessName: seller.business?.businessName || seller.name
+      })
     });
 
   } catch (err) {
     console.error("DETAILED PRISMA ERROR:", err);
     return NextResponse.json(
-      { message: "Internal server error: " + err.message }, 
+      { message: "Internal server error: " + err.message },
       { status: 500 }
     );
   }

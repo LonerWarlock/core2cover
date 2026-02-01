@@ -120,25 +120,25 @@
 /* Typography Enhancements */
 .product-desc-text {
   color: var(--text-muted);
-  -webkit-line-clamp: 2;
-  /* -webkit-box-orient: vertical; */
-  /* height: 2.8rem; */
-  /* margin-bottom: 20px; */
   font-size: .88rem;
-  /* line-height: 1.6; */
+  
   display: -webkit-box;
+  -webkit-line-clamp: 2;   
+  -webkit-box-orient: vertical;
   overflow: hidden;
+  
+  margin-top: 8px;
+  margin-bottom: 16px;
+  height: 2.8rem;         
+  line-height: 1.4;          
 }
 
-/* Metadata Styling */
 .product-seller-group {
   margin-top: auto;
   padding-bottom: 12px;
-  /* Reduced from 20px for better utility */
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* Tightened from 8px for that 'Core2Cover' precision */
 }
 
 .seller-label {
@@ -152,25 +152,19 @@
 
 .location-label {
   font-size: 0.75rem;
-  /* Slightly smaller for hierarchy */
   color: #a1a1aa;
-  /* Softer grey for secondary info */
   display: flex;
   align-items: center;
   gap: 4px;
-  /* Reduced gap for icons */
 }
 
-/* Refined Footer Action */
 .product-footer-row {
   padding-top: 12px;
-  /* Reduced from 16px */
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 4px;
-  /* Closes the gap with metadata */
 }
 
 .price-tag {
@@ -198,9 +192,7 @@
   color: var(--white);
   border: none;
   padding: 8px 18px;
-  /* Slightly slimmer for a more curated look */
   border-radius: 10px;
-  /* Sharper, more professional radius */
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;

@@ -7,69 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ReturnStatus {
-  NONE
-  REQUESTED
-  APPROVED
-  REJECTED
-  CANCELLED
-  COMPLETED
-}
-
-enum RefundStatus {
-  NONE
-  PENDING
-  COMPLETED
-  FAILED
-}
-
-enum RefundMethod {
-  STORE_CREDIT
-  ORIGINAL_PAYMENT
-}
-
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  email     String?   @unique
-  emailVerified DateTime?
-  image     String?
-  password  String?
-  phone     String?
-  address   String?
-  createdAt DateTime @default(now())
-
-  credit Float @default(0)
-
-  accounts      Account[]
-  sessions      Session[]
+  id             Int                   @id @default(autoincrement())
+  name           String?
+  email          String?               @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  phone          String?
+  address        String?
+  createdAt      DateTime              @default(now())
+  credit         Float                 @default(0)
+  accounts       Account[]
+  hireRequests   DesignerHireRequest[]
   orders         Order[]
   ratings        Rating[]
-  hireRequests   DesignerHireRequest[]
   returnRequests ReturnRequest[]
+  sessions       Session[]
 }
 
 model Account {
-  id                 Int     @id @default(autoincrement())
-  userId             Int
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -107,12 +77,12 @@ model Seller {
   createdAt     DateTime               @default(now())
   orderItems    OrderItem[]
   products      Product[]
+  bank          SellerBankDetails?
   business      SellerBusinessDetails?
   delivery      SellerDeliveryDetails?
-  bank          SellerBankDetails?
 }
 
-///SELLER OTP
+/// SELLER OTP
 model SellerOtp {
   id        String   @id @default(uuid())
   email     String
@@ -158,8 +128,7 @@ model SellerDeliveryDetails {
   installationAvailable  String?
   installationCharge     Int?
   createdAt              DateTime @default(now())
-
-  seller Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller                 Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 /// =========================
@@ -171,146 +140,121 @@ model SellerBankDetails {
   bankName      String
   accountNumber String
   ifsc          String
-  upiId         String?  // Add this line
+  upiId         String?
   sellerId      Int      @unique
-  seller        Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+  seller        Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 /// =========================
 /// PRODUCT
 /// =========================
 model Product {
-  id           Int      @id @default(autoincrement())
-  name         String
-  price        Float    // Base price per Unit
-
-  // LOGISTICS & UNIT LOGIC
-  unit         String   @default("pcs") // e.g., "sq. ft", "sheet", "metre"
-  unitsPerTrip Int      @default(1)     // Max units that fit in one trip/vehicle
-  conversionFactor Float @default(1.0) // How many [sqft/metres] are in ONE [sheet/piece]?
-  shippingCharge  Int      @default(0)
-
-  productType  String   // e.g., "Raw Material"
-  category     String
-  description  String?
-  images       String[]
-  video        String?
-  availability String   @default("available")
-  sellerId     Int
-  createdAt    DateTime @default(now())
-  seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  ratings      Rating[]
-  shareCount   Int      @default(0)
+  id               Int      @id @default(autoincrement())
+  name             String
+  price            Float
+  unit             String   @default("pcs")
+  unitsPerTrip     Int      @default(1)
+  conversionFactor Float    @default(1.0)
+  shippingCharge   Int      @default(0)
+  productType      String
+  category         String
+  description      String?
+  images           String[]
+  video            String?
+  availability     String   @default("available")
+  sellerId         Int
+  createdAt        DateTime @default(now())
+  shareCount       Int      @default(0)
+  seller           Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  ratings          Rating[]
 }
 
 /// =========================
 /// ORDER (CUSTOMER LEVEL)
 /// =========================
 model Order {
-  id Int @id @default(autoincrement())
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  customerEmail String
-  customerName  String
-  address       String
-  paymentMethod String
-
+  id             Int         @id @default(autoincrement())
+  userId         Int
+  customerEmail  String
+  customerName   String
+  address        String
+  paymentMethod  String
   subtotal       Float
   casaCharge     Float
   deliveryCharge Float
   grandTotal     Float
-
-  items OrderItem[]
-
-  createdAt DateTime @default(now())
+  createdAt      DateTime    @default(now())
+  user           User        @relation(fields: [userId], references: [id])
+  items          OrderItem[]
 }
 
 /// =========================
 /// ORDER ITEM (SELLER LEVEL)
 /// =========================
 model OrderItem {
-  id           Int      @id @default(autoincrement())
-  orderId      Int
-  order        Order    @relation(fields: [orderId], references: [id])
-
-  sellerId     Int
-  seller       Seller   @relation(fields: [sellerId], references: [id])
-
-  materialId   Int
-  materialName String
-  supplierName String
-  imageUrl     String?
-
-  // --- QUANTITY & LOGISTICS (NEW LOGIC) ---
-  quantity      Int      // e.g., 120 (Total units requested)
-  unit          String?  // e.g., "sq. ft", "sheets", "metres"
-  totalTrips    Int      @default(1) // Calculated as: ceil(quantity / unitsPerTrip)
-  
-  pricePerUnit  Float    // Price per individual unit (e.g., ₹ per sq. ft)
-  totalAmount   Float    // Calculation: (quantity * pricePerUnit) + (totalTrips * shippingCharge) + (installation)
-  shippingCharge  Int
-
-  status        String   @default("pending")
-
-  // --- RETURN & REFUND ---
-  returnStatus      ReturnStatus @default(NONE)
-  returnReason      String?
-  returnRequestedAt DateTime?
-  returnResolvedAt  DateTime?
-  refundAmount      Float?
-  refundStatus      RefundStatus @default(NONE)
-  refundProcessedAt DateTime?
-
-  // --- DELIVERY SNAPSHOT (PRESERVED & ENHANCED) ---
-  deliveryTimeMin       Int?     // Preserved: e.g., 2 days
-  deliveryTimeMax       Int?     // Preserved: e.g., 5 days
-  shippingChargeType    String?  // Now usually "Per Trip" for raw materials
-  installationAvailable String?  // Preserved: e.g., "yes"
-  installationCharge    Int?     // Preserved: Cost per unit for setup/fitting
-
-  createdAt     DateTime @default(now())
-  rating        Rating?
-  returnRequest ReturnRequest?
+  id                    Int            @id @default(autoincrement())
+  orderId               Int
+  sellerId              Int
+  materialId            Int
+  materialName          String
+  supplierName          String
+  imageUrl              String?
+  quantity              Int
+  unit                  String?
+  totalTrips            Int            @default(1)
+  pricePerUnit          Float
+  totalAmount           Float
+  shippingCharge        Int
+  status                String         @default("pending")
+  returnStatus          ReturnStatus   @default(NONE)
+  returnReason          String?
+  returnRequestedAt     DateTime?
+  returnResolvedAt      DateTime?
+  refundAmount          Float?
+  refundStatus          RefundStatus   @default(NONE)
+  refundProcessedAt     DateTime?
+  deliveryTimeMin       Int?
+  deliveryTimeMax       Int?
+  shippingChargeType    String?
+  installationAvailable String?
+  installationCharge    Int?
+  createdAt             DateTime       @default(now())
+  order                 Order          @relation(fields: [orderId], references: [id])
+  seller                Seller         @relation(fields: [sellerId], references: [id])
+  rating                Rating?
+  returnRequest         ReturnRequest?
 }
 
 model Rating {
-  id        Int      @id @default(autoincrement())
-  stars     Int
-  comment   String?
-  createdAt DateTime @default(now())
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
+  id          Int       @id @default(autoincrement())
+  stars       Int
+  comment     String?
+  createdAt   DateTime  @default(now())
+  userId      Int
+  productId   Int
   orderItemId Int       @unique
   orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 }
 
 model Designer {
-  id           Int     @id @default(autoincrement())
+  id           Int                   @id @default(autoincrement())
   fullname     String
-  email        String  @unique
-  mobile       String  @unique
+  email        String                @unique
+  mobile       String                @unique
   location     String?
   passwordHash String
-  availability String  @default("Available")
-  isVerified   Boolean @default(false)
-
-  profile      DesignerProfile?
-  works        DesignerWork[]
+  availability String                @default("Available")
+  isVerified   Boolean               @default(false)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
   hireRequests DesignerHireRequest[]
-
-  ratings DesignerRating[]
-
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  userRatings UserRating[]
+  profile      DesignerProfile?
+  ratings      DesignerRating[]
+  works        DesignerWork[]
+  userRatings  UserRating[]
 }
 
 model DesignerOtp {
@@ -325,128 +269,96 @@ model DesignerOtp {
 }
 
 model DesignerProfile {
-  id         Int @id @default(autoincrement())
-  designerId Int @unique
-
+  id           Int      @id @default(autoincrement())
+  designerId   Int      @unique
   experience   String?
   portfolio    String?
   designerType String?
   bio          String?
   profileImage String?
-
-  designer Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  designer     Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
 }
 
 model DesignerWork {
-  id         Int @id @default(autoincrement())
-  designerId Int
-
+  id          Int      @id @default(autoincrement())
+  designerId  Int
   image       String
   description String?
-
-  designer Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  designer    Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
 }
 
 model DesignerHireRequest {
-  id Int @id @default(autoincrement())
-
-  // 🔐 OWNER (CRITICAL)
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // 🎨 DESIGNER
-  designerId Int
-  designer   Designer @relation(fields: [designerId], references: [id], onDelete: Cascade)
-
-  // SNAPSHOT (for display only)
-  fullName String
-  email    String
-  mobile   String
-  location String
-
+  id           Int             @id @default(autoincrement())
+  userId       Int
+  designerId   Int
+  fullName     String
+  email        String
+  mobile       String
+  location     String
   budget       Int
   workType     String
   timelineDate DateTime?
   description  String?
-  status       String    @default("pending")
-
-  createdAt DateTime @default(now())
-
-  rating     DesignerRating?
-  userRating UserRating?
+  status       String          @default("pending")
+  createdAt    DateTime        @default(now())
+  designer     Designer        @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating       DesignerRating?
+  userRating   UserRating?
 }
 
 model DesignerRating {
-  id            Int @id @default(autoincrement())
+  id            Int                 @id @default(autoincrement())
   designerId    Int
-  hireRequestId Int @unique
-
-  reviewerName String?
-  stars        Int // 1–5
-  review       String?
-
-  createdAt DateTime @default(now())
-
-  designer    Designer            @relation(fields: [designerId], references: [id], onDelete: Cascade)
-  hireRequest DesignerHireRequest @relation(fields: [hireRequestId], references: [id], onDelete: Cascade)
+  hireRequestId Int                 @unique
+  reviewerName  String?
+  stars         Int
+  review        String?
+  createdAt     DateTime            @default(now())
+  designer      Designer            @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  hireRequest   DesignerHireRequest @relation(fields: [hireRequestId], references: [id], onDelete: Cascade)
 }
 
 model UserRating {
-  id            Int      @id @default(autoincrement())
-  hireRequestId Int      @unique
+  id            Int                 @id @default(autoincrement())
+  hireRequestId Int                 @unique
   designerId    Int?
-  reviewerName  String? // name of the designer who rated the user
-  stars         Int // 1-5
+  reviewerName  String?
+  stars         Int
   review        String?
-  createdAt     DateTime @default(now())
-
-  // relations
-  hireRequest DesignerHireRequest @relation(fields: [hireRequestId], references: [id], onDelete: Cascade)
-  designer    Designer?           @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime            @default(now())
+  designer      Designer?           @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  hireRequest   DesignerHireRequest @relation(fields: [hireRequestId], references: [id], onDelete: Cascade)
 }
 
 model ReturnRequest {
-  id          Int       @id @default(autoincrement())
-  orderItemId Int       @unique
-  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // snapshot
-  productName String
-  sellerId    Int
-  sellerName  String?
-
-  reason String
-  note   String?
-  images String[]
-
-  requestedAt DateTime @default(now())
-
-  // 🔑 APPROVAL FLOW
+  id                   Int            @id @default(autoincrement())
+  orderItemId          Int            @unique
+  userId               Int
+  productName          String
+  sellerId             Int
+  sellerName           String?
+  reason               String
+  note                 String?
+  images               String[]
+  requestedAt          DateTime       @default(now())
   sellerApprovalStatus ApprovalStatus @default(PENDING)
   adminApprovalStatus  ApprovalStatus @default(PENDING)
-
-  sellerApprovedAt DateTime?
-  adminApprovedAt  DateTime?
-
-  sellerDecisionNote String?
-  adminDecisionNote  String?
-
-  // 💰 REFUND
-  refundMethod  RefundMethod?
-  refundAmount  Float?
-  refundStatus  RefundStatus @default(NONE)
-  refundDetails String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sellerApprovedAt     DateTime?
+  adminApprovedAt      DateTime?
+  sellerDecisionNote   String?
+  adminDecisionNote    String?
+  refundMethod         RefundMethod?
+  refundAmount         Float?
+  refundStatus         RefundStatus   @default(NONE)
+  refundDetails        String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  orderItem            OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ContactMessage {
@@ -455,4 +367,31 @@ model ContactMessage {
   email     String
   message   String
   createdAt DateTime @default(now())
+}
+
+enum ReturnStatus {
+  NONE
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum RefundStatus {
+  NONE
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum RefundMethod {
+  STORE_CREDIT
+  ORIGINAL_PAYMENT
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

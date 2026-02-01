@@ -18,6 +18,8 @@ const SellerDashboard = () => {
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const [isVerified, setIsVerified] = useState(false);
+
   /* =========================================
       ENCRYPTION HELPERS
   ========================================= */
@@ -56,31 +58,29 @@ const SellerDashboard = () => {
       try {
         // Fetch Profile Info
         const profileRes = await getSellerProfile(sellerId);
-        
+
         // Handle potential encrypted payload from backend
-        const data = profileRes.data?.payload 
-          ? JSON.parse(atob(profileRes.data.payload)) 
+        const data = profileRes.data?.payload
+          ? JSON.parse(atob(profileRes.data.payload))
           : (profileRes.data || {});
+
+        const verified = !!data.isVerified;
+        setIsVerified(verified);
 
         const fetchedName = data.name || data.seller?.name || "Seller";
         setSellerName(fetchedName);
+        if (verified) {
+          const statsRes = await getSellerDashboard(sellerId);
+          const stats = statsRes.data?.payload
+            ? JSON.parse(atob(statsRes.data.payload))
+            : (statsRes.data || {});
+
+          setOrdersCount(stats.ordersCount || 0);
+          setTotalEarnings(stats.totalEarnings || 0);
+        }
       } catch (err) {
         console.error("Could not fetch seller name:", err);
         setSellerName("Seller");
-      }
-
-      try {
-        // Fetch Stats
-        const statsRes = await getSellerDashboard(sellerId);
-        
-        const stats = statsRes.data?.payload 
-          ? JSON.parse(atob(statsRes.data.payload)) 
-          : (statsRes.data || {});
-
-        setOrdersCount(stats.ordersCount || 0);
-        setTotalEarnings(stats.totalEarnings || 0);
-      } catch (err) {
-        console.error("Stats Error:", err);
       } finally {
         setLoading(false);
       }
@@ -88,6 +88,35 @@ const SellerDashboard = () => {
 
     loadDashboardData();
   }, [sellerId]);
+
+  if (!isVerified) {
+    return (
+      <div className="verification-gate">
+        <div className="verification-card">
+          <div className="verification-icon-box">🛡️</div>
+          <h2>Seller Verification Pending.</h2>
+          <p>
+            Welcome to the Core2Cover merchant network! To maintain our premium standards, 
+            your seller account is currently under review. It Might Take 24-48 hours.
+          </p>
+          <div className="verification-status-pill">
+            <span className="pulse-dot"></span>
+            Status: Reviewing Documents
+          </div>
+          <p className="verification-subtext">
+            Our team is verifying your business details. You will be notified via email 
+            once you can start listing products and receiving orders.
+          </p>
+          <button className="gate-logout-btn" onClick={() => {
+            localStorage.clear();
+            router.push("/sellerlogin");
+          }}>
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

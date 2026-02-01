@@ -365,7 +365,22 @@
     padding: 2rem;
   }
 
+  .hero-ctas {
+    flex-direction: column;
+    gap: 14px;
+    display: flex;
+  }
+
   .founder-socials {
     justify-content: center;
   }
+}
+
+.draggable-logo {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.draggable-logo:hover {
+  transform: scale(1.02);
 }

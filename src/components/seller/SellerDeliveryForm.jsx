@@ -1,6 +1,5 @@
 import React from "react";
 import Sidebar from "./Sidebar";
-// 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, loading }) => {
@@ -12,9 +11,11 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
         });
     };
 
+    // Logic: Check if Core2Cover is selected
+    const isC2CManaged = delivery.deliveryResponsibility === "core2cover";
+
     return (
         <>
-            {/* 2. APPLY THE LOADING SPINNER AT TOP LEVEL */}
             {loading && <LoadingSpinner message="Updating delivery preferences..." />}
 
             <div className="ms-root">
@@ -36,16 +37,20 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                     <option value="">Select</option>
                                     <option value="seller">Seller</option>
                                     <option value="courier">Courier Partner</option>
+                                    {/* ADDED OPTION */}
+                                    <option value="core2cover">Core2Cover Delivery</option>
                                 </select>
                             </div>
 
+                            {/* Conditional Disabling of subsequent fields */}
                             <div className="input-group">
                                 <label>Delivery Coverage *</label>
                                 <select
                                     name="deliveryCoverage"
                                     value={delivery.deliveryCoverage}
                                     onChange={handleChange}
-                                    required
+                                    required={!isC2CManaged}
+                                    disabled={isC2CManaged}
                                 >
                                     <option value="">Select</option>
                                     <option value="pan-india">PAN India</option>
@@ -60,7 +65,8 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                     name="deliveryType"
                                     value={delivery.deliveryType}
                                     onChange={handleChange}
-                                    required
+                                    required={!isC2CManaged}
+                                    disabled={isC2CManaged}
                                 >
                                     <option value="">Select</option>
                                     <option value="courier">Courier / Surface</option>
@@ -76,6 +82,7 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                         name="deliveryTimeMin"
                                         value={delivery.deliveryTimeMin}
                                         onChange={handleChange}
+                                        disabled={isC2CManaged}
                                     />
                                 </div>
 
@@ -86,6 +93,7 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                         name="deliveryTimeMax"
                                         value={delivery.deliveryTimeMax}
                                         onChange={handleChange}
+                                        disabled={isC2CManaged}
                                     />
                                 </div>
                             </div>
@@ -96,7 +104,8 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                     name="shippingChargeType"
                                     value={delivery.shippingChargeType}
                                     onChange={handleChange}
-                                    required
+                                    required={!isC2CManaged}
+                                    disabled={isC2CManaged}
                                 >
                                     <option value="">Select</option>
                                     <option value="free">Free</option>
@@ -104,7 +113,7 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                 </select>
                             </div>
 
-                            {delivery.shippingChargeType === "fixed" && (
+                            {delivery.shippingChargeType === "fixed" && !isC2CManaged && (
                                 <div className="input-group">
                                     <label>Shipping Charge (₹)</label>
                                     <input
@@ -116,13 +125,14 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                 </div>
                             )}
 
-                            <div className="checkbox-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
+                            <div className="checkbox-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px', opacity: isC2CManaged ? 0.5 : 1 }}>
                                 <input
                                     type="checkbox"
                                     name="internationalDelivery"
                                     id="intl-check"
                                     checked={delivery.internationalDelivery}
                                     onChange={handleChange}
+                                    disabled={isC2CManaged}
                                 />
                                 <label htmlFor="intl-check">Can deliver internationally</label>
                             </div>
@@ -133,6 +143,7 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                     name="installationAvailable"
                                     value={delivery.installationAvailable}
                                     onChange={handleChange}
+                                    disabled={isC2CManaged}
                                 >
                                     <option value="">Select</option>
                                     <option value="no">No</option>
@@ -141,7 +152,7 @@ const SellerDeliveryForm = ({ delivery, setDelivery, onSubmit, submitLabel, load
                                 </select>
                             </div>
 
-                            {delivery.installationAvailable === "paid" && (
+                            {delivery.installationAvailable === "paid" && !isC2CManaged && (
                                 <div className="input-group">
                                     <label>Installation Charge (₹)</label>
                                     <input

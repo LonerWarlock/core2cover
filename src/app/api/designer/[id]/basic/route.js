@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+
+const encodeData = (data) => {
+  return Buffer.from(JSON.stringify(data)).toString("base64");
+};
+
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
@@ -15,18 +20,18 @@ export async function GET(request, { params }) {
       select: {
         fullname: true,
         availability: true,
+        isVerified: true,
         ratings: {
           select: {
             stars: true,
             review: true,
-            reviewerName: true, // This is the static string
+            reviewerName: true, 
             createdAt: true,
-            // --- ADDED: Fetch the name from the hire request relation ---
             hireRequest: {
               select: {
                 user: {
                   select: {
-                    name: true // This is the actual Client Name
+                    name: true 
                   }
                 }
               }
@@ -43,12 +48,10 @@ export async function GET(request, { params }) {
       return NextResponse.json({ message: "Designer not found" }, { status: 404 });
     }
 
-    // Process ratings to ensure a name is always present
     const processedRatings = designer.ratings.map(r => ({
       stars: r.stars,
       review: r.review,
       createdAt: r.createdAt,
-      // Priority: 1. Static reviewerName, 2. Dynamic User Name, 3. Fallback
       reviewerName: r.reviewerName || r.hireRequest?.user?.name || "Client"
     }));
 
@@ -57,12 +60,17 @@ export async function GET(request, { params }) {
       ? (processedRatings.reduce((acc, curr) => acc + curr.stars, 0) / totalRatings).toFixed(1)
       : 0;
 
-    return NextResponse.json({
+    const dashboardData = {
       fullname: designer.fullname,
       availability: designer.availability,
+      isVerified: designer.isVerified, 
       ratings: processedRatings,
       avgRating: Number(avgRating),
       totalRatings
+    };
+
+    return NextResponse.json({
+      payload: encodeData(dashboardData)
     }, { status: 200 });
 
   } catch (err) {

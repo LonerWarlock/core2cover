@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { saveDesignerProfile } from "../../api/designer";
 // 1. IMPORT THE LOADING SPINNER
 import LoadingSpinner from "../ui/LoadingSpinner";
+import MessageBox from "../ui/MessageBox";
 
 const DesignerProfileSetup = () => {
   const router = useRouter();
@@ -24,6 +25,12 @@ const DesignerProfileSetup = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  // Helper to trigger messages
+  const triggerMsg = (text, type = "success") => {
+    setMsg({ text, type, show: true });
+  };
 
   /* =========================
       CLIENT-SIDE DATA FETCHING
@@ -31,12 +38,12 @@ const DesignerProfileSetup = () => {
   useEffect(() => {
     // 2. Access localStorage ONLY inside useEffect (Client-side)
     const storedId = localStorage.getItem("designerId");
-    
+
     if (storedId) {
       setDesignerId(storedId);
     } else {
       // If no ID is found, the user shouldn't be here
-      setError("Session expired. Please sign up again.");
+      triggerMsg("Session expired. Please sign up again.");
       setTimeout(() => {
         router.push("/designersignup");
       }, 3000);
@@ -76,8 +83,13 @@ const DesignerProfileSetup = () => {
     e.preventDefault();
     setError("");
 
+    if (!form.profileImage) {
+    triggerMsg("Please upload a profile image to continue.", "error");
+    return;
+  }
+
     if (!designerId) {
-      setError("Authorisation error. Please login again.");
+      triggerMsg("Authorisation error. Please login again.");
       return;
     }
 
@@ -143,6 +155,7 @@ const DesignerProfileSetup = () => {
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="profile-input"
+                  required
                 />
               </div>
             </div>

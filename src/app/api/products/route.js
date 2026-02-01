@@ -6,36 +6,31 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
 
+    // Fetch products with a fail-safe query structure
     const products = await prisma.product.findMany({
-  where: {
-    ...(type ? { productType: type } : {}),
-    seller: {
-      isVerified: true // - Only fetch products from verified sellers
-    }
-  },
-  include: {
-    seller: {
-      select: {
-        name: true,
-        delivery: {
-          select: {
-            shippingChargeType: true,
-            shippingCharge: true,
-            installationAvailable: true,
-            installationCharge: true,
-          }
-        },
-        business: { select: { city: true, state: true } },
+      where: {
+        ...(type ? { productType: type } : {}),
+        seller: {
+          isVerified: true 
+        }
       },
-    },
-    ratings: { select: { stars: true } },
-  },
-  orderBy: { createdAt: "desc" },
-});
+      include: {
+        seller: {
+          select: {
+            name: true,
+            delivery: true, // Ensure this relation exists in schema.prisma
+            business: true,
+          },
+        },
+        ratings: { select: { stars: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
+    // Safely format the data to prevent mapping crashes
     const formatted = products.map((p) => {
-      const total = p.ratings.reduce((sum, r) => sum + r.stars, 0);
-      const count = p.ratings.length;
+      const total = p.ratings?.reduce((sum, r) => sum + r.stars, 0) || 0;
+      const count = p.ratings?.length || 0;
       const avgRating = count ? total / count : 0;
 
       return {
@@ -46,19 +41,20 @@ export async function GET(request) {
         description: p.description,
         availability: p.availability,
         productType: p.productType,
-        images: p.images, 
-        video: p.video,
+        images: p.images || [], 
+        video: p.video || null, 
         sellerId: p.sellerId,
         seller: p.seller?.name || "Verified Seller",
         sellerBusiness: p.seller?.business || null,
         avgRating: Number(avgRating.toFixed(1)),
         ratingCount: count,
         
-        // NEW RAW MATERIAL LOGISTICS
+        // Logistics Fields with Fallbacks
         unit: p.unit || "pcs",
         unitsPerTrip: p.unitsPerTrip || 1,
         conversionFactor: p.conversionFactor || 1,
 
+        // Optional Chaining (?.) prevents "Cannot read property of null" errors
         shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
         shippingCharge: p.seller?.delivery?.shippingCharge || 0,
         installationAvailable: p.seller?.delivery?.installationAvailable || "no",
@@ -68,7 +64,11 @@ export async function GET(request) {
 
     return NextResponse.json(formatted);
   } catch (err) {
-    console.error("FETCH PRODUCTS ERROR:", err);
-    return NextResponse.json({ message: "Failed to fetch products" }, { status: 500 });
+    // Log the exact error to your Vercel/Terminal logs
+    console.error("SERVER ERROR:", err.message);
+    return NextResponse.json(
+      { message: "Internal Server Error", error: err.message }, 
+      { status: 500 }
+    );
   }
 }

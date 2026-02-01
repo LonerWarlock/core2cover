@@ -234,3 +234,76 @@
     animation: none !important;
   }
 }
+
+.verification-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #fdfdfb;
+}
+
+.verification-card {
+  background: white;
+  padding: 50px;
+  border-radius: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  max-width: 480px;
+  border: 1px solid #eef2e6;
+}
+
+.verification-icon-box {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.verification-card h2 {
+  color: #4a5a3f; /* Darker olive for sellers */
+  margin-bottom: 15px;
+  font-family: serif;
+}
+
+.verification-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0f4ec;
+  color: #4a5a3f;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 700;
+  margin: 20px 0;
+  font-size: 0.9rem;
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  background: #91a56e;
+  border-radius: 50%;
+  animation: seller-pulse 2s infinite;
+}
+
+@keyframes seller-pulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.gate-logout-btn {
+  margin-top: 30px;
+  background: #4a5a3f;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.gate-logout-btn:hover {
+  background: #606e52;
+  transform: translateY(-2px);
+}

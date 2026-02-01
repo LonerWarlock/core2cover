@@ -4,30 +4,32 @@ import React, { useEffect, useState, useCallback } from "react";
 import "./DesignerDashboard.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  FaPalette, FaEdit, FaUserTie, FaHandshake, 
-  FaBars, FaTimes, FaToggleOn, FaToggleOff, FaStar 
+import {
+  FaPalette, FaEdit, FaUserTie, FaHandshake,
+  FaBars, FaTimes, FaToggleOn, FaToggleOff, FaStar
 } from "react-icons/fa";
 import { getDesignerBasic, updateDesignerAvailability } from "../../api/designer";
 import Image from "next/image";
 import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
-import MessageBox from "../ui/MessageBox"; 
+import MessageBox from "../ui/MessageBox";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
 
 const DesignerDashboard = () => {
   const router = useRouter();
-  
+
   // 1. All State declarations at the top
   const [available, setAvailable] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [designerName, setDesignerName] = useState("Designer");
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [designerId, setDesignerId] = useState(null);
   const [ratingData, setRatingData] = useState({ avg: 0, total: 0, reviews: [] });
   const [msg, setMsg] = useState({ text: "", type: "success", show: false });
+
+  const [isVerified, setIsVerified] = useState(false);
 
   /* =========================================
       EASY ENCRYPTION HELPERS
@@ -57,7 +59,7 @@ const DesignerDashboard = () => {
   /* =========================================
       STABLE HOOKS (Fixed Dependency Sizes)
   ========================================= */
-  
+
   // Hook 1: Authentication & Identity Retrieval
   useEffect(() => {
     const sid = secureGetItem("designerId");
@@ -78,9 +80,11 @@ const DesignerDashboard = () => {
       try {
         setLoading(true);
         const res = await getDesignerBasic(designerId);
-        
+
         // Handle encrypted payload from backend if present
         const data = res?.payload ? decodePayload(res.payload) : res;
+
+        setIsVerified(!!data?.isVerified);
 
         setDesignerName(data?.fullname?.trim() || "Designer");
         setAvailable(data?.availability === "Available");
@@ -127,15 +131,40 @@ const DesignerDashboard = () => {
   // 2. Conditional render happens AFTER all hooks have been called
   if (loading) return <LoadingSpinner message="Opening designer console..." />;
 
+  if (!isVerified) {
+    return (
+      <div className="verification-gate">
+        <div className="verification-card">
+          <Image src={CoreToCoverLogo} alt="Logo" width={60} height={60} />
+          <h2>Account Under Verification</h2>
+          <p>
+            Your professional profile is currently being reviewed by our team.
+            Verification usually takes <strong>24-48 hours</strong>.
+          </p>
+          <div className="verification-status">
+            <span className="status-dot"></span>
+            Status: Account Under Verification.
+          </div>
+          <p className="verification-note">
+            Once verified, you'll get full access to your portfolio, work requests, and appearing in search results.
+          </p>
+          <button className="logout-btn" onClick={() => { localStorage.clear(); router.push("/designerlogin"); }}>
+            Log Out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {loadingAvailability && <LoadingSpinner message="Updating status..." />}
 
       {msg.show && (
-        <MessageBox 
-          message={msg.text} 
-          type={msg.type} 
-          onClose={() => setMsg({ ...msg, show: false })} 
+        <MessageBox
+          message={msg.text}
+          type={msg.type}
+          onClose={() => setMsg({ ...msg, show: false })}
         />
       )}
 
@@ -171,10 +200,10 @@ const DesignerDashboard = () => {
             <h1 className="dd-title">Welcome, {designerName}</h1>
             <p className="dd-sub">Manage your portfolio and leads from your private dashboard.</p>
           </div>
-          
+
           <div className="dd-header-stats">
             <div className="stat-item">
-              <span className="stat-value">{ratingData.avg} <FaStar style={{color: '#ca8a04', fontSize: '1.2rem'}} /></span>
+              <span className="stat-value">{ratingData.avg} <FaStar style={{ color: '#ca8a04', fontSize: '1.2rem' }} /></span>
               <span className="stat-label">Average Rating</span>
             </div>
             <div className="stat-divider"></div>
@@ -191,7 +220,7 @@ const DesignerDashboard = () => {
             <h3>My Portfolio</h3>
             <p>Upload and showcase your best design works.</p>
           </div>
-          
+
           <div className="dd-card dd-reveal dd-delay-2" onClick={() => router.push("/designerworkreceived")}>
             <div className="dd-icon"><FaHandshake /></div>
             <h3>Work Received</h3>

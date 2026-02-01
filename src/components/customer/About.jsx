@@ -7,6 +7,7 @@ import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import CoreToCoverTitle from "../../assets/logo/CoreToCover_1.png";
 import Om from "../../assets/founders/om.jpg";
 import Soham from "../../assets/founders/soham.jpeg";
+import Prathmesh from "../../assets/founders/Prathmesh.jpeg"
 import NextImage from "next/image";
 import { Github, Linkedin, Instagram, Mail } from "lucide-react";
 
@@ -36,6 +37,13 @@ const founderData = [
     github: "https://github.com/LonerWarlock",
     linkedin: "https://www.linkedin.com/in/soham-phatak",
     instagram: "https://www.instagram.com/sohamphatak21/"
+  },
+  {
+    name: "Prathmesh Mali",
+    role: "Design and Marketing Head",
+    image: Prathmesh,
+    email: "Sonaigfx@gamil.com",
+    instagram: "https://www.instagram.com/sonai_graphics/"
   }
 ];
 
@@ -102,12 +110,23 @@ export default function About() {
             <div className="hero-ctas">
               <Link href="/" className="btn btn-primary">Explore Marketplace</Link>
               <Link href="/signup" className="btn btn-ghost">Create an account</Link>
+              <Link href="/sellersignup" className="btn btn-ghost">Signup as Seller</Link>
+              <Link href="/designersignup" className="btn btn-ghost">Signup as Designer</Link>
             </div>
           </div>
         </div>
         {!isMobileOrTablet && (
           <div className="hero-art">
-            <NextImage src={CoreToCoverLogo} alt="Logo" width={400} height={400} />
+            <Link href="/" title="Go to Core2Cover Home">
+              <NextImage
+                src={CoreToCoverLogo}
+                alt="Core2Cover Logo"
+                width={400}
+                height={400}
+                unoptimized
+                className="draggable-logo"
+              />
+            </Link>
             <BrandTag>From Design To Finish - In One Place.</BrandTag>
           </div>
         )}
@@ -154,12 +173,14 @@ export default function About() {
                     className="founder-img-circle"
                     width={150}
                     height={150}
+                    unoptimized
                   />
                 </div>
                 <div className="founder-content">
                   <h3 className="founder-name-text">{founder.name}</h3>
                   <p className="founder-role-text">{founder.role}</p>
                   <div className="founder-socials">
+                    {/* Email logic remains the same */}
                     {founder.email && (
                       <a
                         href={`mailto:${founder.email}?subject=Contacting Core2Cover`}
@@ -170,9 +191,27 @@ export default function About() {
                         <Mail size={20} />
                       </a>
                     )}
-                    <a href={founder.github} target="_blank" rel="noreferrer" className="social-icon"><Github size={20} /></a>
-                    <a href={founder.linkedin} target="_blank" rel="noreferrer" className="social-icon"><Linkedin size={20} /></a>
-                    <a href={founder.instagram} target="_blank" rel="noreferrer" className="social-icon"><Instagram size={20} /></a>
+
+                    {/* Only show Github if provided */}
+                    {founder.github && (
+                      <a href={founder.github} target="_blank" rel="noreferrer" className="social-icon" title="Github">
+                        <Github size={20} />
+                      </a>
+                    )}
+
+                    {/* Only show Linkedin if provided */}
+                    {founder.linkedin && (
+                      <a href={founder.linkedin} target="_blank" rel="noreferrer" className="social-icon" title="LinkedIn">
+                        <Linkedin size={20} />
+                      </a>
+                    )}
+
+                    {/* Only show Instagram if provided */}
+                    {founder.instagram && (
+                      <a href={founder.instagram} target="_blank" rel="noreferrer" className="social-icon" title="Instagram">
+                        <Instagram size={20} />
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -196,11 +235,11 @@ export default function About() {
           <div className="cta-actions">
             <Link href="/signup" className="cta-button">Get started</Link>
           </div>
-          <div className="cta-credits">
+          {/* <div className="cta-credits">
             <p className="credits-title">Platform Credits</p>
             <p>Design & Marketing Head — Prathamesh Mali</p>
             <p>CFO — Om Mali</p>
-          </div>
+          </div> */}
         </section>
       </main>
     </section>

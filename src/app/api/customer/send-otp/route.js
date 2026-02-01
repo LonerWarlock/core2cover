@@ -33,7 +33,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: emailNormalized,
-      subject: "Casa Email Verification",
+      subject: "Core2Cover Email Verification",
       html: `<h2>Verify your email</h2><h1>${otp}</h1><p>Expires in 5 mins.</p>`,
     });
 

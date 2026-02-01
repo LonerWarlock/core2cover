@@ -190,3 +190,15 @@
     padding: 14px; /* Larger tap target */
   }
 }
+
+.form-lock-section.locked {
+    opacity: 0.5;
+    pointer-events: none; /* Secondary safety measure */
+    filter: grayscale(0.5);
+    transition: all 0.3s ease;
+}
+
+input:disabled, select:disabled {
+    background-color: #f9f9f9;
+    cursor: not-allowed;
+}
