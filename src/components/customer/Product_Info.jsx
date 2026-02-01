@@ -340,26 +340,52 @@ const ProductInfo = () => {
                                 key={i}
                                 className={`pd-thumb-container ${selectedMedia?.src === m.src ? "active-thumb" : ""}`}
                                 onClick={() => setSelectedMedia(m)}
-                                style={{ width: 80, height: 80, borderRadius: 8, overflow: "hidden", border: selectedMedia?.src === m.src ? "2px solid #4e5a44" : "1px solid #ddd", marginRight: 10, display: "inline-block", cursor: "pointer" }}
+                                style={{
+                                    width: 80,
+                                    height: 80,
+                                    borderRadius: 8,
+                                    overflow: "hidden",
+                                    border: selectedMedia?.src === m.src ? "2px solid #4e5a44" : "1px solid #ddd",
+                                    marginRight: 10,
+                                    display: "inline-block",
+                                    cursor: "pointer",
+                                    background: "#000" // Fallback background
+                                }}
                             >
                                 {m.type === "video" ? (
-                                    <div style={{ width: "100%", height: "100%", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", position: 'relative' }}>
-                                        {images[0] && (
+                                    <div style={{ width: "100%", height: "100%", position: 'relative', display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                        {/* Use the first image as a poster, or a grey fallback if no images exist */}
+                                        {images && images.length > 0 ? (
                                             <Image
-                                                src={images[0].includes("cloudinary") ? images[0].replace("/upload/", "/upload/w_200,c_thumb/") : images[0]}
+                                                src={images[0].includes("cloudinary.com")
+                                                    ? images[0].replace("/upload/", "/upload/w_200,h_200,c_thumb,g_auto,q_auto,f_auto/")
+                                                    : images[0]
+                                                }
                                                 fill
                                                 unoptimized
-                                                style={{ objectFit: 'cover', opacity: 0.5 }}
-                                                alt="video-bg"
+                                                style={{ objectFit: 'cover', opacity: 0.6 }}
+                                                alt="video-thumbnail"
                                             />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', background: '#333' }} />
                                         )}
-                                        <FaPlay style={{ color: '#fff', fontSize: '24px', zIndex: 1 }} />
+                                        {/* The Play Icon Overlay */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            zIndex: 2,
+                                            background: 'rgba(0,0,0,0.4)',
+                                            borderRadius: '50%',
+                                            padding: '8px',
+                                            display: 'flex'
+                                        }}>
+                                            <FaPlay style={{ color: '#fff', fontSize: '16px' }} />
+                                        </div>
                                     </div>
                                 ) : (
                                     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                                         <Image
                                             src={m.src}
-                                            alt="thumb"
+                                            alt="product-thumb"
                                             fill
                                             unoptimized
                                             style={{ objectFit: "cover" }}
