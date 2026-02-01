@@ -1,43 +1,74 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(request, { params }) {
+export async function GET(request) {
   try {
-    const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type");
 
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(id) },
+    // Fetch products with a fail-safe query structure
+    const products = await prisma.product.findMany({
+      where: {
+        ...(type ? { productType: type } : {}),
+        seller: {
+          isVerified: true 
+        }
+      },
       include: {
         seller: {
-          include: {
-            delivery: true,
+          select: {
+            name: true,
+            delivery: true, // Ensure this relation exists in schema.prisma
             business: true,
-          }
+          },
         },
-        ratings: true,
+        ratings: { select: { stars: true } },
       },
+      orderBy: { createdAt: "desc" },
     });
 
-    if (!product) {
-      return NextResponse.json({ message: "Product not found" }, { status: 404 });
-    }
+    // Safely format the data to prevent mapping crashes
+    const formatted = products.map((p) => {
+      const total = p.ratings?.reduce((sum, r) => sum + r.stars, 0) || 0;
+      const count = p.ratings?.length || 0;
+      const avgRating = count ? total / count : 0;
 
-    // Explicitly mapping every field to ensure nothing is lost
-    const formatted = {
-      ...product, // Spreading the product object ensures 'video' is included
-      id: product.id,
-      video: product.video || null, // Forced check for the video string
-      seller: product.seller?.name || "Verified Seller",
-      sellerId: product.sellerId,
-      shippingChargeType: product.seller?.delivery?.shippingChargeType || "Paid",
-      shippingCharge: product.seller?.delivery?.shippingCharge || 0,
-      installationAvailable: product.seller?.delivery?.installationAvailable || "no",
-      installationCharge: product.seller?.delivery?.installationCharge || 0,
-    };
+      return {
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        price: p.price,
+        description: p.description,
+        availability: p.availability,
+        productType: p.productType,
+        images: p.images || [], 
+        video: p.video || null, 
+        sellerId: p.sellerId,
+        seller: p.seller?.name || "Verified Seller",
+        sellerBusiness: p.seller?.business || null,
+        avgRating: Number(avgRating.toFixed(1)),
+        ratingCount: count,
+        
+        // Logistics Fields with Fallbacks
+        unit: p.unit || "pcs",
+        unitsPerTrip: p.unitsPerTrip || 1,
+        conversionFactor: p.conversionFactor || 1,
+
+        // Optional Chaining (?.) prevents "Cannot read property of null" errors
+        shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
+        shippingCharge: p.seller?.delivery?.shippingCharge || 0,
+        installationAvailable: p.seller?.delivery?.installationAvailable || "no",
+        installationCharge: p.seller?.delivery?.installationCharge || 0,
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (err) {
-    console.error("API ERROR:", err);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    // Log the exact error to your Vercel/Terminal logs
+    console.error("SERVER ERROR:", err.message);
+    return NextResponse.json(
+      { message: "Internal Server Error", error: err.message }, 
+      { status: 500 }
+    );
   }
 }
