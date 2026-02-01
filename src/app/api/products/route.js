@@ -1,76 +1,43 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(request) {
+export async function GET(request, { params }) {
   try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type");
+    const { id } = params;
 
-    const products = await prisma.product.findMany({
-      where: {
-        // Filter by type if provided
-        ...(type ? { productType: type } : {}),
-        // Ensure we only show products from verified sellers
-        seller: {
-          isVerified: true 
-        }
-      },
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
       include: {
         seller: {
-          select: {
-            name: true,
-            // Use 'delivery' only if it exists as a 1-to-1 or 1-to-many in your schema
-            delivery: true, 
+          include: {
+            delivery: true,
             business: true,
-          },
+          }
         },
-        ratings: { select: { stars: true } },
+        ratings: true,
       },
-      orderBy: { createdAt: "desc" },
     });
 
-    const formatted = products.map((p) => {
-      // Calculate ratings safely
-      const total = p.ratings?.reduce((sum, r) => sum + r.stars, 0) || 0;
-      const count = p.ratings?.length || 0;
-      const avgRating = count ? total / count : 0;
+    if (!product) {
+      return NextResponse.json({ message: "Product not found" }, { status: 404 });
+    }
 
-      return {
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        price: p.price,
-        description: p.description,
-        availability: p.availability,
-        productType: p.productType,
-        images: p.images || [], 
-        video: p.video || null, // Ensure video is passed
-        sellerId: p.sellerId,
-        seller: p.seller?.name || "Verified Seller",
-        sellerBusiness: p.seller?.business || null,
-        avgRating: Number(avgRating.toFixed(1)),
-        ratingCount: count,
-        
-        // Logistics & Raw Material Fields
-        unit: p.unit || "pcs",
-        unitsPerTrip: p.unitsPerTrip || 1,
-        conversionFactor: p.conversionFactor || 1,
-
-        // Safe access to nested delivery charges
-        shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
-        shippingCharge: p.seller?.delivery?.shippingCharge || 0,
-        installationAvailable: p.seller?.delivery?.installationAvailable || "no",
-        installationCharge: p.seller?.delivery?.installationCharge || 0,
-      };
-    });
+    // Explicitly mapping every field to ensure nothing is lost
+    const formatted = {
+      ...product, // Spreading the product object ensures 'video' is included
+      id: product.id,
+      video: product.video || null, // Forced check for the video string
+      seller: product.seller?.name || "Verified Seller",
+      sellerId: product.sellerId,
+      shippingChargeType: product.seller?.delivery?.shippingChargeType || "Paid",
+      shippingCharge: product.seller?.delivery?.shippingCharge || 0,
+      installationAvailable: product.seller?.delivery?.installationAvailable || "no",
+      installationCharge: product.seller?.delivery?.installationCharge || 0,
+    };
 
     return NextResponse.json(formatted);
   } catch (err) {
-    // Log the exact error to Vercel/Terminal logs for debugging
-    console.error("FETCH PRODUCTS ERROR:", err.message);
-    return NextResponse.json(
-      { message: "Internal Server Error", error: err.message }, 
-      { status: 500 }
-    );
+    console.error("API ERROR:", err);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

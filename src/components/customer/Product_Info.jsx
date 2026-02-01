@@ -227,7 +227,7 @@ const ProductInfo = () => {
     const mediaList = useMemo(() => {
         const list = [];
 
-        // 1. Process Images
+        // Process Images
         if (images && Array.isArray(images)) {
             images.forEach((img) => {
                 let src = img.startsWith("http") ? img : `/${img}`;
@@ -238,19 +238,16 @@ const ProductInfo = () => {
             });
         }
 
-        // 2. Ultra-Safe Video Detection
-        // Check if video exists and isn't just an empty string
+        // Process Video - Logic specifically for Cloudinary/Direct URLs
         if (video && typeof video === "string" && video.trim() !== "") {
             let vSrc = video.startsWith("http") ? video : `/${video}`;
             list.push({ type: "video", src: vSrc });
-            console.log("✅ Video detected and added to list:", vSrc);
-        } else {
-            console.log("❌ No video string found in product data.");
         }
 
         return list;
     }, [images, video]);
 
+    // Ensure the first item (image or video) is selected on load
     useEffect(() => {
         if (mediaList.length > 0 && !selectedMedia) {
             setSelectedMedia(mediaList[0]);
