@@ -17,18 +17,15 @@ export const addSellerProduct = async (formData) => {
   }
 };
 
-// Update an existing product (PUT /api/seller/products/[id])
-export const updateSellerProduct = (productId, formData) => {
-  return api.put(`/product/${productId}`, formData, {
+export const updateSellerProduct = (id, formData) =>
+  api.put(`/seller/product/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-};  
 
 // Delete a product (DELETE /api/seller/products/[id])
 export const deleteSellerProduct = (productId) => {
   return api.delete(`/product/${productId}`);
 };
-
 
 export const getSellerProducts = (sellerId) => {
   return api.get(`/seller/${sellerId}/products`);

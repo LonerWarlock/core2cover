@@ -42,7 +42,7 @@ export async function PUT(request, { params }) {
     // 2. Extract basic fields
     const name = formData.get("name")?.toString().trim();
     const category = formData.get("category")?.toString().trim();
-    const productType = formData.get("productType")?.toString(); 
+    const productType = formData.get("productType")?.toString();
     const priceRaw = formData.get("price");
     const description = formData.get("description")?.toString().trim();
     const availability = formData.get("availability")?.toString();
@@ -66,7 +66,17 @@ export async function PUT(request, { params }) {
       newImageUrls = results.map(r => r.secure_url);
     }
 
-    // 4. Construct strictly typed Update Data
+    // 4. Handle Video logic
+    const newVideoFile = formData.get("video"); 
+    let videoUrl = formData.get("existingVideo")?.toString() || null; 
+
+    // If a new video file is provided, upload it and replace the old URL
+    if (newVideoFile && newVideoFile instanceof File && newVideoFile.size > 0) {
+      const videoResult = await uploadToCloudinary(newVideoFile, "coretocover/products/videos");
+      videoUrl = videoResult.secure_url;
+    }
+
+    // 5. Construct strictly typed Update Data
     const price = parseFloat(priceRaw?.toString() || "0");
     const updateData = {
       name,
@@ -76,9 +86,10 @@ export async function PUT(request, { params }) {
       description: description || null,
       availability,
       images: [...keptImages, ...newImageUrls],
+      video: videoUrl,
     };
 
-    // 5. Force numeric conversion for Logistics (Prisma Int/Float requirements)
+    // 6. Force numeric conversion for Logistics (Prisma Int/Float requirements)
     if (productType === "material" || productType === "Raw Material") {
       const unit = formData.get("unit")?.toString() || "pcs";
       const rawUPT = formData.get("unitsPerTrip");
@@ -104,7 +115,7 @@ export async function PUT(request, { params }) {
     });
 
   } catch (err) {
-    console.error("FULL DATABASE ERROR:", err); // Check your server terminal, not just browser
+    console.error("FULL DATABASE ERROR:", err);
     return NextResponse.json({ 
       message: "Update failed", 
       error: err.message 
