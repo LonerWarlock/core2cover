@@ -1,73 +1,76 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(request, { params }) {
+export async function GET(request) {
   try {
-    const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type");
 
-    const product = await prisma.product.findUnique({
-      where: { 
-        id: parseInt(id) 
+    const products = await prisma.product.findMany({
+      where: {
+        // Filter by type if provided
+        ...(type ? { productType: type } : {}),
+        // Ensure we only show products from verified sellers
+        seller: {
+          isVerified: true 
+        }
       },
       include: {
         seller: {
           select: {
             name: true,
-            delivery: {
-              select: {
-                shippingChargeType: true,
-                shippingCharge: true,
-                installationAvailable: true,
-                installationCharge: true,
-              }
-            },
-            business: { select: { city: true, state: true } },
+            // Use 'delivery' only if it exists as a 1-to-1 or 1-to-many in your schema
+            delivery: true, 
+            business: true,
           },
         },
         ratings: { select: { stars: true } },
       },
+      orderBy: { createdAt: "desc" },
     });
 
-    if (!product) {
-      return NextResponse.json({ message: "Product not found" }, { status: 404 });
-    }
+    const formatted = products.map((p) => {
+      // Calculate ratings safely
+      const total = p.ratings?.reduce((sum, r) => sum + r.stars, 0) || 0;
+      const count = p.ratings?.length || 0;
+      const avgRating = count ? total / count : 0;
 
-    // Calculate rating stats
-    const total = product.ratings.reduce((sum, r) => sum + r.stars, 0);
-    const count = product.ratings.length;
-    const avgRating = count ? total / count : 0;
+      return {
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        price: p.price,
+        description: p.description,
+        availability: p.availability,
+        productType: p.productType,
+        images: p.images || [], 
+        video: p.video || null, // Ensure video is passed
+        sellerId: p.sellerId,
+        seller: p.seller?.name || "Verified Seller",
+        sellerBusiness: p.seller?.business || null,
+        avgRating: Number(avgRating.toFixed(1)),
+        ratingCount: count,
+        
+        // Logistics & Raw Material Fields
+        unit: p.unit || "pcs",
+        unitsPerTrip: p.unitsPerTrip || 1,
+        conversionFactor: p.conversionFactor || 1,
 
-    // Formatting exactly like your list route to ensure frontend compatibility
-    const formatted = {
-      id: product.id,
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      description: product.description,
-      availability: product.availability,
-      productType: product.productType,
-      images: product.images,
-      video: product.video, // CRITICAL: This was likely missing
-      sellerId: product.sellerId,
-      seller: product.seller?.name || "Verified Seller",
-      sellerBusiness: product.seller?.business || null,
-      avgRating: Number(avgRating.toFixed(1)),
-      ratingCount: count,
-      
-      // LOGISTICS FIELDS
-      unit: product.unit || "pcs",
-      unitsPerTrip: product.unitsPerTrip || 1,
-      conversionFactor: product.conversionFactor || 1,
-
-      shippingChargeType: product.seller?.delivery?.shippingChargeType || "Paid",
-      shippingCharge: product.seller?.delivery?.shippingCharge || 0,
-      installationAvailable: product.seller?.delivery?.installationAvailable || "no",
-      installationCharge: product.seller?.delivery?.installationCharge || 0,
-    };
+        // Safe access to nested delivery charges
+        shippingChargeType: p.seller?.delivery?.shippingChargeType || "Paid",
+        shippingCharge: p.seller?.delivery?.shippingCharge || 0,
+        installationAvailable: p.seller?.delivery?.installationAvailable || "no",
+        installationCharge: p.seller?.delivery?.installationCharge || 0,
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (err) {
-    console.error("FETCH SINGLE PRODUCT ERROR:", err);
-    return NextResponse.json({ message: "Failed to fetch product" }, { status: 500 });
+    // Log the exact error to Vercel/Terminal logs for debugging
+    console.error("FETCH PRODUCTS ERROR:", err.message);
+    return NextResponse.json(
+      { message: "Internal Server Error", error: err.message }, 
+      { status: 500 }
+    );
   }
 }
