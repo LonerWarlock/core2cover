@@ -8,12 +8,13 @@ import CoreToCoverTitle from "../../assets/logo/CoreToCover_1.png";
 import Om from "../../assets/founders/om.jpg";
 import Soham from "../../assets/founders/soham.jpeg";
 import Prathmesh from "../../assets/founders/Prathmesh.jpeg"
+import Om_Mali from "../../assets/founders/om_mail.jpeg"
 import NextImage from "next/image";
 import { Github, Linkedin, Instagram, Mail } from "lucide-react";
 
 const founderData = [
   {
-    name: "Om Karande",
+    name: "Om Nilesh Karande",
     role: "Co-Founder",
     image: Om,
     email: "omnileshkarande@gmail.com",
@@ -30,7 +31,7 @@ const founderData = [
   //   instagram: "#"
   // },
   {
-    name: "Soham Phatak",
+    name: "Soham Sachin Phatak",
     role: "Co-Founder",
     image: Soham,
     email: "phataksoham2109@gmail.com",
@@ -39,10 +40,17 @@ const founderData = [
     instagram: "https://www.instagram.com/sohamphatak21/"
   },
   {
-    name: "Prathmesh Mali",
+    name: "Prathmesh Tanhaji Mali",
     role: "Design and Marketing Head",
     image: Prathmesh,
     email: "Sonaigfx@gamil.com",
+    instagram: "https://www.instagram.com/sonai_graphics/"
+  },
+  {
+    name: "Om Ganpati Mali",
+    role: "CFO",
+    image: Om_Mali,
+    email: "omm227028@gmail.comm",
     instagram: "https://www.instagram.com/sonai_graphics/"
   }
 ];
