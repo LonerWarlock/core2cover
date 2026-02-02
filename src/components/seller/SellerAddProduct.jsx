@@ -107,7 +107,7 @@ const SellerAddProduct = () => {
 
   const productCategories = {
     finished: ["Furniture", "Modular Kitchen", "Doors & Windows", "Wardrobes", "Lighting", "Wall Panels", "Decor Items"],
-    material: ["Plywood & Boards", "MDF / HDF", "Laminates & Veneers", "Hardware & Fittings", "Glass & Mirrors", "Marble & Stone", "Fabrics & Upholstery", "Paints & Finishes"],
+    material: ["Plywood & Boards", "MDF / HDF", "Laminates & Veneers", "Hardware & Fittings", "Glass & Mirrors", "Marble & Stone","Tiles", "Fabrics & Upholstery", "Paints & Finishes"],
   };
 
   const handleImages = (e) => {
