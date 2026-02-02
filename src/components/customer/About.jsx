@@ -51,7 +51,7 @@ const founderData = [
     role: "CFO",
     image: Om_Mali,
     email: "omm227028@gmail.comm",
-    instagram: "https://www.instagram.com/sonai_graphics/"
+    instagram: "https://www.instagram.com/om_2212007/"
   }
 ];
 
