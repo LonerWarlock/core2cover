@@ -137,7 +137,7 @@ const DesignerProfileSetup = () => {
           <form className="designer-form" onSubmit={handleSubmit}>
             {/* Profile Image */}
             <div className="field full">
-              <label className="input-label">Profile Image</label>
+              <label className="input-label">Profile Image (Optional)</label>
 
               <div className="profile-upload-box">
                 {form.profilePreview ? (
@@ -155,7 +155,6 @@ const DesignerProfileSetup = () => {
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="profile-input"
-                  required
                 />
               </div>
             </div>
