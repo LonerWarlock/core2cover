@@ -7,7 +7,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import {
   FaArrowLeft, FaStar, FaStarHalfAlt, FaRegStar,
-  FaTimes, FaExpand, FaCheckCircle, FaMinusCircle, FaMapMarkerAlt
+  FaTimes, FaExpand, FaCheckCircle, FaMinusCircle, FaMapMarkerAlt, FaRegUser
 } from "react-icons/fa";
 import { LuMapPin } from "react-icons/lu";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -283,7 +283,21 @@ const DesignerInfoContent = () => {
         <div className={`designer-info-layout ${!designer.works?.length ? 'no-portfolio' : ''}`}>
           <div className="designer-text">
             <div className="profile-header-wrap">
-              <Image src={designer.profile?.profileImage || "/assets/images/sample.jpg"} width={150} height={150} className="designer-photo" alt="profile" />
+              {designer.profile?.profileImage ? (
+                <Image
+                  src={designer.profile.profileImage}
+                  width={150}
+                  height={150}
+                  className="designer-photo"
+                  alt="profile"
+                  unoptimized
+                />
+              ) : (
+                /* FALLBACK ICON DISPLAY */
+                <div className="designer-photo icon-fallback-profile">
+                  <FaRegUser />
+                </div>
+              )}
               <div className={`availability-pill ${designer.availability?.toLowerCase() === "available" ? "available" : "unavailable"}`}>
                 {designer.availability?.toLowerCase() === "available" ? <FaCheckCircle /> : <FaMinusCircle />}
                 {designer.availability || "Unknown"}

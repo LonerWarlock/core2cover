@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FaStar, FaMapMarkerAlt, FaBriefcase } from "react-icons/fa";
+import { FaStar, FaMapMarkerAlt, FaBriefcase, FaRegUser } from "react-icons/fa";
 import "./DesignerCard.css";
 
 const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, location, experience, bio, isLocal }) => {
@@ -12,7 +12,7 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, loca
   // Robust Image Validation to prevent "Invalid URL" crash
   const finalImage = (typeof image === "string" && image.includes("cloudinary.com"))
     ? image.replace("/upload/", "/upload/w_400,h_400,c_fill,g_face,q_auto,f_auto/")
-    : "https://res.cloudinary.com/dq7vru7sc/image/upload/v1716550732/retina_standard_avatar_v2_f8f8f8.png";
+    : image;
 
   const truncatedBio = bio
     ? bio.split(" ").slice(0, 6).join(" ") + (bio.split(" ").length > 6 ? "..." : "")
@@ -24,14 +24,20 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, loca
       onClick={() => router.push(`/designer_info?id=${id}`)}
     >
       <div className="product-image-container">
-        <Image
-          src={finalImage}
-          alt={name}
-          className="product-image"
-          fill
-          unoptimized
-          priority={id < 4}
-        />
+        {finalImage ? (
+          <Image
+            src={finalImage}
+            alt={name}
+            className="product-image"
+            fill
+            unoptimized
+          />
+        ) : (
+          /* FALLBACK ICON DISPLAY */
+          <div className="product-image icon-fallback-container">
+            <FaRegUser className="fallback-user-icon" />
+          </div>
+        )}
         <span className="product-badge">{category}</span>
         {/* {isLocal && <span className="local-badge">Near You</span>} */}
       </div>
