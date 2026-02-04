@@ -296,7 +296,7 @@ const SellerProducts = () => {
             return (
               <div key={m.id} className="ms-card">
                 <div className="ms-img-container">
-                  <img src={m.images[slideIndex[m.id] || 0] || "/placeholder.jpg"} className="ms-thumb" alt={m.name} />
+                  <img src={m.images[slideIndex[m.id] || 0] || "/placeholder.jpg"} className="ms-thumb" alt={m.name} unoptimized/>
                   {m.video && <div className="ms-video-indicator"><FaPlay /></div>}
                   <div className={`ms-status-badge ${m.availability}`}>{m.availability.replace('_', ' ')}</div>
                 </div>

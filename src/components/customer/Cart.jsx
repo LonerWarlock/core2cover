@@ -136,7 +136,7 @@ const Cart = () => {
                       width={200}
                       height={200}
                       style={{ objectFit: "cover" }}
-                      unoptimized // Useful if paths are external or complex
+                      unoptimized
                     />
                   </div>
 

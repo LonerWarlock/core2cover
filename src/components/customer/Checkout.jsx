@@ -314,8 +314,8 @@ export default function Checkout() {
                 <h2>Payment Method</h2>
                 <div className="payment-options">
                   {['cod', 'gpay', 'paytm', 'phonepe'].map(method => (
-                    <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
-                      <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} />
+                    <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>                  
+                      <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} unoptimized/>
                       <span>{method === 'cod' ? "Cash on Delivery" : method.toUpperCase()}</span>
                     </button>
                   ))}

@@ -156,6 +156,7 @@ const MyHiredDesigners = () => {
                   alt={d.name}
                   fill
                   style={{ objectFit: 'cover', borderRadius: '50%' }}
+                  unoptimized
                 />
               </div>
               <div className="hired-info">

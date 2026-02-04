@@ -238,7 +238,7 @@ const DesignerEditProfile = () => {
           <div className="dep-image-section">
             <div className="dep-image-wrapper">
               {preview ? (
-                <img src={preview} alt="Profile Preview" className="dep-profile-img" />
+                <img src={preview} alt="Profile Preview" className="dep-profile-img" unoptimized/>
               ) : (
                 <div className="dep-placeholder">
                   <FaCamera className="dep-camera-icon" />

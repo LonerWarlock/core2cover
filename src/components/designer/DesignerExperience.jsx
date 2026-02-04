@@ -265,7 +265,7 @@ const DesignerExperience = () => {
             <div key={work.id} className="de-item">
               <label className="de-image">
                 {work.preview ? (
-                  <img src={work.preview} alt="work" />
+                  <img src={work.preview} alt="work" unoptimized/>
                 ) : (
                   <div className="de-image-placeholder">
                     <FaPlus />
