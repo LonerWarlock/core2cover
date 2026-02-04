@@ -283,7 +283,15 @@ const DesignerInfoContent = () => {
         <div className={`designer-info-layout ${!designer.works?.length ? 'no-portfolio' : ''}`}>
           <div className="designer-text">
             <div className="profile-header-wrap">
-              <Image src={designer.profile?.profileImage || "/assets/images/sample.jpg"} width={150} height={150} className="designer-photo" alt="profile" />
+              <Image
+                
+                src={designer.profile?.profileImage || "https://res.cloudinary.com/dq7vru7sc/image/upload/v1716550732/retina_standard_avatar_v2_f8f8f8.png"}
+                width={150}
+                height={150}
+                className="designer-photo"
+                alt="profile"
+                style={{ objectFit: "cover" }}
+              />
               <div className={`availability-pill ${designer.availability?.toLowerCase() === "available" ? "available" : "unavailable"}`}>
                 {designer.availability?.toLowerCase() === "available" ? <FaCheckCircle /> : <FaMinusCircle />}
                 {designer.availability || "Unknown"}

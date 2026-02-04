@@ -12,11 +12,11 @@ const DesignerCard = ({ id, name, category, image, avgRating, totalRatings, loca
   // Robust Image Validation to prevent "Invalid URL" crash
   const finalImage = (typeof image === "string" && image.includes("cloudinary.com"))
     ? image.replace("/upload/", "/upload/w_400,h_400,c_fill,g_face,q_auto,f_auto/")
-    : image || "/assets/placeholder-designer.jpg";
+    : "https://res.cloudinary.com/dq7vru7sc/image/upload/v1716550732/retina_standard_avatar_v2_f8f8f8.png";
 
-  const truncatedBio = bio 
-  ? bio.split(" ").slice(0, 6).join(" ") + (bio.split(" ").length > 6 ? "..." : "")
-  : "No bio provided.";
+  const truncatedBio = bio
+    ? bio.split(" ").slice(0, 6).join(" ") + (bio.split(" ").length > 6 ? "..." : "")
+    : "No bio provided.";
 
   return (
     <article
