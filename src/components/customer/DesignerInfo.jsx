@@ -321,7 +321,12 @@ const DesignerInfoContent = () => {
                   width={800}
                   height={600}
                   priority
+                  unoptimized
                   style={{ objectFit: "cover", cursor: "zoom-in" }}
+                  onError={(e) => {
+                    // If Cloudinary blocks the main image, show your logo instead
+                    setActiveImage("/assets/logo/CoreToCover_2_.png");
+                  }}
                 />
                 <div className="zoom-hint"><FaExpand /> Click to View Fullscreen</div>
               </div>
@@ -353,7 +358,17 @@ const DesignerInfoContent = () => {
                   className={`portfolio-item ${selectedWorkIndex === i ? 'active' : ''}`}
                   onClick={() => { setActiveImage(w.image); setSelectedWorkIndex(i); }}
                 >
-                  <Image src={w.image} width={300} height={200} alt="Work" />
+                  <Image
+                    src={w.image}
+                    width={300}
+                    height={200}
+                    alt="Work"
+                    unoptimized // Bypass Next.js optimization to save Cloudinary credits
+                    onError={(e) => {
+                      // If Cloudinary blocks the image (402), swap it for a local placeholder
+                      e.currentTarget.src = "/assets/logo/CoreToCover_2_.png";
+                    }}
+                  />
                   <p className="work_desc">{w.description}</p>
                 </div>
               ))}

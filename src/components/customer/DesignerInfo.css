@@ -744,3 +744,16 @@ body {
   border-radius: 50%;
   border: 2px solid #4a5a3f;
 }
+
+.icon-fallback-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f2f0;
+  color: #4a5a3f;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  font-size: 50px; /* Makes the FaRegUser icon look proportional */
+  border: 2px solid #4a5a3f;
+}
