@@ -83,11 +83,6 @@ const DesignerProfileSetup = () => {
     e.preventDefault();
     setError("");
 
-    if (!form.profileImage) {
-    triggerMsg("Please upload a profile image to continue.", "error");
-    return;
-  }
-
     if (!designerId) {
       triggerMsg("Authorisation error. Please login again.");
       return;
