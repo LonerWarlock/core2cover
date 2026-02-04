@@ -648,7 +648,7 @@ body {
 .expandable-text {
   line-height: 1.6;
   color: var(--text-main, #333);
-  white-space: pre-line; /* Ensures manual breaks are respected */
+  white-space: normal; 
 }
 
 .see-more-btn {

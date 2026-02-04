@@ -31,7 +31,7 @@ const formatTextWithBreaks = (text, wordLimit = 20) => {
   return chunks.map((chunk, index) => (
     <React.Fragment key={index}>
       {chunk}
-      {index < chunks.length - 1 && <><br /><br /></>}
+      {index < chunks.length - 1 && " "}
     </React.Fragment>
   ));
 };
@@ -40,16 +40,20 @@ const ExpandableText = ({ text = "", limit = 160 }) => {
   const [expanded, setExpanded] = useState(false);
   if (!text) return null;
   const isLong = text.length > limit;
+  const displayedText = expanded ? text : `${text.slice(0, limit)}...`;
   return (
     <div className="bio-container">
       <div className={`expandable-text ${expanded ? "expanded" : ""}`}>
         {expanded || !isLong ? formatTextWithBreaks(text) : `${text.slice(0, limit)}...`}
       </div>
-      {isLong && (
-        <span className="see-more-btn" onClick={() => setExpanded(!expanded)}>
-          {expanded ? " See less" : " See more"}
-        </span>
-      )}
+      <p className="bio-text">
+        {displayedText}
+        {isLong && (
+          <span className="see-more-btn" onClick={() => setExpanded(!expanded)}>
+            {expanded ? " See less" : " See more"}
+          </span>
+        )}
+      </p>
     </div>
   );
 };
