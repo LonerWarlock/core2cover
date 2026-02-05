@@ -318,6 +318,30 @@ const ProductInfo = () => {
         triggerMsg(`${displayTitle} added to cart!`, "success");
     };
 
+    const handleShare = async () => {
+        const shareData = {
+            title: displayTitle,
+            text: `Check out ${displayTitle} on Core2Cover!`,
+            url: window.location.href,
+        };
+
+        try {
+            // Check if the browser supports the native share menu
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback: Copy to clipboard
+                await navigator.clipboard.writeText(window.location.href);
+                triggerMsg("Link copied to clipboard!", "success");
+            }
+        } catch (err) {
+            // Handle case where user cancels the share
+            if (err.name !== "AbortError") {
+                triggerMsg("Sharing failed", "error");
+            }
+        }
+    };
+
     if (loading) return <LoadingSpinner message="Loading Product..." />;
     if (!product) return <div className="pd-not-found">Product not found</div>;
 
@@ -457,7 +481,7 @@ const ProductInfo = () => {
                         <p className="pd-total-preview">Subtotal: ₹{totalPrice.toLocaleString()}</p>
                         <button className="pd-btn pd-btn-buy" onClick={handleBuyNow} disabled={availability === "out_of_stock"}>Buy Now</button>
                         <button className="pd-btn pd-btn-cart" onClick={handleAddToCart} disabled={availability === "out_of_stock"}>Add to Cart</button>
-                        <button className="pd-btn-share-icon" onClick={() => triggerMsg("Link copied!", "success")} style={{ width: "100%", borderRadius: 10, border: "1px solid #ddd", marginTop: 12, padding: "10px", background: "#fff", cursor: 'pointer' }}><FaShareAlt /> Share Product</button>
+                        <button className="pd-btn-share-icon" onClick={handleShare} style={{ width: "100%", borderRadius: 10, border: "1px solid #ddd", marginTop: 12, padding: "10px", background: "#fff", cursor: 'pointer' }}><FaShareAlt /> Share Product</button>
                     </div>
                 </div>
             </div>
