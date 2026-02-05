@@ -155,7 +155,7 @@ export default function Checkout() {
     items.forEach((it) => {
       const qty = Number(it.quantity) || 0;
       subtotal += (Number(it.amountPerTrip) * qty);
-      
+
       if (it.shippingChargeType?.toLowerCase() !== "free") {
         rawDeliveryCharge += (Number(it.shippingCharge) * (Number(it.trips) || 1));
       }
@@ -176,114 +176,117 @@ export default function Checkout() {
     };
   }, [items]);
 
-// 1. First, add this helper outside your component or at the top of your file
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
-
-// 2. Updated handlePlaceOrder and new processOrder helper
-const handlePlaceOrder = async () => {
-  const hasInvalidQty = items.some(it => !it.quantity || Number(it.quantity) <= 0);
-  if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
-  if (hasInvalidQty) return triggerMsg("Please enter valid quantities for all items.", "error");
-
-  setLoading(true);
-
-  // Helper to call your existing /order/place API
-  const processOrder = async (razorpayPaymentId = null) => {
-    try {
-      const res = await api.post("/order/place", {
-        customerEmail: email,
-        checkoutDetails: { 
-          name, 
-          address, 
-          paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod,
-          razorpayPaymentId // Send this to your backend for verification/records
-        },
-        orders: items.map(it => ({
-          ...it,
-          trips: it.trips,
-          unit: it.unit,
-          conversionFactor: it.conversionFactor,
-          unitsPerTrip: it.unitsPerTrip,
-          installationCharge: it.installationCharge,
-          installationAvailable: it.installationAvailable
-        })),
-        summary: computeSummary,
-        creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
-      });
-
-      if (res?.data?.orderId) {
-        localStorage.setItem("userEmail", btoa(email.toLowerCase().trim()));
-        clearSingleCheckoutItem();
-        clearCart();
-        triggerMsg("Order placed successfully!", "success");
-        setTimeout(() => router.push("/userprofile"), 2000);
-      }
-    } catch (err) {
-      triggerMsg(err.response?.data?.message || "Checkout failed.", "error");
-    } finally {
-      setLoading(false);
-    }
+  // 1. First, add this helper outside your component or at the top of your file
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
-  // Logic Switch: COD/Credit vs Online Payment
-  if (paymentMethod === "cod" || useCreditForFullAmount) {
-    return processOrder();
-  } else {
-    // RAZORPAY FLOW
-    const isLoaded = await loadRazorpayScript();
-    if (!isLoaded) {
-      setLoading(false);
-      return triggerMsg("Razorpay SDK failed to load. Please check your connection.", "error");
-    }
+  // 2. Updated handlePlaceOrder and new processOrder helper
+  const handlePlaceOrder = async () => {
+    const hasInvalidQty = items.some(it => !it.quantity || Number(it.quantity) <= 0);
+    if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
+    if (hasInvalidQty) return triggerMsg("Please enter valid quantities for all items.", "error");
 
-    try {
-      // Create a Razorpay Order on your server first
-      // You need to create this API endpoint (e.g., /api/razorpay/create-order)
-      const orderResponse = await api.post("/razorpay/create-order", {
-        amount: computeSummary.grandTotal,
-      });
+    setLoading(true);
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Use the public Key ID
-        amount: orderResponse.data.amount,
-        currency: "INR",
-        name: "Core2Cover",
-        description: "Payment for Order",
-        order_id: orderResponse.data.id,
-        handler: async function (response) {
-          // If payment is successful, finalize the order in your DB
-          await processOrder(response.razorpay_payment_id);
-        },
-        prefill: {
-          name: name,
-          email: email,
-        },
-        theme: {
-          color: "#4e5a44",
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-          }
+    // Helper to call your existing /order/place API
+    const processOrder = async (razorpayPaymentId = null) => {
+      try {
+        const res = await api.post("/order/place", {
+          customerEmail: email,
+          checkoutDetails: {
+            name,
+            address,
+            paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod,
+            razorpayPaymentId // Send this to your backend for verification/records
+          },
+          orders: items.map(it => ({
+            ...it,
+            trips: it.trips,
+            unit: it.unit,
+            conversionFactor: it.conversionFactor,
+            unitsPerTrip: it.unitsPerTrip,
+            installationCharge: it.installationCharge,
+            installationAvailable: it.installationAvailable
+          })),
+          summary: computeSummary,
+          creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
+        });
+
+        if (res?.data?.orderId) {
+          localStorage.setItem("userEmail", btoa(email.toLowerCase().trim()));
+          clearSingleCheckoutItem();
+          clearCart();
+          triggerMsg("Order placed successfully!", "success");
+          setTimeout(() => router.push("/userprofile"), 2000);
         }
-      };
+      } catch (err) {
+        triggerMsg(err.response?.data?.message || "Checkout failed.", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-    } catch (err) {
-      setLoading(false);
-      triggerMsg("Failed to initiate online payment. Try again.", "error");
+    // Logic Switch: COD/Credit vs Online Payment
+    if (paymentMethod === "cod" || useCreditForFullAmount) {
+      return processOrder();
+    } else {
+      // RAZORPAY FLOW
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setLoading(false);
+        return triggerMsg("Razorpay SDK failed to load. Please check your connection.", "error");
+      }
+
+      try {
+        // Create a Razorpay Order on your server first
+        // You need to create this API endpoint (e.g., /api/razorpay/create-order)
+        const orderResponse = await api.post("/razorpay/create-order", {
+          amount: computeSummary.grandTotal,
+        });
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Use the public Key ID
+          amount: orderResponse.data.amount,
+          currency: "INR",
+          name: "Core2Cover",
+          description: "Payment for Order",
+          order_id: orderResponse.data.id,
+          handler: async function (response) {
+            // If payment is successful, finalize the order in your DB
+            await processOrder(
+              response.razorpay_payment_id,
+              response.razorpay_order_id // Pass both!
+            );
+          },
+          prefill: {
+            name: name,
+            email: email,
+          },
+          theme: {
+            color: "#4e5a44",
+          },
+          modal: {
+            ondismiss: function () {
+              setLoading(false);
+            }
+          }
+        };
+
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+      } catch (err) {
+        setLoading(false);
+        triggerMsg("Failed to initiate online payment. Try again.", "error");
+      }
     }
-  }
-};
+  };
 
   if (loadError) return <div className="error">Map error: {loadError.message}</div>;
   if (!isLoaded) return <LoadingSpinner message="Initialising Maps..." />;
@@ -318,7 +321,7 @@ const handlePlaceOrder = async () => {
                       <div className="checkout-logistics-info">
                         <span><FaTruckLoading /> {item.trips} Trip(s)</span>
                         {item.installationAvailable === "yes" && (
-                          <span className="installation-tag" style={{color: '#4e5a44', fontWeight: '600'}}>
+                          <span className="installation-tag" style={{ color: '#4e5a44', fontWeight: '600' }}>
                             <FaTools /> Seller Install: {formatINR(item.installationCharge)}/unit
                           </span>
                         )}
@@ -387,8 +390,8 @@ const handlePlaceOrder = async () => {
                 <h2>Payment Method</h2>
                 <div className="payment-options">
                   {['cod', 'gpay', 'paytm', 'phonepe'].map(method => (
-                    <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>                  
-                      <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} unoptimized/>
+                    <button key={method} type="button" className={`payment-option ${paymentMethod === method ? "active" : ""}`} onClick={() => setPaymentMethod(method)}>
+                      <Image src={method === 'cod' ? COD : method === 'gpay' ? GooglePay : method === 'paytm' ? Paytm : PhonePe} alt={method} width={40} height={25} unoptimized />
                       <span>{method === 'cod' ? "Cash on Delivery" : method.toUpperCase()}</span>
                     </button>
                   ))}
@@ -410,24 +413,24 @@ const handlePlaceOrder = async () => {
                   <span>Delivery Charges</span>
                   <span>{formatINR(computeSummary.deliveryCharge)}</span>
                 </div>
-                
+
                 {/* INSTALLATION CHARGES - FORCED VISIBLE IF > 0 */}
                 {computeSummary.installationTotal > 0 && (
                   <div className="summary-row highlight-row" style={{ color: '#4e5a44', fontWeight: 'bold', borderTop: '1px dashed #ddd', paddingTop: '10px', marginTop: '5px' }}>
-                    <span><FaTools style={{marginRight: '8px'}} /> Installation Charges</span>
+                    <span><FaTools style={{ marginRight: '8px' }} /> Installation Charges</span>
                     <span>{formatINR(computeSummary.installationTotal)}</span>
                   </div>
                 )}
               </div>
               <hr className="summary-divider" />
-              
+
               {useCreditForFullAmount && (
                 <div className="summary-row credit-applied" style={{ color: '#606E52', fontWeight: '600' }}>
                   <span>Credit Applied</span>
                   <span>-{formatINR(computeSummary.grandTotal)}</span>
                 </div>
               )}
-              
+
               <div className="summary-row total">
                 <span>Total Amount</span>
                 <span>{useCreditForFullAmount ? formatINR(0) : formatINR(computeSummary.grandTotal)}</span>

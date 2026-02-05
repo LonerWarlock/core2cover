@@ -12,6 +12,7 @@ export async function POST(request) {
       creditUsed = 0,
     } = body;
 
+    // 1. Basic Validation
     if (!customerEmail || !orders?.length) {
       return NextResponse.json({ message: "Invalid order data" }, { status: 400 });
     }
@@ -25,61 +26,62 @@ export async function POST(request) {
     }
 
     const creditToUse = Number(creditUsed || 0);
-
     if (creditToUse > 0 && user.credit < creditToUse) {
       return NextResponse.json({ message: "Insufficient store credit" }, { status: 400 });
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Create the main Order record
+      // 2. Create the main Order record with sanitized numbers
       const order = await tx.order.create({
         data: {
           userId: user.id,
           customerEmail,
-          customerName: checkoutDetails.name,
-          address: checkoutDetails.address,
-          
-          // CHANGE: Logic to prioritize Razorpay or Store Credit over default method
+          customerName: checkoutDetails.name || "Customer",
+          address: checkoutDetails.address || "N/A",
           paymentMethod: checkoutDetails.razorpayPaymentId 
             ? "razorpay" 
-            : (creditToUse > 0 ? "store_credit" : checkoutDetails.paymentMethod),
-          
-          // ADDED: Capture Razorpay identifiers for the database
+            : (creditToUse > 0 ? "store_credit" : (checkoutDetails.paymentMethod || "cod")),
           razorpayPaymentId: checkoutDetails.razorpayPaymentId || null,
           razorpayOrderId: checkoutDetails.razorpayOrderId || null,
-
-          subtotal: Number(summary.subtotal || 0),
-          casaCharge: Number(summary.casaCharge || 0),
-          deliveryCharge: Number(summary.deliveryCharge || 0),
-          installationCharge: Number(summary.installationTotal || 0),
-          grandTotal: Number(summary.grandTotal || 0),
+          subtotal: parseFloat(summary.subtotal || 0),
+          // platformCharge logic: ensure it matches frontend platform charge
+          casaCharge: parseFloat(summary.deliveryCharge || 0), 
+          deliveryCharge: parseFloat(summary.deliveryCharge || 0),
+          installationCharge: parseFloat(summary.installationTotal || 0),
+          grandTotal: parseFloat(summary.grandTotal || 0),
         },
       });
 
-      // 2. Map and Create Order Items (remains same as your current logic)
+      // 3. Map Order Items with strict NaN protection
       const orderItemsData = orders.map((item) => {
-        const qty = Number(item.quantity || 1);
-        const trips = Number(item.trips || 1);
-        const price = Number(item.amountPerTrip || 0);
-        const shipCharge = Number(item.shippingCharge || 0);
-        const instCharge = Number(item.installationCharge || 0);
+        const qty = Number(item.quantity) || 1;
+        const trips = Number(item.trips) || 1;
+        const price = Number(item.amountPerTrip || item.price) || 0;
+        const shipCharge = Number(item.shippingCharge) || 0;
+        const instCharge = Number(item.installationCharge) || 0;
         
+        // Use unique IDs safely
+        const mId = parseInt(item.materialId);
+        const sId = parseInt(item.sellerId || item.supplierId);
+
+        if (isNaN(mId)) throw new Error(`Invalid Material ID for item: ${item.name}`);
+
         const itemShippingTotal = item.shippingChargeType === "Paid" ? (trips * shipCharge) : 0;
         const itemInstallationTotal = item.installationAvailable === "yes" ? (qty * instCharge) : 0;
         const itemTotal = (qty * price) + itemShippingTotal + itemInstallationTotal;
 
         return {
           orderId: order.id,
-          materialId: Number(item.materialId),
-          materialName: item.materialName || item.name || "Unknown Product",
-          supplierName: item.supplierName || item.supplier || "Unknown Seller",
-          sellerId: Number(item.supplierId || item.sellerId),
+          materialId: mId,
+          materialName: item.name || item.materialName || "Unknown Product",
+          supplierName: item.supplierName || "Unknown Seller",
+          sellerId: isNaN(sId) ? 0 : sId, // Fallback if sellerId is missing
           quantity: qty,
           unit: item.unit || "pcs",
           totalTrips: trips, 
           pricePerUnit: price,
           totalAmount: itemTotal,
-          imageUrl: item.imageUrl || item.image || null,
+          imageUrl: item.image || item.imageUrl || null,
           shippingChargeType: item.shippingChargeType || "Paid",
           shippingCharge: shipCharge,
           installationAvailable: item.installationAvailable || "no",
@@ -91,7 +93,7 @@ export async function POST(request) {
         data: orderItemsData,
       });
 
-      // 3. Update Credit if used
+      // 4. Update Credit
       if (creditToUse > 0) {
         await tx.user.update({
           where: { id: user.id },
@@ -102,19 +104,16 @@ export async function POST(request) {
       return order;
     });
 
-    const updatedUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { credit: true },
-    });
-
     return NextResponse.json({
       message: "Order placed successfully",
       orderId: result.id,
-      newCredit: updatedUser?.credit ?? 0,
     }, { status: 201 });
 
   } catch (error) {
-    console.error("ORDER PLACE ERROR:", error);
-    return NextResponse.json({ message: "Failed to place order" }, { status: 500 });
+    console.error("CRITICAL DATABASE ERROR:", error);
+    // Return specific error message for debugging 
+    return NextResponse.json({ 
+      message: "Failed to place order: " + error.message 
+    }, { status: 500 });
   }
 }

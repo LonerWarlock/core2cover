@@ -37,6 +37,7 @@ export async function GET(request, { params }) {
       order.items.map((item) => ({
         id: order.id,
         orderItemId: item.id,
+        materialId: item.materialId,
         productName: item.materialName,
         sellerName: item.seller.name,
         quantity: item.quantity,
@@ -45,6 +46,8 @@ export async function GET(request, { params }) {
         imageUrl: item.imageUrl,
         isRated: !!item.rating,
         createdAt: order.createdAt,
+        paymentMethod: order.paymentMethod,
+        address: order.address
       }))
     );
 
