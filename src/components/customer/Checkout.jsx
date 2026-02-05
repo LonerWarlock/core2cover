@@ -176,16 +176,36 @@ export default function Checkout() {
     };
   }, [items]);
 
-  const handlePlaceOrder = async () => {
-    const hasInvalidQty = items.some(it => !it.quantity || Number(it.quantity) <= 0);
-    if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
-    if (hasInvalidQty) return triggerMsg("Please enter valid quantities for all items.", "error");
-    
-    setLoading(true);
+// 1. First, add this helper outside your component or at the top of your file
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
+// 2. Updated handlePlaceOrder and new processOrder helper
+const handlePlaceOrder = async () => {
+  const hasInvalidQty = items.some(it => !it.quantity || Number(it.quantity) <= 0);
+  if (!email || !name || !address) return triggerMsg("Please provide all required details.", "error");
+  if (hasInvalidQty) return triggerMsg("Please enter valid quantities for all items.", "error");
+
+  setLoading(true);
+
+  // Helper to call your existing /order/place API
+  const processOrder = async (razorpayPaymentId = null) => {
     try {
       const res = await api.post("/order/place", {
         customerEmail: email,
-        checkoutDetails: { name, address, paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod },
+        checkoutDetails: { 
+          name, 
+          address, 
+          paymentMethod: useCreditForFullAmount ? "store_credit" : paymentMethod,
+          razorpayPaymentId // Send this to your backend for verification/records
+        },
         orders: items.map(it => ({
           ...it,
           trips: it.trips,
@@ -198,6 +218,7 @@ export default function Checkout() {
         summary: computeSummary,
         creditUsed: useCreditForFullAmount ? computeSummary.grandTotal : 0,
       });
+
       if (res?.data?.orderId) {
         localStorage.setItem("userEmail", btoa(email.toLowerCase().trim()));
         clearSingleCheckoutItem();
@@ -211,6 +232,58 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
+  // Logic Switch: COD/Credit vs Online Payment
+  if (paymentMethod === "cod" || useCreditForFullAmount) {
+    return processOrder();
+  } else {
+    // RAZORPAY FLOW
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded) {
+      setLoading(false);
+      return triggerMsg("Razorpay SDK failed to load. Please check your connection.", "error");
+    }
+
+    try {
+      // Create a Razorpay Order on your server first
+      // You need to create this API endpoint (e.g., /api/razorpay/create-order)
+      const orderResponse = await api.post("/razorpay/create-order", {
+        amount: computeSummary.grandTotal,
+      });
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Use the public Key ID
+        amount: orderResponse.data.amount,
+        currency: "INR",
+        name: "Core2Cover",
+        description: "Payment for Order",
+        order_id: orderResponse.data.id,
+        handler: async function (response) {
+          // If payment is successful, finalize the order in your DB
+          await processOrder(response.razorpay_payment_id);
+        },
+        prefill: {
+          name: name,
+          email: email,
+        },
+        theme: {
+          color: "#4e5a44",
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      setLoading(false);
+      triggerMsg("Failed to initiate online payment. Try again.", "error");
+    }
+  }
+};
 
   if (loadError) return <div className="error">Map error: {loadError.message}</div>;
   if (!isLoaded) return <LoadingSpinner message="Initialising Maps..." />;

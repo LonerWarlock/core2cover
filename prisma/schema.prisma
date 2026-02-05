@@ -179,6 +179,8 @@ model Order {
   customerEmail  String
   customerName   String
   address        String
+  razorpayOrderId    String?     @unique
+  razorpayPaymentId  String?     @unique
   paymentMethod  String
   subtotal       Float
   casaCharge     Float

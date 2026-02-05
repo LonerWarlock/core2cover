@@ -48,9 +48,9 @@ const founderData = [
   },
   {
     name: "Om Ganpati Mali",
-    role: "CFO",
+    role: "Finance and Operations",
     image: Om_Mali,
-    email: "omm227028@gmail.comm",
+    email: "omm227028@gmail.com",
     instagram: "https://www.instagram.com/om_2212007/"
   }
 ];
