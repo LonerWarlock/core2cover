@@ -323,6 +323,7 @@ export default function MyOrders() {
                   width={100}
                   height={100}
                   style={{ objectFit: "cover" }}
+                  unoptimized
                 />
                 <div className="order-info">
                   <div className="order-header">
