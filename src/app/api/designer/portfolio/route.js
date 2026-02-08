@@ -1,10 +1,10 @@
-// src/app/api/designer/portfolio/route.js
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(request) {
   try {
+    // request.formData() will now succeed because of the frontend header fix
     const formData = await request.formData();
     
     const designerId = Number(formData.get("designerId"));
@@ -12,8 +12,7 @@ export async function POST(request) {
       return NextResponse.json({ message: "Valid Designer ID is required" }, { status: 400 });
     }
 
-    // Get all entries for 'image' and 'description'
-    // This allows the system to process 1 work or many works in one request
+    // Use "image" and "description" keys to match DesignerExperience.jsx
     const files = formData.getAll("image");
     const descriptions = formData.getAll("description");
 
@@ -21,9 +20,8 @@ export async function POST(request) {
       return NextResponse.json({ message: "No images provided" }, { status: 400 });
     }
 
-    // Process each image as a separate work entry (Strictly 1 image per work)
+    // Process each file as a separate work entry (Strictly 1 image per work)
     const uploadPromises = files.map(async (file, index) => {
-      // Skip invalid entries
       if (!file || typeof file === "string" || file.size === 0) return null;
 
       try {
@@ -47,13 +45,15 @@ export async function POST(request) {
       return NextResponse.json({ message: "No valid images were processed" }, { status: 400 });
     }
 
-    // Batch insert into the database
+    // prisma.designerWork.createMany inserts each work as a distinct entry
     await prisma.designerWork.createMany({
       data: worksData,
     });
 
+    // Return the first created item for the frontend UI update
     return NextResponse.json({ 
       message: "Portfolio saved successfully",
+      work: worksData[0], 
       count: worksData.length 
     }, { status: 201 });
 

@@ -140,6 +140,8 @@ const DesignerExperience = () => {
   /* =========================================
       SAVE / UPDATE WORK
   ========================================= */
+  // Locate the saveWork function and update the try/catch block:
+
   const saveWork = async (work) => {
     if (!work.description && !work.image) {
       alert("Please add an image or description");
@@ -148,26 +150,26 @@ const DesignerExperience = () => {
 
     setSavingId(work.id);
     const formData = new FormData();
-    // Use the decoded designerId for the backend
     formData.append("designerId", designerId);
     formData.append("description", work.description || "");
 
     if (work.image instanceof File) {
-      formData.append("image", work.image);
+      formData.append("image", work.image); // Key matches backend getAll("image")
     }
 
     try {
       let res;
+      // FIX: Manually setting headers ensures Axios handles the multipart boundary correctly
       const config = {
         headers: { "Content-Type": "multipart/form-data" },
       };
+
       if (work.isNew) {
-        res = await api.post(`/designer/portfolio`, formData);
+        res = await api.post(`/designer/portfolio`, formData, config);
       } else {
-        res = await api.put(`/designer/portfolio/${work.id}`, formData);
+        res = await api.put(`/designer/portfolio/${work.id}`, formData, config);
       }
 
-      // Handle payload response if backend is encrypted
       const responseData = res.data?.payload
         ? decodePayload(res.data.payload)
         : res.data;
