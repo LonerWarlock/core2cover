@@ -18,15 +18,17 @@ import CoreToCoverLogo from "../../assets/logo/CoreToCover_3.png";
 import api from "../../api/axios";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
-const BrandBold = ({ children }) => (<span className="brand brand-bold">{children}</span>);
+const BrandBold = ({ children }) => (
+  <span className="brand brand-bold">{children}</span>
+);
 
 const DesignerExperience = () => {
   const router = useRouter();
   const [works, setWorks] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false); 
+  const [isDeleting, setIsDeleting] = useState(false);
   const [designerId, setDesignerId] = useState(null);
 
   /* =========================================
@@ -76,7 +78,7 @@ const DesignerExperience = () => {
       try {
         setLoading(true);
         const res = await api.get(`/designer/${designerId}/portfolio`);
-        
+
         // Handle potential encrypted payload from backend
         let rawData = [];
         if (res.data?.payload) {
@@ -85,10 +87,10 @@ const DesignerExperience = () => {
           rawData = Array.isArray(res.data) ? res.data : [];
         }
 
-        const mapped = rawData.map(w => ({
+        const mapped = rawData.map((w) => ({
           ...w,
-          preview: w.image, 
-          isNew: false
+          preview: w.image,
+          isNew: false,
         }));
         setWorks(mapped);
       } catch (err) {
@@ -124,16 +126,14 @@ const DesignerExperience = () => {
       prev.map((w) =>
         w.id === id
           ? { ...w, image: file, preview: URL.createObjectURL(file) }
-          : w
-      )
+          : w,
+      ),
     );
   };
 
   const handleDescriptionChange = (id, value) => {
     setWorks((prev) =>
-      prev.map((w) =>
-        w.id === id ? { ...w, description: value } : w
-      )
+      prev.map((w) => (w.id === id ? { ...w, description: value } : w)),
     );
   };
 
@@ -158,6 +158,9 @@ const DesignerExperience = () => {
 
     try {
       let res;
+      const config = {
+        headers: { "Content-Type": "multipart/form-data" },
+      };
       if (work.isNew) {
         res = await api.post(`/designer/portfolio`, formData);
       } else {
@@ -165,18 +168,18 @@ const DesignerExperience = () => {
       }
 
       // Handle payload response if backend is encrypted
-      const responseData = res.data?.payload ? decodePayload(res.data.payload) : res.data;
+      const responseData = res.data?.payload
+        ? decodePayload(res.data.payload)
+        : res.data;
       const workData = responseData.work || responseData;
 
       const updatedWork = {
         ...workData,
         preview: workData.image,
-        isNew: false
+        isNew: false,
       };
 
-      setWorks((prev) =>
-        prev.map((w) => (w.id === work.id ? updatedWork : w))
-      );
+      setWorks((prev) => prev.map((w) => (w.id === work.id ? updatedWork : w)));
       alert("Work saved successfully!");
     } catch (err) {
       console.error(err);
@@ -216,21 +219,39 @@ const DesignerExperience = () => {
       <header className="navbar">
         <div className="nav-container">
           <div className="nav-left">
-            <Link href="/" className="nav-logo-link" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link
+              href="/"
+              className="nav-logo-link"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
               <span className="nav-logo-wrap">
-                <Image src={CoreToCoverLogo} alt="Logo" width={120} height={50} priority style={{ height: 'auto', width: '50px' }} />
+                <Image
+                  src={CoreToCoverLogo}
+                  alt="Logo"
+                  width={120}
+                  height={50}
+                  priority
+                  style={{ height: "auto", width: "50px" }}
+                />
                 <BrandBold>Core2Cover</BrandBold>
               </span>
             </Link>
           </div>
 
           <div className="nav-right">
-            <div className="hamburger always-visible" onClick={() => setMenuOpen(!menuOpen)}>
+            <div
+              className="hamburger always-visible"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
               {menuOpen ? <FaTimes /> : <FaBars />}
             </div>
             <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
               <li>
-                <Link href="/login" className="seller-btn" onClick={() => setMenuOpen(false)}>
+                <Link
+                  href="/login"
+                  className="seller-btn"
+                  onClick={() => setMenuOpen(false)}
+                >
                   Login as Customer
                 </Link>
               </li>
@@ -241,18 +262,27 @@ const DesignerExperience = () => {
 
       <div className="de-page">
         <div className="de-navigation-top">
-          <button className="de-back-btn" onClick={() => router.push("/designerdashboard")}>
+          <button
+            className="de-back-btn"
+            onClick={() => router.push("/designerdashboard")}
+          >
             <FaArrowLeft /> Back to Dashboard
           </button>
         </div>
         <div className="de-header">
           <h1 className="de-title">My Work Experience</h1>
-          <p className="de-subtitle">Showcase your best interior & product designs.</p>
+          <p className="de-subtitle">
+            Showcase your best interior & product designs.
+          </p>
         </div>
 
         {works.length === 0 && (
           <div className="de-empty">
-            <img src="https://cdn-icons-png.flaticon.com/512/9541/9541430.png" alt="Empty" width={100} />
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/9541/9541430.png"
+              alt="Empty"
+              width={100}
+            />
             <p className="de-empty-text">You have not added any work yet</p>
             <button className="de-empty-btn" onClick={addWork}>
               I want to add my work experience
@@ -265,7 +295,7 @@ const DesignerExperience = () => {
             <div key={work.id} className="de-item">
               <label className="de-image">
                 {work.preview ? (
-                  <img src={work.preview} alt="work" unoptimized/>
+                  <img src={work.preview} alt="work" unoptimized />
                 ) : (
                   <div className="de-image-placeholder">
                     <FaPlus />
@@ -275,7 +305,9 @@ const DesignerExperience = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageChange(work.id, e.target.files[0])}
+                  onChange={(e) =>
+                    handleImageChange(work.id, e.target.files[0])
+                  }
                 />
               </label>
 
@@ -284,7 +316,9 @@ const DesignerExperience = () => {
                   className="de-description"
                   placeholder="Describe your work..."
                   value={work.description || ""}
-                  onChange={(e) => handleDescriptionChange(work.id, e.target.value)}
+                  onChange={(e) =>
+                    handleDescriptionChange(work.id, e.target.value)
+                  }
                 />
 
                 <div className="de-actions">
@@ -296,7 +330,10 @@ const DesignerExperience = () => {
                     <FaSave />
                     {savingId === work.id ? "Saving..." : "Save"}
                   </button>
-                  <button className="de-delete-btn" onClick={() => deleteWork(work.id)}>
+                  <button
+                    className="de-delete-btn"
+                    onClick={() => deleteWork(work.id)}
+                  >
                     <FaTrashAlt /> Delete
                   </button>
                 </div>

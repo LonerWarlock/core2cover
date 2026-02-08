@@ -12,27 +12,24 @@ export async function POST(request) {
       return NextResponse.json({ message: "Valid Designer ID is required" }, { status: 400 });
     }
 
-    // Support both 'image' (single) and 'images' (multiple/bulk)
-    const files = formData.getAll("image").length > 0 
-      ? formData.getAll("image") 
-      : formData.getAll("images");
-
-    // Support both 'description' and 'descriptions'
-    const descriptions = formData.getAll("description").length > 0
-      ? formData.getAll("description")
-      : formData.getAll("descriptions");
+    // Get all entries for 'image' and 'description'
+    // This allows the system to process 1 work or many works in one request
+    const files = formData.getAll("image");
+    const descriptions = formData.getAll("description");
 
     if (!files || files.length === 0) {
       return NextResponse.json({ message: "No images provided" }, { status: 400 });
     }
 
-    // Process each file as a separate work entry (one image per work)
+    // Process each image as a separate work entry (Strictly 1 image per work)
     const uploadPromises = files.map(async (file, index) => {
+      // Skip invalid entries
       if (!file || typeof file === "string" || file.size === 0) return null;
 
       try {
         const upload = await uploadToCloudinary(file, "coretocover/designers/portfolio");
         
+        // Each object in this array becomes a single row in the DesignerWork table
         return {
           designerId,
           image: upload.secure_url, 
@@ -40,7 +37,7 @@ export async function POST(request) {
         };
       } catch (err) {
         console.error(`Cloudinary Error at index ${index}:`, err);
-        throw new Error("Failed to upload one or more images");
+        throw new Error("Failed to upload image");
       }
     });
 
@@ -50,7 +47,7 @@ export async function POST(request) {
       return NextResponse.json({ message: "No valid images were processed" }, { status: 400 });
     }
 
-    // Prisma createMany will insert each object as a new row in DesignerWork
+    // Batch insert into the database
     await prisma.designerWork.createMany({
       data: worksData,
     });
