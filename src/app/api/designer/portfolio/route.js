@@ -6,15 +6,20 @@ export async function POST(request) {
   try {
     // request.formData() will now succeed because of the frontend header fix
     const formData = await request.formData();
-    
+
     const designerId = Number(formData.get("designerId"));
     if (!designerId || isNaN(designerId)) {
       return NextResponse.json({ message: "Valid Designer ID is required" }, { status: 400 });
     }
 
-    // Use "image" and "description" keys to match DesignerExperience.jsx
-    const files = formData.getAll("image");
-    const descriptions = formData.getAll("description");
+    // Checks if 'images' (plural/signup) exists, otherwise falls back to 'image' (singular/dashboard)
+    const files = formData.getAll("images").length > 0
+      ? formData.getAll("images")
+      : formData.getAll("image");
+
+    const descriptions = formData.getAll("descriptions").length > 0
+      ? formData.getAll("descriptions")
+      : formData.getAll("description");
 
     if (!files || files.length === 0) {
       return NextResponse.json({ message: "No images provided" }, { status: 400 });
@@ -26,11 +31,11 @@ export async function POST(request) {
 
       try {
         const upload = await uploadToCloudinary(file, "coretocover/designers/portfolio");
-        
+
         // Each object in this array becomes a single row in the DesignerWork table
         return {
           designerId,
-          image: upload.secure_url, 
+          image: upload.secure_url,
           description: descriptions[index] || null,
         };
       } catch (err) {
@@ -51,17 +56,17 @@ export async function POST(request) {
     });
 
     // Return the first created item for the frontend UI update
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Portfolio saved successfully",
-      work: worksData[0], 
-      count: worksData.length 
+      work: worksData[0],
+      count: worksData.length
     }, { status: 201 });
 
   } catch (err) {
     console.error("DATABASE_PORTFOLIO_ERROR:", err);
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Server error while saving portfolio",
-      error: err.message 
+      error: err.message
     }, { status: 500 });
   }
 }
