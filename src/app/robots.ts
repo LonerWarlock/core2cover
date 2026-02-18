@@ -12,6 +12,6 @@ export default function robots(): MetadataRoute.Robots {
         '/api' 
       ],
     },
-    sitemap: 'https://core2cover.vercel.app/sitemap.xml',
+    sitemap: 'https://core2cover.in/sitemap.xml',
   }
 }

@@ -73,7 +73,7 @@ export async function POST(request) {
           <p>Please check the Admin Panel to review their product catalog and approve the account.</p>
           
           <div style="margin-top: 30px; text-align: center;">
-            <a href="https://core2cover.vercel.app/admin" 
+            <a href="https://core2cover.in/admin" 
                style="background: #000; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">
                Go to Admin Panel
             </a>

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   verification: {
     google: "48hxJVOfuV3-SlJW8Bhs4y6wFM3OEiyDY0vr2dNld48",
   },
-  metadataBase: new URL("https://core2cover.vercel.app"),
+  metadataBase: new URL("https://core2cover.in"),
   alternates: {
     canonical: "/",
   },
@@ -49,14 +49,14 @@ export default function RootLayout({
     "@type": "WebSite",
     "name": "Core2Cover",
     "alternateName": ["C2C", "Core 2 Cover"],
-    "url": "https://core2cover.vercel.app"
+    "url": "https://core2cover.in"
     },
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Core2Cover",
-      "url": "https://core2cover.vercel.app",
-      "logo": "https://core2cover.vercel.app/icon.png",
+      "url": "https://core2cover.in",
+      "logo": "https://core2cover.in/icon.png",
       "contactPoint": {
         "@type": "ContactPoint",
         "telephone": "+91-8275922422",

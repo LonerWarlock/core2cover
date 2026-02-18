@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
  
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://core2cover.vercel.app';
+  const baseUrl = 'https://core2cover.in';
   return [
     { url: baseUrl, lastModified: new Date() },
     { url: `${baseUrl}/designers`, lastModified: new Date() },
